@@ -25,6 +25,7 @@ class QTreeWidget;
 class QTreeWidgetItem;
 
 namespace papiro {
+class GitDiffView;
 
 class Document;
 class Editor;
@@ -120,6 +121,8 @@ private slots:
     void gitLog();
     void gitBlame();
     void gitDiff();
+    void showGitDiff(const QVector<GitDiffFile>& diffs);
+    void onGitDiffOpenFile(const QString& filePath, int line);
 
 private:
     void createActions();
@@ -241,6 +244,7 @@ private:
     QAction *m_gitBlameAction = nullptr;
     QAction *m_gitDiffAction = nullptr;
     QAction *m_gitToggleAction = nullptr;
+    QAction *m_toggleGitDiffAction = nullptr;
 
     QStringList m_recentFiles;
     QStringList m_recentWorkspaces;
@@ -270,6 +274,9 @@ private:
     // Git
     GitRepo *m_gitRepo = nullptr;
     QString m_currentRepoPath;
+    // Git Diff View
+    GitDiffView *m_gitDiffView = nullptr;
+    QDockWidget *m_gitDiffDock = nullptr;
 
     QMap<Macro *, QShortcut *> m_customShortcuts;
 

@@ -62,6 +62,7 @@ set(PAPIRO_APP_SOURCES
     src/editor/SyntaxHighlighter.cpp
     src/ui/ClipLibraryWidget.cpp
     src/ui/FindReplaceDialog.cpp
+    src/ui/GitDiffView.cpp
     src/ui/LSPCompletionWidget.cpp
     src/ui/LSPHoverWidget.cpp
     src/ui/MacroManagerDialog.cpp

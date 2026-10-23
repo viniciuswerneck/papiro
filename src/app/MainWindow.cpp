@@ -11,7 +11,9 @@
 #include "editor/Editor.h"
 #include "ui/ClipLibraryWidget.h"
 #include "ui/FileExplorerWidget.h"
+#include "ui/GitDiffView.h"
 #include "ui/MacroManagerDialog.h"
+#include "ui/Theme.h"
 #include "ui/PreferencesDialog.h"
 #include "ui/Theme.h"
 #include "ui/ToolsDialog.h"
@@ -478,6 +480,15 @@ void MainWindow::createActions()
     m_gitToggleAction->setCheckable(true);
     m_gitToggleAction->setChecked(false);
 
+    m_toggleGitDiffAction = makeAction(tr("Diff View"), QKeySequence(),
+                                       themedIcon(QStringLiteral("vcs-diff"), QStyle::SP_FileDialogContentsView, this));
+    m_toggleGitDiffAction->setCheckable(true);
+    m_toggleGitDiffAction->setChecked(false);
+    connect(m_toggleGitDiffAction, &QAction::toggled, this, [this](bool visible) {
+        if (m_gitDiffDock)
+            m_gitDiffDock->setVisible(visible);
+    });
+
     // Language selection
     m_languageGroup = new QActionGroup(this);
     m_languageGroup->setExclusive(true);
@@ -678,6 +689,8 @@ void MainWindow::createActions()
     m_gitMenu->addSeparator();
     m_gitMenu->addAction(m_gitDiffAction);
     m_gitMenu->addAction(m_gitBlameAction);
+    m_gitMenu->addSeparator();
+    m_gitMenu->addAction(m_toggleGitDiffAction);
 
     // Help
     auto *helpMenu = menuBar()->addMenu(tr("&Help"));
@@ -2239,6 +2252,15 @@ void MainWindow::createDockWidgets()
                 if (m_findDialog)
                     m_findDialog->setSearchFolder(folder);
             });
+    connect(m_fileExplorer, &FileExplorerWidget::diffRequested, this,
+            [this](const QString &relativePath) {
+                if (m_gitRepo && m_gitRepo->isValid()) {
+                    QVector<GitDiffFile> diffs = m_gitRepo->diff(relativePath);
+                    if (!diffs.isEmpty()) {
+                        showGitDiff(diffs);
+                    }
+                }
+            });
     connect(m_fileExplorerDock, &QDockWidget::visibilityChanged, this, [this](bool visible) {
         m_toggleFileExplorerAction->blockSignals(true);
         m_toggleFileExplorerAction->setChecked(visible);
@@ -2322,6 +2344,23 @@ void MainWindow::createDockWidgets()
     connect(m_tabs, &QTabWidget::currentChanged, this, [this] {
         if (m_clipLibraryWidget)
             m_clipLibraryWidget->setEditor(currentEditor());
+    });
+
+    // Git Diff View
+    m_gitDiffView = new papiro::GitDiffView(this);
+    m_gitDiffDock = new QDockWidget(tr("Git Diff"), this);
+    m_gitDiffDock->setObjectName(QStringLiteral("GitDiffDock"));
+    m_gitDiffDock->setWidget(m_gitDiffView);
+    m_gitDiffDock->setAllowedAreas(Qt::BottomDockWidgetArea | Qt::TopDockWidgetArea | Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
+    addDockWidget(Qt::BottomDockWidgetArea, m_gitDiffDock);
+    m_gitDiffDock->hide();
+    tabifyDockWidget(m_searchResultsDock, m_gitDiffDock);
+
+    connect(m_gitDiffView, &papiro::GitDiffView::openFileRequested, this, &MainWindow::onGitDiffOpenFile);
+    connect(m_gitDiffDock, &QDockWidget::visibilityChanged, this, [this](bool visible) {
+        m_toggleGitDiffAction->blockSignals(true);
+        m_toggleGitDiffAction->setChecked(visible);
+        m_toggleGitDiffAction->blockSignals(false);
     });
 }
 
@@ -3059,43 +3098,39 @@ void MainWindow::gitDiff()
                              tr("No file open or not in a Git repository."));
         return;
     }
-    
+
     QVector<GitDiffFile> diffs = m_gitRepo->diff(document->filePath());
     if (diffs.isEmpty()) {
         QMessageBox::information(this, tr("Git Diff"), tr("No changes in this file."));
         return;
     }
-    
-    QString output;
-    for (const GitDiffFile &df : diffs) {
-        for (const GitDiffHunk &hunk : df.hunks) {
-            output += hunk.header + QLatin1Char('\n');
-            for (const QString &line : hunk.lines) {
-                output += line + QLatin1Char('\n');
-            }
-        }
+
+    showGitDiff(diffs);
+}
+
+void MainWindow::showGitDiff(const QVector<GitDiffFile>& diffs)
+{
+    if (!m_gitDiffView || !m_gitDiffDock)
+        return;
+
+    m_gitDiffView->setDiff(diffs);
+    m_gitDiffDock->show();
+    m_gitDiffDock->raise();
+    m_toggleGitDiffAction->setChecked(true);
+}
+
+void MainWindow::onGitDiffOpenFile(const QString& filePath, int line)
+{
+    // Resolve the file path relative to the repo root
+    QString absolutePath = filePath;
+    if (m_gitRepo && m_gitRepo->isValid() && !QFileInfo(filePath).isAbsolute()) {
+        absolutePath = QDir(m_gitRepo->workTree()).absoluteFilePath(filePath);
     }
-    
-    // Show diff in a dialog
-    QDialog *dialog = new QDialog(this);
-    dialog->setWindowTitle(tr("Git Diff - %1").arg(QFileInfo(document->filePath()).fileName()));
-    dialog->resize(800, 600);
-    
-    QVBoxLayout *layout = new QVBoxLayout(dialog);
-    QPlainTextEdit *diffView = new QPlainTextEdit(dialog);
-    diffView->setReadOnly(true);
-    diffView->setPlainText(output);
-    QFont font = QFontDatabase::systemFont(QFontDatabase::FixedFont);
-    font.setPointSize(10);
-    diffView->setFont(font);
-    layout->addWidget(diffView);
-    
-    QDialogButtonBox *buttons = new QDialogButtonBox(QDialogButtonBox::Close, dialog);
-    connect(buttons, &QDialogButtonBox::rejected, dialog, &QDialog::reject);
-    layout->addWidget(buttons);
-    
-    dialog->exec();
-    dialog->deleteLater();
+
+    openFile(absolutePath);
+    if (auto *document = currentDocument()) {
+        document->editor()->gotoLine(line);
+    }
 }
 
 } // namespace papiro

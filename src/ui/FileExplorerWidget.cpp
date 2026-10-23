@@ -385,38 +385,8 @@ void FileExplorerWidget::showContextMenu(const QPoint &position)
         }
         
         QAction *diff = menu.addAction(tr("Diff"));
-        connect(diff, &QAction::triggered, this, [this, relativePath, fileName = info.fileName()] {
-            QVector<GitDiffFile> diffs = m_gitRepo->diff(relativePath);
-            if (!diffs.isEmpty()) {
-                QString output;
-                for (const GitDiffFile &df : diffs) {
-                    for (const GitDiffHunk &hunk : df.hunks) {
-                        output += hunk.header + QLatin1Char('\n');
-                        for (const QString &line : hunk.lines) {
-                            output += line + QLatin1Char('\n');
-                        }
-                    }
-                }
-                QDialog *dialog = new QDialog(this);
-                dialog->setWindowTitle(tr("Git Diff - %1").arg(fileName));
-                dialog->resize(800, 600);
-                
-                QVBoxLayout *layout = new QVBoxLayout(dialog);
-                QPlainTextEdit *diffView = new QPlainTextEdit(dialog);
-                diffView->setReadOnly(true);
-                diffView->setPlainText(output);
-                QFont font = QFontDatabase::systemFont(QFontDatabase::FixedFont);
-                font.setPointSize(10);
-                diffView->setFont(font);
-                layout->addWidget(diffView);
-                
-                QDialogButtonBox *buttons = new QDialogButtonBox(QDialogButtonBox::Close, dialog);
-                connect(buttons, &QDialogButtonBox::rejected, dialog, &QDialog::reject);
-                layout->addWidget(buttons);
-                
-                dialog->exec();
-                dialog->deleteLater();
-            }
+        connect(diff, &QAction::triggered, this, [this, relativePath] {
+            emit diffRequested(relativePath);
         });
     }
     

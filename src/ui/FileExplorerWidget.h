@@ -45,6 +45,7 @@ public:
 signals:
     void fileActivated(const QString &path);
     void findInFolderRequested(const QString &path);
+    void diffRequested(const QString &relativePath);
 
 private slots:
     void handleDoubleClick(const QModelIndex &index);
