@@ -65,6 +65,9 @@ private slots:
     void findPrevious() { findInDocument(true); }
     void replaceCurrent();
     void replaceAll();
+    void replaceAllInSelection(Editor *editor, const QRegularExpression &expression, int start, int end);
+    void replaceAllInBlockSelection(Editor *editor, const QRegularExpression &expression);
+    void replaceAllInDocument(Editor *editor, const QRegularExpression &expression);
     void goToLine();
     void chooseFont();
     void openPreferences();

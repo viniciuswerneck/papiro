@@ -30,6 +30,17 @@ public:
     explicit Editor(QWidget *parent = nullptr);
     ~Editor() override;
 
+    /*! Block/column selection point. */
+    struct BlockPoint {
+        int block = -1;
+        int column = 0;
+        bool isValid() const { return block >= 0; }
+        bool operator==(const BlockPoint &other) const
+        {
+            return block == other.block && column == other.column;
+        }
+    };
+
     void applySyntax(const SyntaxDefinition &definition);
     void clearSyntax();
 
@@ -62,6 +73,8 @@ public:
     void deleteBlockSelection();
     /*! Creates a rectangular selection directly (block/column coordinates). */
     void selectBlock(int anchorBlock, int anchorColumn, int currentBlock, int currentColumn);
+    /*! Returns the anchor and cursor points of the current block selection. */
+    QPair<BlockPoint, BlockPoint> getBlockSelectionPoints() const;
 
     /*! Clears any block selection before selecting the whole document. */
     void selectAll();
@@ -90,8 +103,8 @@ signals:
     void findRequested();
     void gotoLineRequested();
     void blockSelectionChanged();
-    
-    // LSP signals
+
+// LSP signals
     void lspDefinitionRequested(const LSP::TextDocumentPositionParams& params);
     void lspReferencesRequested(const LSP::ReferenceParams& params);
     void lspRenameRequested(const LSP::RenameParams& params);
@@ -185,16 +198,6 @@ private:
     bool isHoverVisible() const;
 
 private:
-    struct BlockPoint {
-        int block = -1;
-        int column = 0;
-        bool isValid() const { return block >= 0; }
-        bool operator==(const BlockPoint &other) const
-        {
-            return block == other.block && column == other.column;
-        }
-    };
-
     BlockPoint blockPointAt(const QPoint &position) const;
     QTextCursor cursorForBlockPoint(const BlockPoint &point) const;
     void updateBlockSelection(const QPoint &position);

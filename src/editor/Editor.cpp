@@ -960,6 +960,11 @@ int Editor::blockSelectionRight() const
     return qMax(m_blockAnchor.column, m_blockCursor.column);
 }
 
+QPair<Editor::BlockPoint, Editor::BlockPoint> Editor::getBlockSelectionPoints() const
+{
+    return qMakePair(m_blockAnchor, m_blockCursor);
+}
+
 QList<QRect> Editor::blockSelectionRects() const
 {
     QList<QRect> rectangles;

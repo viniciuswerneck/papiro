@@ -1521,6 +1521,27 @@ void MainWindow::replaceAll()
     Editor *editor = document->editor();
     QTextDocument *textDocument = editor->document();
 
+    // Check for block/column selection first
+    if (editor->hasBlockSelection()) {
+        replaceAllInBlockSelection(editor, expression);
+        return;
+    }
+
+    // Check for normal selection
+    QTextCursor cursor = editor->textCursor();
+    if (cursor.hasSelection()) {
+        replaceAllInSelection(editor, expression, cursor.selectionStart(), cursor.selectionEnd());
+        return;
+    }
+
+    // No selection - search entire document (existing behavior)
+    replaceAllInDocument(editor, expression);
+}
+
+void MainWindow::replaceAllInDocument(Editor *editor, const QRegularExpression &expression)
+{
+    QTextDocument *textDocument = editor->document();
+
     QTextCursor group(textDocument);
     group.beginEditBlock();
 
@@ -1550,6 +1571,131 @@ void MainWindow::replaceAll()
 
     group.endEditBlock();
     statusBar()->showMessage(tr("%n replacement(s) made.", "", count), 5000);
+}
+
+void MainWindow::replaceAllInSelection(Editor *editor, const QRegularExpression &expression, int start, int end)
+{
+    QTextDocument *textDocument = editor->document();
+
+    QTextCursor group(textDocument);
+    group.beginEditBlock();
+
+    int count = 0;
+    int searchStart = start;
+    int searchEnd = end;
+
+    QTextCursor search = editor->document()->find(expression, searchStart);
+    while (!search.isNull() && search.anchor() < searchEnd) {
+        if (!search.hasSelection()) {
+            QTextCursor next = search;
+            next.movePosition(QTextCursor::NextCharacter);
+            if (next.position() == search.position())
+                break;
+            search = textDocument->find(expression, next.position());
+            continue;
+        }
+
+        // Ensure the match is within the selection range
+        if (search.anchor() >= searchEnd || search.position() > searchEnd)
+            break;
+
+        QString selected = search.selectedText();
+        selected.replace(QChar::ParagraphSeparator, QLatin1Char('\n'));
+        const QRegularExpressionMatch match = expression.match(selected);
+        const QString text = (m_lastFind.regex && match.hasMatch())
+            ? expandReplacement(m_lastReplacement, match)
+            : m_lastReplacement;
+
+        search.insertText(text);
+        ++count;
+        // Continue searching from the end of the replacement
+        search = textDocument->find(expression, search.position());
+    }
+
+    group.endEditBlock();
+    statusBar()->showMessage(tr("%n replacement(s) made in selection.", "", count), 5000);
+}
+
+void MainWindow::replaceAllInBlockSelection(Editor *editor, const QRegularExpression &expression)
+{
+    QTextDocument *textDocument = editor->document();
+
+    QTextCursor group(textDocument);
+    group.beginEditBlock();
+
+    int count = 0;
+
+    // Get block selection boundaries
+    const auto blockPoints = editor->getBlockSelectionPoints();
+    if (!blockPoints.first.isValid() || !blockPoints.second.isValid()) {
+        group.endEditBlock();
+        return;
+    }
+
+    int topBlock = qMin(blockPoints.first.block, blockPoints.second.block);
+    int bottomBlock = qMax(blockPoints.first.block, blockPoints.second.block);
+    int leftColumn = qMin(blockPoints.first.column, blockPoints.second.column);
+    int rightColumn = qMax(blockPoints.first.column, blockPoints.second.column);
+
+    // Iterate through each line in the block selection
+    for (int blockNum = topBlock; blockNum <= bottomBlock; ++blockNum) {
+        QTextBlock block = editor->document()->findBlockByNumber(blockNum);
+        if (!block.isValid())
+            continue;
+
+        QString lineText = block.text();
+        if (lineText.isEmpty())
+            continue;
+
+        // Extract the column range for this line
+        int lineLength = lineText.length();
+        int colStart = qMin(leftColumn, lineLength);
+        int colEnd = qMin(rightColumn, lineLength);
+        if (colStart >= colEnd)
+            continue;
+
+        QString selectedText = lineText.mid(colStart, colEnd - colStart);
+        if (selectedText.isEmpty())
+            continue;
+
+        // Search for matches within the selected column range
+        QRegularExpressionMatchIterator it = expression.globalMatch(selectedText);
+        QStringList replacements;
+        QList<int> matchStarts, matchEnds;
+
+        while (it.hasNext()) {
+            QRegularExpressionMatch match = it.next();
+            matchStarts << match.capturedStart();
+            matchEnds << match.capturedEnd();
+            QString matched = match.captured(0);
+            matched.replace(QChar::ParagraphSeparator, QLatin1Char('\n'));
+            QString replacementText = (m_lastFind.regex && match.hasMatch())
+                ? expandReplacement(m_lastReplacement, match)
+                : m_lastReplacement;
+            replacements << replacementText;
+        }
+
+        if (replacements.isEmpty())
+            continue;
+
+        // Build new line text with replacements (from right to left to maintain positions)
+        QString newLine = lineText;
+        for (int i = replacements.size() - 1; i >= 0; --i) {
+            int absStart = colStart + matchStarts[i];
+            int absEnd = colStart + matchEnds[i];
+            newLine.replace(absStart, absEnd - absStart, replacements[i]);
+            ++count;
+        }
+
+        // Apply the new line text
+        QTextCursor cursor(textDocument);
+        cursor.setPosition(block.position() + colStart);
+        cursor.setPosition(block.position() + colEnd, QTextCursor::KeepAnchor);
+        cursor.insertText(newLine.mid(colStart, colEnd - colStart));
+    }
+
+    group.endEditBlock();
+    statusBar()->showMessage(tr("%n replacement(s) made in block selection.", "", count), 5000);
 }
 
 QString MainWindow::expandReplacement(const QString &replacement,
