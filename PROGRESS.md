@@ -140,6 +140,13 @@
 - [x] Arquivo → **Restaurar Sessão Anterior** (ligável/desligável, persistido);
       desligado, inicia com um documento vazio e limpa a sessão salva
 
+### Empacotamento
+- [x] CPack configurado: DEB, RPM, NSIS, ZIP portátil
+- [x] AppImage: .desktop, .metainfo.xml, ícones, build script (linuxdeploy)
+- [x] Windows: Qt Installer Framework (config.xml, package.xml, installscript.qs)
+- [x] GitHub Actions: linux-release.yml, windows-release.yml (build + release automático)
+- [x] LICENSE (MIT) adicionado
+
 ### Painel de resultados de busca
 - [x] Diálogo Find/Replace com botão **Find All**
 - [x] Dock **Search Results** (Ctrl+Alt+F) com agrupamento por arquivo,
@@ -205,7 +212,7 @@
 
 ## 🚧 Em andamento
 
-- [ ] **Atalhos personalizados de macros** — combinações além dos 9 slots fixos
+- [x] **Atalhos personalizados de macros** — combinações além dos 9 slots fixos
 
 ---
 
@@ -262,6 +269,8 @@ $HOME/Qt/6.8.3/gcc_64/bin/lupdate -no-obsolete src \
   - Dicionários: `~/.local/share/hunspell` (pt_BR, es_ES, en_US)
 - Configs do usuário: `~/.config/Papiro/` (`cliplib.json`, `macros/`, `tools.json`,
   `Papiro.conf` com idioma/fonte/workspaces recentes/sessão)
+- Empacotamento configurado (CPack, AppImage, QtIFW, GitHub Actions)
+- Repositório: https://github.com/viniciuswerneck/papiro.git
 - `TextPad.exe` é o alvo de análise e **não** deve ser modificado nem commitado
 
 ## ▶️ Retomar amanhã
@@ -270,8 +279,10 @@ $HOME/Qt/6.8.3/gcc_64/bin/lupdate -no-obsolete src \
 2. Rodar: `cd build && setsid nohup ./Papiro > /tmp/papiro_run.log 2>&1 &`
 3. Verificar: `ctest --test-dir build --output-on-failure`
 4. Próximos passos sugeridos:
-   - [ ] **Atalhos de macros** — permitir combinações além dos 9 slots fixos
-   - [ ] **Empacotamento** — AppImage/instalador e atalho de desktop
+   - [ ] **Ícones reais** — gerar PNG/ICO do SVG placeholder
+   - [ ] **Testar pacotes** — AppImage, DEB/RPM localmente
+   - [ ] **LSP / Language Server** — suporte a clangd, pyright, etc.
+   - [ ] **Git integration** — status branch, diff, blame, commit UI
 
 ## 🔍 Verificações rápidas
 

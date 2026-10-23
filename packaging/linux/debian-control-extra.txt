@@ -1,3 +1,3 @@
-Homepage: https://github.com/usuario/papiro
-Vcs-Git: https://github.com/usuario/papiro.git
-Vcs-Browser: https://github.com/usuario/papiro
+Homepage: https://github.com/viniciuswerneck/papiro
+Vcs-Git: https://github.com/viniciuswerneck/papiro.git
+Vcs-Browser: https://github.com/viniciuswerneck/papiro
