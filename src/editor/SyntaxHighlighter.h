@@ -1,5 +1,6 @@
 #pragma once
 
+#include "core/LSPTypes.h"
 #include "core/SyntaxDefinition.h"
 #include "editor/BlockState.h"
 
@@ -25,6 +26,12 @@ public:
     /*! Re-reads the current theme colors and repaints the document. */
     void refreshTheme();
 
+    /*! Sets LSP diagnostics for the current document. */
+    void setLSPDiagnostics(const QVector<LSP::Diagnostic>& diagnostics);
+    
+    /*! Clears all LSP diagnostics. */
+    void clearLSPDiagnostics();
+
 protected:
     void highlightBlock(const QString &text) override;
 
@@ -36,6 +43,7 @@ private:
 
     void applySyntax(const QString &text);
     void applySpelling(const QString &text);
+    void applyLSPDiagnostics(const QString &text);
     void updateFormats();
     bool startsWithAt(const QString &text, int position, const QString &token) const;
     bool isIdentifierStart(QChar ch) const;
@@ -47,6 +55,9 @@ private:
     /*! Syntax state helpers that preserve the folding bits in userState. */
     int previousSyntaxState() const;
     void setSyntaxState(int state);
+    
+    /*! Returns the underline format for a diagnostic severity. */
+    QTextCharFormat diagnosticFormat(LSP::DiagnosticSeverity severity) const;
 
     static constexpr int BlockCommentState = 1;
     static constexpr int MultilineStringStateBase = 100;
@@ -61,6 +72,13 @@ private:
     QTextCharFormat m_stringFormat;
     QTextCharFormat m_numberFormat;
     SpellChecker *m_spellChecker = nullptr;
+    
+    // LSP Diagnostics
+    QVector<LSP::Diagnostic> m_lspDiagnostics;
+    QTextCharFormat m_diagErrorFormat;
+    QTextCharFormat m_diagWarningFormat;
+    QTextCharFormat m_diagInfoFormat;
+    QTextCharFormat m_diagHintFormat;
 };
 
 } // namespace papiro

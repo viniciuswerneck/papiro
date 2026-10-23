@@ -2,9 +2,13 @@
 
 #include "editor/BlockState.h"
 
+#include "core/LSPClient.h"
+#include "core/LSPTypes.h"
+
 #include <QPlainTextEdit>
 #include <QTextEdit>
 #include <QHash>
+#include <QTimer>
 
 namespace papiro {
 
@@ -76,6 +80,19 @@ signals:
     void findRequested();
     void gotoLineRequested();
     void blockSelectionChanged();
+    
+    // LSP signals
+    void lspDefinitionRequested(const LSP::TextDocumentPositionParams& params);
+    void lspReferencesRequested(const LSP::ReferenceParams& params);
+    void lspRenameRequested(const LSP::RenameParams& params);
+    void lspDiagnosticsChanged();
+
+public slots:
+    void onLSPDefinitionResponse(const QVector<LSP::Location>& locations);
+    void onLSPReferencesResponse(const QVector<LSP::Location>& locations);
+    void onLSPRenameResponse(const std::optional<LSP::WorkspaceEdit>& edit);
+    void onLSPPrepareRenameResponse(const std::optional<LSP::Range>& range);
+    void onLSPDiagnosticsReceived(const QString& uri, const QVector<LSP::Diagnostic>& diagnostics);
 
 protected:
     void resizeEvent(QResizeEvent *event) override;
@@ -102,6 +119,24 @@ private:
     void refreshFoldCache();
     void applyFolds();
     void toggleFold(int blockNumber);
+
+    // LSP integration
+    void setupLSP();
+    void teardownLSP();
+    void sendDidOpen();
+    void sendDidChange();
+    void sendDidSave();
+    void sendDidClose();
+    void scheduleDidChange();
+    void triggerGoToDefinition();
+    void triggerFindReferences();
+    void triggerRename();
+    void disableLSP();
+    void setLSPClient(LSPClient* client, const QString& languageId);
+    void applyWorkspaceEdit(const LSP::WorkspaceEdit& edit);
+    LSP::TextDocumentPositionParams makePositionParams() const;
+    LSP::ReferenceParams makeReferenceParams() const;
+    LSP::RenameParams makeRenameParams(const QString& newName) const;
 
 private:
     struct BlockPoint {
@@ -137,6 +172,22 @@ private:
     bool m_blockSelectMode = false;
     BlockPoint m_blockAnchor;
     BlockPoint m_blockCursor;
+
+    // LSP state
+    LSPClient* m_lspClient = nullptr;
+    QString m_lspLanguageId;
+    int m_lspDocumentVersion = 0;
+    bool m_lspEnabled = false;
+    QString m_lspDocumentUri;
+    QString m_documentPath;
+
+    // Timer para debounce didChange
+    QTimer m_didChangeTimer;
+    QVector<LSP::TextDocumentContentChangeEvent> m_pendingChanges;
+
+public:
+    void setDocumentPath(const QString& path);
+    QString documentPath() const { return m_documentPath; }
 };
 
 } // namespace papiro

@@ -59,6 +59,25 @@ void SyntaxHighlighter::updateFormats()
 
     m_stringFormat.setForeground(colors.string);
     m_numberFormat.setForeground(colors.number);
+
+    // LSP Diagnostic formats - use theme-aware colors
+    const QPalette palette = Theme::palette(Theme::mode());
+    
+    // Error - red squiggly underline
+    m_diagErrorFormat.setUnderlineStyle(QTextCharFormat::SpellCheckUnderline);
+    m_diagErrorFormat.setUnderlineColor(QColor(0xD3, 0x2F, 0x2F)); // Red
+    
+    // Warning - orange squiggly underline
+    m_diagWarningFormat.setUnderlineStyle(QTextCharFormat::SpellCheckUnderline);
+    m_diagWarningFormat.setUnderlineColor(QColor(0xE6, 0x8A, 0x00)); // Orange
+    
+    // Info - blue squiggly underline
+    m_diagInfoFormat.setUnderlineStyle(QTextCharFormat::SpellCheckUnderline);
+    m_diagInfoFormat.setUnderlineColor(QColor(0x2F, 0x7F, 0xD3)); // Blue
+    
+    // Hint - gray squiggly underline
+    m_diagHintFormat.setUnderlineStyle(QTextCharFormat::SpellCheckUnderline);
+    m_diagHintFormat.setUnderlineColor(QColor(0x8A, 0x8A, 0x8A)); // Gray
 }
 
 void SyntaxHighlighter::refreshTheme()
@@ -122,10 +141,23 @@ void SyntaxHighlighter::setSpellChecker(SpellChecker *checker)
     rehighlight();
 }
 
+void SyntaxHighlighter::setLSPDiagnostics(const QVector<LSP::Diagnostic>& diagnostics)
+{
+    m_lspDiagnostics = diagnostics;
+    rehighlight();
+}
+
+void SyntaxHighlighter::clearLSPDiagnostics()
+{
+    m_lspDiagnostics.clear();
+    rehighlight();
+}
+
 void SyntaxHighlighter::highlightBlock(const QString &text)
 {
     applySyntax(text);
     applySpelling(text);
+    applyLSPDiagnostics(text);
 }
 
 void SyntaxHighlighter::applySpelling(const QString &text)
@@ -153,6 +185,60 @@ void SyntaxHighlighter::applySpelling(const QString &text)
             continue;
         if (!m_spellChecker->isCorrect(word))
             setFormat(match.capturedStart(), match.capturedLength(), misspelled);
+    }
+}
+
+void SyntaxHighlighter::applyLSPDiagnostics(const QString &text)
+{
+    if (m_lspDiagnostics.isEmpty())
+        return;
+
+    const int blockNumber = currentBlock().blockNumber();
+    
+    for (const LSP::Diagnostic& diag : m_lspDiagnostics) {
+        // Check if this diagnostic applies to the current block
+        if (diag.range.start.line > blockNumber || diag.range.end.line < blockNumber)
+            continue;
+        
+        int startColumn = 0;
+        int endColumn = text.length();
+        
+        if (diag.range.start.line == blockNumber) {
+            startColumn = diag.range.start.character;
+        }
+        
+        if (diag.range.end.line == blockNumber) {
+            endColumn = diag.range.end.character;
+        } else if (diag.range.end.line > blockNumber) {
+            endColumn = text.length();
+        }
+        
+        // Clamp to valid range
+        startColumn = qBound(0, startColumn, text.length());
+        endColumn = qBound(startColumn, endColumn, text.length());
+        
+        if (endColumn <= startColumn)
+            continue;
+        
+        const int length = endColumn - startColumn;
+        const QTextCharFormat format = diagnosticFormat(diag.severity.value_or(LSP::DiagnosticSeverity::Error));
+        setFormat(startColumn, length, format);
+    }
+}
+
+QTextCharFormat SyntaxHighlighter::diagnosticFormat(LSP::DiagnosticSeverity severity) const
+{
+    switch (severity) {
+    case LSP::DiagnosticSeverity::Error:
+        return m_diagErrorFormat;
+    case LSP::DiagnosticSeverity::Warning:
+        return m_diagWarningFormat;
+    case LSP::DiagnosticSeverity::Information:
+        return m_diagInfoFormat;
+    case LSP::DiagnosticSeverity::Hint:
+        return m_diagHintFormat;
+    default:
+        return m_diagErrorFormat;
     }
 }
 

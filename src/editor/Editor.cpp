@@ -1,5 +1,7 @@
 #include "editor/Editor.h"
 
+#include "core/LSPClient.h"
+#include "core/LSPTypes.h"
 #include "core/Macro.h"
 #include "core/SyntaxDefinition.h"
 #include "core/SpellChecker.h"
@@ -9,8 +11,10 @@
 #include <QApplication>
 #include <QClipboard>
 #include <QContextMenuEvent>
+#include <QInputDialog>
 #include <QInputMethodEvent>
 #include <QKeyEvent>
+#include <QLineEdit>
 #include <QMenu>
 #include <QMimeData>
 #include <QMouseEvent>
@@ -20,6 +24,7 @@
 #include <QTextDocument>
 #include <QTextLayout>
 #include <QTextLine>
+#include <QUrl>
 
 namespace papiro {
 namespace {
@@ -68,13 +73,26 @@ Editor::Editor(QWidget *parent)
             clearBlockSelection();
         if (m_foldsActive)
             applyFolds();
+        if (m_lspEnabled)
+            scheduleDidChange();
     });
+
+    // LSP timers
+    m_didChangeTimer.setSingleShot(true);
+    m_didChangeTimer.setInterval(300);
+    connect(&m_didChangeTimer, &QTimer::timeout, this, &Editor::sendDidChange);
 
     updateLineNumberAreaWidth();
     highlightCurrentLine();
 }
 
-Editor::~Editor() = default;
+Editor::~Editor()
+{
+    if (m_lspEnabled) {
+        sendDidClose();
+        teardownLSP();
+    }
+}
 
 void Editor::setMacroManager(MacroManager *manager)
 {
@@ -1133,9 +1151,329 @@ void Editor::highlightCurrentLine()
     setExtraSelections(selections);
 }
 
-// ---------------------------------------------------------------------------
+// ============================================================================
+// LSP Integration
+// ============================================================================
+
+void Editor::setDocumentPath(const QString& path)
+{
+    m_documentPath = path;
+    if (m_lspEnabled) {
+        m_lspDocumentUri = QUrl::fromLocalFile(path).toString();
+    }
+}
+
+void Editor::setLSPClient(LSPClient *client, const QString &languageId)
+{
+    if (m_lspEnabled) {
+        teardownLSP();
+    }
+    
+    m_lspClient = client;
+    m_lspLanguageId = languageId;
+    m_lspDocumentVersion = 0;
+    m_lspDocumentUri = QUrl::fromLocalFile(m_documentPath).toString();
+    
+    if (m_lspClient && m_lspClient->isInitialized()) {
+        setupLSP();
+    } else if (m_lspClient) {
+        connect(m_lspClient, &LSPClient::stateChanged, this, [this](LSPClient::State state) {
+            if (state == LSPClient::State::Ready) {
+                setupLSP();
+            }
+        });
+    }
+}
+
+void Editor::disableLSP()
+{
+    if (!m_lspEnabled)
+        return;
+    
+    sendDidClose();
+    teardownLSP();
+}
+
+void Editor::setupLSP()
+{
+    if (!m_lspClient || !m_lspClient->isInitialized() || m_lspEnabled)
+        return;
+    
+    // Connect LSP signals
+    connect(m_lspClient, &LSPClient::diagnosticsReceived,
+            this, &Editor::onLSPDiagnosticsReceived);
+    
+    m_lspEnabled = true;
+    sendDidOpen();
+}
+
+void Editor::teardownLSP()
+{
+    if (!m_lspEnabled)
+        return;
+    
+    if (m_lspClient) {
+        disconnect(m_lspClient, &LSPClient::diagnosticsReceived,
+                   this, &Editor::onLSPDiagnosticsReceived);
+    }
+    
+    m_didChangeTimer.stop();
+    m_pendingChanges.clear();
+    
+    m_lspEnabled = false;
+    m_lspClient = nullptr;
+}
+
+void Editor::sendDidOpen()
+{
+    if (!m_lspClient || !m_lspEnabled)
+        return;
+    
+    LSP::TextDocumentItem item;
+    item.uri = m_lspDocumentUri;
+    item.languageId = m_lspLanguageId;
+    item.version = m_lspDocumentVersion;
+    item.text = toPlainText();
+    
+    m_lspClient->didOpen(item);
+}
+
+void Editor::sendDidChange()
+{
+    if (!m_lspClient || !m_lspEnabled || m_pendingChanges.isEmpty())
+        return;
+    
+    LSP::VersionedTextDocumentIdentifier doc;
+    doc.uri = m_lspDocumentUri;
+    doc.version = ++m_lspDocumentVersion;
+    
+    m_lspClient->didChange(doc, m_pendingChanges);
+    m_pendingChanges.clear();
+}
+
+void Editor::sendDidSave()
+{
+    if (!m_lspClient || !m_lspEnabled)
+        return;
+    
+    LSP::TextDocumentIdentifier doc;
+    doc.uri = m_lspDocumentUri;
+    
+    m_lspClient->didSave(doc, toPlainText());
+}
+
+void Editor::sendDidClose()
+{
+    if (!m_lspClient)
+        return;
+    
+    LSP::TextDocumentIdentifier doc;
+    doc.uri = m_lspDocumentUri;
+    
+    m_lspClient->didClose(doc);
+}
+
+void Editor::scheduleDidChange()
+{
+    // Capture the current change
+    // Note: This is a simplified version - in reality we'd need to track what actually changed
+    // For now, we send full document content on each change (less efficient but works)
+    LSP::TextDocumentContentChangeEvent change;
+    change.text = toPlainText();
+    // No range = full document replacement
+    
+    m_pendingChanges.append(change);
+    m_didChangeTimer.start();
+}
+
+void Editor::triggerGoToDefinition()
+{
+    if (!m_lspEnabled || !m_lspClient)
+        return;
+    
+    LSP::TextDocumentPositionParams params = makePositionParams();
+    emit lspDefinitionRequested(params);
+    
+    m_lspClient->requestDefinition(params, [this](const QVector<LSP::Location>& locations) {
+        onLSPDefinitionResponse(locations);
+    });
+}
+
+void Editor::triggerFindReferences()
+{
+    if (!m_lspEnabled || !m_lspClient)
+        return;
+    
+    LSP::ReferenceParams params = makeReferenceParams();
+    emit lspReferencesRequested(params);
+    
+    m_lspClient->requestReferences(params, [this](const QVector<LSP::Location>& locations) {
+        onLSPReferencesResponse(locations);
+    });
+}
+
+void Editor::triggerRename()
+{
+    if (!m_lspEnabled || !m_lspClient)
+        return;
+    
+    // For now, use selected text or word under cursor
+    QString currentName = textCursor().selectedText();
+    if (currentName.isEmpty()) {
+        // Get word under cursor
+        QTextCursor cursor = textCursor();
+        cursor.select(QTextCursor::WordUnderCursor);
+        currentName = cursor.selectedText();
+    }
+    if (currentName.isEmpty())
+        return;
+    
+    // For now, we'll show a simple dialog to get the new name
+    // In a real implementation, this would show an inline rename UI
+    bool ok = false;
+    QString newName = QInputDialog::getText(this, tr("Rename Symbol"), 
+                                            tr("New name:"), QLineEdit::Normal,
+                                            currentName,
+                                            &ok);
+    if (!ok || newName.isEmpty() || newName == currentName)
+        return;
+    
+    LSP::RenameParams params = makeRenameParams(newName);
+    emit lspRenameRequested(params);
+    
+    m_lspClient->requestRename(params, [this](const std::optional<LSP::WorkspaceEdit>& edit) {
+        onLSPRenameResponse(edit);
+    });
+}
+
+LSP::TextDocumentPositionParams Editor::makePositionParams() const
+{
+    LSP::TextDocumentPositionParams params;
+    params.textDocument.uri = m_lspDocumentUri;
+    QTextCursor cursor = textCursor();
+    params.position.line = cursor.blockNumber();
+    params.position.character = cursor.positionInBlock();
+    return params;
+}
+
+LSP::ReferenceParams Editor::makeReferenceParams() const
+{
+    LSP::ReferenceParams params;
+    params.textDocument.uri = m_lspDocumentUri;
+    QTextCursor cursor = textCursor();
+    params.position.line = cursor.blockNumber();
+    params.position.character = cursor.positionInBlock();
+    params.context.includeDeclaration = true;
+    return params;
+}
+
+LSP::RenameParams Editor::makeRenameParams(const QString& newName) const
+{
+    LSP::RenameParams params;
+    params.textDocument.uri = m_lspDocumentUri;
+    QTextCursor cursor = textCursor();
+    params.position.line = cursor.blockNumber();
+    params.position.character = cursor.positionInBlock();
+    params.newName = newName;
+    return params;
+}
+
+void Editor::applyWorkspaceEdit(const LSP::WorkspaceEdit& edit)
+{
+    if (!edit.changes.isEmpty()) {
+        // Group edits by document
+        for (auto it = edit.changes.begin(); it != edit.changes.end(); ++it) {
+            const QString& uri = it.key();
+            const QVector<LSP::TextEdit>& edits = it.value();
+            
+            if (uri == m_lspDocumentUri) {
+                // Apply edits to current document
+                QTextCursor cursor(document());
+                cursor.beginEditBlock();
+                
+                // Sort edits by position (reverse order to maintain positions)
+                QVector<LSP::TextEdit> sortedEdits = edits;
+                std::sort(sortedEdits.begin(), sortedEdits.end(), [](const LSP::TextEdit& a, const LSP::TextEdit& b) {
+                    if (a.range.start.line != b.range.start.line)
+                        return a.range.start.line > b.range.start.line;
+                    return a.range.start.character > b.range.start.character;
+                });
+                
+                for (const LSP::TextEdit& textEdit : sortedEdits) {
+                    const int startPos = document()->findBlockByNumber(textEdit.range.start.line).position() 
+                                        + textEdit.range.start.character;
+                    const int endPos = document()->findBlockByNumber(textEdit.range.end.line).position() 
+                                      + textEdit.range.end.character;
+                    
+                    cursor.setPosition(startPos);
+                    cursor.setPosition(endPos, QTextCursor::KeepAnchor);
+                    cursor.insertText(textEdit.newText);
+                }
+                
+                cursor.endEditBlock();
+            } else {
+                // Different document - emit signal for MainWindow to handle
+                // TODO: emit signal to open file
+            }
+        }
+    }
+}
+
+void Editor::onLSPDefinitionResponse(const QVector<LSP::Location>& locations)
+{
+    if (locations.isEmpty())
+        return;
+    
+    // Navigate to first location
+    const LSP::Location& loc = locations.first();
+    if (loc.uri == m_lspDocumentUri) {
+        // Same document - navigate locally
+        QTextCursor cursor(document());
+        const QTextBlock block = document()->findBlockByNumber(loc.range.start.line);
+        if (block.isValid()) {
+            cursor.setPosition(block.position() + loc.range.start.character);
+            setTextCursor(cursor);
+            centerCursor();
+        }
+    } else {
+        // Different document - emit signal for MainWindow to handle
+        // TODO: emit signal to open file
+    }
+}
+
+void Editor::onLSPReferencesResponse(const QVector<LSP::Location>& locations)
+{
+    // TODO: Show references in a panel
+    Q_UNUSED(locations);
+}
+
+void Editor::onLSPRenameResponse(const std::optional<LSP::WorkspaceEdit>& edit)
+{
+    if (edit) {
+        applyWorkspaceEdit(*edit);
+    }
+}
+
+void Editor::onLSPPrepareRenameResponse(const std::optional<LSP::Range>& range)
+{
+    Q_UNUSED(range);
+    // TODO: Show inline rename UI
+}
+
+void Editor::onLSPDiagnosticsReceived(const QString& uri, const QVector<LSP::Diagnostic>& diagnostics)
+{
+    if (uri != m_lspDocumentUri)
+        return;
+    
+    if (m_highlighter) {
+        m_highlighter->setLSPDiagnostics(diagnostics);
+    }
+    emit lspDiagnosticsChanged();
+}
+
+// ============================================================================
 // Macro execution (static helper called from MacroManager)
-// ---------------------------------------------------------------------------
+// ============================================================================
 
 bool executeMacroAction(const MacroAction &action, QPlainTextEdit *editor)
 {

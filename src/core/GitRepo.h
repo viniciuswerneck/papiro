@@ -111,10 +111,12 @@ private:
     mutable bool m_statusCacheValid = false;
     void invalidateStatusCache() const;
 
-    // Path helpers
+public:
+    // Path helpers (public for UI)
     QString normalizePath(const QString& path) const;
     QString relativeToRepo(const QString& path) const;
 
+private:
     QString m_repoPath;
     QString m_gitDir;
     QString m_workTree;

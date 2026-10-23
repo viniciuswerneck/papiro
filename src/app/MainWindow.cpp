@@ -3,6 +3,7 @@
 #include "app/Document.h"
 #include "core/ClipLibrary.h"
 #include "core/ExternalTool.h"
+#include "core/GitRepo.h"
 #include "core/Macro.h"
 #include "core/SpellChecker.h"
 #include "core/SyntaxDefinition.h"
@@ -21,6 +22,8 @@
 #include <QCloseEvent>
 #include <QDir>
 #include <QDirIterator>
+#include <QDialog>
+#include <QDialogButtonBox>
 #include <QDragEnterEvent>
 #include <QDropEvent>
 #include <QDockWidget>
@@ -55,6 +58,8 @@
 #include <QToolBar>
 #include <QTreeWidget>
 #include <QUrl>
+#include <QTimer>
+#include <QVBoxLayout>
 
 namespace papiro {
 namespace {
@@ -115,6 +120,7 @@ MainWindow::MainWindow(QWidget *parent)
         updateStatus();
         updateActions();
         updateDocumentMenuState();
+        updateGitStatus();
     });
 
     applySettings();
@@ -439,6 +445,39 @@ void MainWindow::createActions()
     m_toggleClipLibraryAction->setChecked(true);
     connect(m_toggleClipLibraryAction, &QAction::toggled, this, &MainWindow::toggleClipLibrary);
 
+    // Git actions
+    m_gitCommitAction = makeAction(tr("&Commit..."), QKeySequence(Qt::CTRL | Qt::ALT | Qt::Key_C),
+                                   themedIcon(QStringLiteral("vcs-commit"), QStyle::SP_DialogApplyButton, this));
+    connect(m_gitCommitAction, &QAction::triggered, this, &MainWindow::gitCommit);
+
+    m_gitPushAction = makeAction(tr("&Push"), QKeySequence(Qt::CTRL | Qt::ALT | Qt::Key_P),
+                                 themedIcon(QStringLiteral("vcs-push"), QStyle::SP_ArrowUp, this));
+    connect(m_gitPushAction, &QAction::triggered, this, &MainWindow::gitPush);
+
+    m_gitPullAction = makeAction(tr("Pul&l"), QKeySequence(Qt::CTRL | Qt::ALT | Qt::Key_L),
+                                 themedIcon(QStringLiteral("vcs-pull"), QStyle::SP_ArrowDown, this));
+    connect(m_gitPullAction, &QAction::triggered, this, &MainWindow::gitPull);
+
+    m_gitBranchAction = makeAction(tr("&Branch..."), QKeySequence(Qt::CTRL | Qt::ALT | Qt::Key_B),
+                                   themedIcon(QStringLiteral("vcs-branch"), QStyle::SP_DirIcon, this));
+    connect(m_gitBranchAction, &QAction::triggered, this, &MainWindow::gitBranch);
+
+    m_gitLogAction = makeAction(tr("&Log..."), QKeySequence(Qt::CTRL | Qt::ALT | Qt::Key_G),
+                                themedIcon(QStringLiteral("vcs-log"), QStyle::SP_FileDialogListView, this));
+    connect(m_gitLogAction, &QAction::triggered, this, &MainWindow::gitLog);
+
+    m_gitBlameAction = makeAction(tr("&Blame"), QKeySequence(),
+                                  themedIcon(QStringLiteral("vcs-annotate"), QStyle::SP_FileDialogDetailedView, this));
+    connect(m_gitBlameAction, &QAction::triggered, this, &MainWindow::gitBlame);
+
+    m_gitDiffAction = makeAction(tr("&Diff"), QKeySequence(Qt::CTRL | Qt::ALT | Qt::Key_D),
+                                 themedIcon(QStringLiteral("vcs-diff"), QStyle::SP_FileDialogContentsView, this));
+    connect(m_gitDiffAction, &QAction::triggered, this, &MainWindow::gitDiff);
+
+    m_gitToggleAction = makeAction(tr("&Git"), QKeySequence());
+    m_gitToggleAction->setCheckable(true);
+    m_gitToggleAction->setChecked(false);
+
     // Language selection
     m_languageGroup = new QActionGroup(this);
     m_languageGroup->setExclusive(true);
@@ -628,6 +667,18 @@ void MainWindow::createActions()
     m_toolsMenu = menuBar()->addMenu(tr("&Tools"));
     m_toolsMenu->addAction(m_configureToolsAction);
 
+    // Git
+    m_gitMenu = menuBar()->addMenu(tr("&Git"));
+    m_gitMenu->addAction(m_gitCommitAction);
+    m_gitMenu->addAction(m_gitPushAction);
+    m_gitMenu->addAction(m_gitPullAction);
+    m_gitMenu->addSeparator();
+    m_gitMenu->addAction(m_gitBranchAction);
+    m_gitMenu->addAction(m_gitLogAction);
+    m_gitMenu->addSeparator();
+    m_gitMenu->addAction(m_gitDiffAction);
+    m_gitMenu->addAction(m_gitBlameAction);
+
     // Help
     auto *helpMenu = menuBar()->addMenu(tr("&Help"));
     helpMenu->addAction(aboutAction);
@@ -670,6 +721,24 @@ void MainWindow::createStatusBar()
     statusBar()->addPermanentWidget(m_syntaxLabel);
     statusBar()->addPermanentWidget(m_eolLabel);
     statusBar()->addPermanentWidget(m_encodingLabel);
+
+    // Git status bar widgets (right side, before encoding/eol/syntax)
+    m_gitBranchLabel = new QLabel(this);
+    m_gitBranchLabel->setMinimumWidth(120);
+    m_gitBranchLabel->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
+    m_gitBranchLabel->setTextFormat(Qt::RichText);
+    m_gitBranchLabel->setToolTip(tr("Git branch"));
+    m_gitBranchLabel->hide();
+
+    m_gitDirtyIndicator = new QLabel(this);
+    m_gitDirtyIndicator->setFixedWidth(16);
+    m_gitDirtyIndicator->setAlignment(Qt::AlignCenter);
+    m_gitDirtyIndicator->setToolTip(tr("Repository has uncommitted changes"));
+    m_gitDirtyIndicator->hide();
+
+    // Insert before the encoding label (permanent widgets are added right-to-left)
+    statusBar()->insertPermanentWidget(0, m_gitDirtyIndicator);
+    statusBar()->insertPermanentWidget(0, m_gitBranchLabel);
 }
 
 // ---------------------------------------------------------------------------
@@ -706,6 +775,7 @@ Document *MainWindow::addDocument()
         if (document == currentDocument()) {
             updateWindowTitle();
             updateActions();
+            updateGitStatus();
         }
     });
     connect(document, &Document::pathChanged, this, [this, document](const QString &) {
@@ -741,6 +811,7 @@ void MainWindow::newDocument()
     updateWindowTitle();
     updateStatus();
     updateActions();
+    updateGitStatus();
 }
 
 void MainWindow::openFiles()
@@ -797,6 +868,7 @@ void MainWindow::openFile(const QString &path)
     updateStatus();
     updateActions();
     updateDocumentMenuState();
+    updateGitStatus();
 }
 
 void MainWindow::refreshTabTitle(Document *document)
@@ -904,6 +976,7 @@ void MainWindow::closeTab(int index)
     updateStatus();
     updateActions();
     updateDocumentMenuState();
+    updateGitStatus();
 }
 
 void MainWindow::closeEvent(QCloseEvent *event)
@@ -2176,6 +2249,11 @@ void MainWindow::createDockWidgets()
     const QString explorerRoot = explorerSettings.value(QStringLiteral("explorer/root")).toString();
     if (!explorerRoot.isEmpty() && QFileInfo(explorerRoot).isDir())
         m_fileExplorer->setRootPath(explorerRoot);
+    
+    // Connect GitRepo to file explorer if we already have one
+    if (m_gitRepo && m_gitRepo->isValid()) {
+        m_fileExplorer->setGitRepo(m_gitRepo);
+    }
 
     // Output pane for external tools.
     m_outputView = new QPlainTextEdit(this);
@@ -2275,6 +2353,7 @@ void MainWindow::openFolder()
     if (m_toggleFileExplorerAction)
         m_toggleFileExplorerAction->setChecked(true);
     settings.setValue(QStringLiteral("explorer/root"), directory);
+    updateGitStatus();
 }
 
 void MainWindow::configureTools()
@@ -2633,6 +2712,390 @@ void MainWindow::setLanguage(const QString &locale)
     QMessageBox::information(
         this, tr("Language"),
         tr("The interface language will change after restarting Papiro."));
+}
+
+// ---------------------------------------------------------------------------
+// Git integration
+// ---------------------------------------------------------------------------
+
+void MainWindow::detectGitRepo(const QString &filePath)
+{
+    if (filePath.isEmpty()) {
+        clearGitRepo();
+        return;
+    }
+
+    QFileInfo info(filePath);
+    QString dir = info.isDir() ? info.absoluteFilePath() : info.absolutePath();
+    
+    // Walk up the directory tree to find a .git directory
+    QDir currentDir(dir);
+    while (currentDir.exists()) {
+        QString gitDir = currentDir.absoluteFilePath(".git");
+        if (QFileInfo::exists(gitDir)) {
+            QString repoPath = currentDir.absolutePath();
+            if (repoPath != m_currentRepoPath) {
+                clearGitRepo();
+                m_currentRepoPath = repoPath;
+                m_gitRepo = new GitRepo(repoPath, this);
+                if (m_gitRepo->isValid()) {
+                    connect(m_gitRepo, &GitRepo::repositoryChanged, this, &MainWindow::onGitRepositoryChanged);
+                    // Connect to file explorer
+                    if (m_fileExplorer) {
+                        m_fileExplorer->setGitRepo(m_gitRepo);
+                    }
+                    updateGitStatus();
+                } else {
+                    clearGitRepo();
+                }
+            }
+            return;
+        }
+        
+        QString parentPath = currentDir.absolutePath();
+        if (!currentDir.cdUp() || currentDir.absolutePath() == parentPath) {
+            break; // Reached filesystem root
+        }
+    }
+    
+    // No git repo found
+    clearGitRepo();
+}
+
+void MainWindow::clearGitRepo()
+{
+    if (m_gitRepo) {
+        m_gitRepo->deleteLater();
+        m_gitRepo = nullptr;
+    }
+    m_currentRepoPath.clear();
+    m_gitBranchLabel->hide();
+    m_gitDirtyIndicator->hide();
+    
+    // Clear git repo from file explorer
+    if (m_fileExplorer) {
+        m_fileExplorer->setGitRepo(nullptr);
+    }
+}
+
+void MainWindow::updateGitStatus()
+{
+    Document *document = currentDocument();
+    if (!document || document->filePath().isEmpty()) {
+        detectGitRepo(m_fileExplorer ? m_fileExplorer->rootPath() : QString());
+        return;
+    }
+    
+    detectGitRepo(document->filePath());
+    
+    if (!m_gitRepo || !m_gitRepo->isValid()) {
+        m_gitBranchLabel->hide();
+        m_gitDirtyIndicator->hide();
+        return;
+    }
+    
+    // Get current branch
+    GitBranch branch = m_gitRepo->currentBranch();
+    QString branchName = branch.isCurrent ? branch.displayName : tr("(no branch)");
+    
+    // Check if repo has uncommitted changes
+    QVector<GitFileStatus> status = m_gitRepo->status(true, false);
+    bool dirty = false;
+    for (const GitFileStatus &s : status) {
+        if (!s.isClean()) {
+            dirty = true;
+            break;
+        }
+    }
+    
+    updateGitBranchLabel(branchName, dirty);
+}
+
+void MainWindow::updateGitBranchLabel(const QString &branch, bool dirty)
+{
+    if (branch.isEmpty()) {
+        m_gitBranchLabel->hide();
+        m_gitDirtyIndicator->hide();
+        return;
+    }
+    
+    QString text = branch;
+    if (dirty) {
+        text += QStringLiteral(" <span style=\"color:#ffaa00;\">●</span>");
+        m_gitDirtyIndicator->setText(QStringLiteral("●"));
+        m_gitDirtyIndicator->setStyleSheet("color: #ffaa00;");
+        m_gitDirtyIndicator->setToolTip(tr("Repository has uncommitted changes"));
+        m_gitDirtyIndicator->show();
+    } else {
+        m_gitDirtyIndicator->setText(QStringLiteral("●"));
+        m_gitDirtyIndicator->setStyleSheet("color: #4caf50;");
+        m_gitDirtyIndicator->setToolTip(tr("Repository is clean"));
+        m_gitDirtyIndicator->show();
+    }
+    
+    m_gitBranchLabel->setText(text);
+    m_gitBranchLabel->setToolTip(tr("Branch: %1\nStatus: %2").arg(branch).arg(dirty ? tr("Modified") : tr("Clean")));
+    m_gitBranchLabel->show();
+}
+
+void MainWindow::onGitRepositoryChanged()
+{
+    updateGitStatus();
+    
+    // Also update file explorer if it's using our GitFileSystemModel
+    if (m_fileExplorer && m_gitRepo) {
+        m_fileExplorer->setGitRepo(m_gitRepo);
+    }
+}
+
+void MainWindow::gitCommit()
+{
+    if (!m_gitRepo || !m_gitRepo->isValid())
+        return;
+    
+    bool ok = false;
+    QString message = QInputDialog::getMultiLineText(this, tr("Git Commit"),
+                                                      tr("Commit message:"), QString(), &ok);
+    if (!ok || message.trimmed().isEmpty())
+        return;
+    
+    QApplication::setOverrideCursor(Qt::WaitCursor);
+    bool success = m_gitRepo->commit(message.trimmed());
+    QApplication::restoreOverrideCursor();
+    
+    if (success) {
+        statusBar()->showMessage(tr("Commit successful"), 3000);
+        updateGitStatus();
+    } else {
+        QMessageBox::warning(this, tr("Git Commit Failed"),
+                             tr("Failed to commit. Check the output for details."));
+    }
+}
+
+void MainWindow::gitPush()
+{
+    if (!m_gitRepo || !m_gitRepo->isValid())
+        return;
+    
+    QApplication::setOverrideCursor(Qt::WaitCursor);
+    bool success = m_gitRepo->push("origin");
+    QApplication::restoreOverrideCursor();
+    
+    if (success) {
+        statusBar()->showMessage(tr("Push successful"), 3000);
+    } else {
+        QMessageBox::warning(this, tr("Git Push Failed"),
+                             tr("Failed to push. Check the output for details."));
+    }
+}
+
+void MainWindow::gitPull()
+{
+    if (!m_gitRepo || !m_gitRepo->isValid())
+        return;
+    
+    QApplication::setOverrideCursor(Qt::WaitCursor);
+    bool success = m_gitRepo->pull("origin");
+    QApplication::restoreOverrideCursor();
+    
+    if (success) {
+        statusBar()->showMessage(tr("Pull successful"), 3000);
+        updateGitStatus();
+    } else {
+        QMessageBox::warning(this, tr("Git Pull Failed"),
+                             tr("Failed to pull. Check the output for details."));
+    }
+}
+
+void MainWindow::gitBranch()
+{
+    if (!m_gitRepo || !m_gitRepo->isValid())
+        return;
+    
+    QVector<GitBranch> branches = m_gitRepo->branches();
+    QStringList branchNames;
+    int currentIndex = -1;
+    for (int i = 0; i < branches.size(); ++i) {
+        const GitBranch &b = branches.at(i);
+        QString name = b.displayName;
+        if (b.isCurrent) {
+            name = QStringLiteral("* %1").arg(name);
+            currentIndex = i;
+        }
+        if (b.ahead > 0 || b.behind > 0) {
+            name += QStringLiteral(" [↑%1 ↓%2]").arg(b.ahead).arg(b.behind);
+        }
+        branchNames << name;
+    }
+    
+    bool ok = false;
+    QString selected = QInputDialog::getItem(this, tr("Git Branch"),
+                                             tr("Select branch:"), branchNames, currentIndex, false, &ok);
+    if (!ok || selected.isEmpty())
+        return;
+    
+    // Remove the "* " prefix if present
+    if (selected.startsWith("* "))
+        selected = selected.mid(2);
+    
+    // Remove ahead/behind info
+    int bracketPos = selected.indexOf(" [");
+    if (bracketPos > 0)
+        selected = selected.left(bracketPos);
+    
+    // Check if we need to create the branch
+    bool create = false;
+    for (const GitBranch &b : branches) {
+        if (b.displayName == selected && !b.isCurrent) {
+            // Switching to existing branch
+            QApplication::setOverrideCursor(Qt::WaitCursor);
+            bool success = m_gitRepo->checkoutBranch(selected, false);
+            QApplication::restoreOverrideCursor();
+            if (success) {
+                statusBar()->showMessage(tr("Switched to branch: %1").arg(selected), 3000);
+                updateGitStatus();
+            } else {
+                QMessageBox::warning(this, tr("Git Branch Failed"),
+                                     tr("Failed to switch branch."));
+            }
+            return;
+        }
+    }
+    
+    // Branch doesn't exist locally, offer to create it
+    QMessageBox::StandardButton btn = QMessageBox::question(this, tr("Create Branch"),
+        tr("Branch \"%1\" does not exist locally. Create and switch to it?").arg(selected),
+        QMessageBox::Yes | QMessageBox::No);
+    if (btn == QMessageBox::Yes) {
+        QApplication::setOverrideCursor(Qt::WaitCursor);
+        bool success = m_gitRepo->checkoutBranch(selected, true);
+        QApplication::restoreOverrideCursor();
+        if (success) {
+            statusBar()->showMessage(tr("Created and switched to branch: %1").arg(selected), 3000);
+            updateGitStatus();
+        } else {
+            QMessageBox::warning(this, tr("Git Branch Failed"),
+                                 tr("Failed to create branch."));
+        }
+    }
+}
+
+void MainWindow::gitLog()
+{
+    if (!m_gitRepo || !m_gitRepo->isValid())
+        return;
+    
+    QVector<GitCommit> commits = m_gitRepo->log(50);
+    if (commits.isEmpty()) {
+        QMessageBox::information(this, tr("Git Log"), tr("No commits found."));
+        return;
+    }
+    
+    QStringList items;
+    for (const GitCommit &c : commits) {
+        QString refs = c.refs.isEmpty() ? QString() : QStringLiteral(" (%1)").arg(c.refs.join(", "));
+        items << QStringLiteral("%1 %2 - %3%4")
+                  .arg(c.shortHash)
+                  .arg(c.authorDate.toString(Qt::ISODate))
+                  .arg(c.subject)
+                  .arg(refs);
+    }
+    
+    bool ok = false;
+    QString selected = QInputDialog::getItem(this, tr("Git Log"),
+                                             tr("Select commit:"), items, 0, false, &ok);
+    if (!ok || selected.isEmpty())
+        return;
+    
+    // For now just show details in a message box
+    int index = items.indexOf(selected);
+    if (index >= 0 && index < commits.size()) {
+        const GitCommit &c = commits.at(index);
+        QString details = tr("Commit: %1\nAuthor: %2 <%3>\nDate: %4\n\n%5")
+                              .arg(c.hash)
+                              .arg(c.authorName)
+                              .arg(c.authorEmail)
+                              .arg(c.authorDate.toString(Qt::ISODate))
+                              .arg(c.subject + (c.body.isEmpty() ? "" : "\n\n" + c.body));
+        QMessageBox::information(this, tr("Commit Details"), details);
+    }
+}
+
+void MainWindow::gitBlame()
+{
+    Document *document = currentDocument();
+    if (!document || document->filePath().isEmpty() || !m_gitRepo || !m_gitRepo->isValid()) {
+        QMessageBox::warning(this, tr("Git Blame"),
+                             tr("No file open or not in a Git repository."));
+        return;
+    }
+    
+    QVector<GitBlameLine> blameLines = m_gitRepo->blame(document->filePath());
+    if (blameLines.isEmpty()) {
+        QMessageBox::information(this, tr("Git Blame"), tr("No blame information available."));
+        return;
+    }
+    
+    QStringList items;
+    for (const GitBlameLine &line : blameLines) {
+        items << QStringLiteral("%1: %2 - %3 (%4)")
+                  .arg(line.lineNumber)
+                  .arg(line.commitShortHash)
+                  .arg(line.authorName)
+                  .arg(line.authorDate.toString(Qt::ISODate));
+    }
+    
+    bool ok = false;
+    QString selected = QInputDialog::getItem(this, tr("Git Blame"),
+                                             tr("Select line:"), items, 0, false, &ok);
+    // Just show the blame info for now
+}
+
+void MainWindow::gitDiff()
+{
+    Document *document = currentDocument();
+    if (!document || document->filePath().isEmpty() || !m_gitRepo || !m_gitRepo->isValid()) {
+        QMessageBox::warning(this, tr("Git Diff"),
+                             tr("No file open or not in a Git repository."));
+        return;
+    }
+    
+    QVector<GitDiffFile> diffs = m_gitRepo->diff(document->filePath());
+    if (diffs.isEmpty()) {
+        QMessageBox::information(this, tr("Git Diff"), tr("No changes in this file."));
+        return;
+    }
+    
+    QString output;
+    for (const GitDiffFile &df : diffs) {
+        for (const GitDiffHunk &hunk : df.hunks) {
+            output += hunk.header + QLatin1Char('\n');
+            for (const QString &line : hunk.lines) {
+                output += line + QLatin1Char('\n');
+            }
+        }
+    }
+    
+    // Show diff in a dialog
+    QDialog *dialog = new QDialog(this);
+    dialog->setWindowTitle(tr("Git Diff - %1").arg(QFileInfo(document->filePath()).fileName()));
+    dialog->resize(800, 600);
+    
+    QVBoxLayout *layout = new QVBoxLayout(dialog);
+    QPlainTextEdit *diffView = new QPlainTextEdit(dialog);
+    diffView->setReadOnly(true);
+    diffView->setPlainText(output);
+    QFont font = QFontDatabase::systemFont(QFontDatabase::FixedFont);
+    font.setPointSize(10);
+    diffView->setFont(font);
+    layout->addWidget(diffView);
+    
+    QDialogButtonBox *buttons = new QDialogButtonBox(QDialogButtonBox::Close, dialog);
+    connect(buttons, &QDialogButtonBox::rejected, dialog, &QDialog::reject);
+    layout->addWidget(buttons);
+    
+    dialog->exec();
+    dialog->deleteLater();
 }
 
 } // namespace papiro
