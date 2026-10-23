@@ -20,6 +20,10 @@ add_library(papiro_core STATIC
     src/core/ClipLibrary.cpp
     src/core/Encoding.cpp
     src/core/ExternalTool.cpp
+    src/core/GitRepo.cpp
+    src/core/LSPClient.cpp
+    src/core/LSPManager.cpp
+    src/core/LSPMessage.cpp
     src/core/Macro.cpp
     src/core/SpellChecker.cpp
     src/core/SyntaxDefinition.cpp
@@ -148,7 +152,6 @@ endif()
 # ---------------------------------------------------------------------------
 # CPack Packaging Configuration
 # ---------------------------------------------------------------------------
-include(CPack)
 
 # Common package metadata
 set(CPACK_PACKAGE_NAME "Papiro")
@@ -166,6 +169,8 @@ set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${CPACK_PACKAGE_VERSION}-${CM
 # DEB (Linux)
 # ---------------------------------------------------------------------------
 set(CPACK_DEBIAN_PACKAGE_MAINTAINER "Papiro Project")
+
+include(CPack)
 set(CPACK_DEBIAN_PACKAGE_SECTION "editors")
 set(CPACK_DEBIAN_PACKAGE_PRIORITY "optional")
 set(CPACK_DEBIAN_PACKAGE_DEPENDS "libqt6core6, libqt6widgets6, libqt6printsupport6, libgl1")
