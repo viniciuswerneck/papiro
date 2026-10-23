@@ -22,6 +22,19 @@ struct Colors {
     QColor bracketMatch;
     QColor gutterBackground;
     QColor gutterText;
+
+    // Completion widget colors
+    QColor completionBackground;
+    QColor completionText;
+    QColor completionBorder;
+    QColor completionSelectionBackground;
+    QColor completionSelectionText;
+    QColor completionIcon;
+    QColor completionMatchHighlight;
+    QColor completionMatchText;
+    QColor completionDeprecatedText;
+    QColor scrollbarHandle;
+    QColor scrollbarHandleHover;
 };
 
 Mode mode();

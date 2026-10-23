@@ -32,6 +32,19 @@ Colors colors(Mode mode)
         result.bracketMatch = QColor(0x3A, 0x3D, 0x41);
         result.gutterBackground = QColor(0x25, 0x25, 0x26);
         result.gutterText = QColor(0x85, 0x85, 0x85);
+
+        // Completion colors (dark)
+        result.completionBackground = QColor(0x2D, 0x2D, 0x30);
+        result.completionText = QColor(0xD4, 0xD4, 0xD4);
+        result.completionBorder = QColor(0x44, 0x44, 0x44);
+        result.completionSelectionBackground = QColor(0x26, 0x4F, 0x78);
+        result.completionSelectionText = Qt::white;
+        result.completionIcon = QColor(0x9C, 0xD3, 0xE6);
+        result.completionMatchHighlight = QColor(0x3A, 0x5A, 0x7A);
+        result.completionMatchText = Qt::white;
+        result.completionDeprecatedText = QColor(0x80, 0x80, 0x80);
+        result.scrollbarHandle = QColor(0x4E, 0x4E, 0x4E);
+        result.scrollbarHandleHover = QColor(0x6E, 0x6E, 0x6E);
     } else {
         result.keyword = QColor(0x00, 0x33, 0xB3);
         result.comment = QColor(0x8A, 0x8A, 0x8A);
@@ -41,6 +54,19 @@ Colors colors(Mode mode)
         result.bracketMatch = QColor(0xDF, 0xEB, 0xFF);
         result.gutterBackground = QColor(0xF2, 0xF2, 0xF2);
         result.gutterText = QColor(0x8A, 0x8A, 0x8A);
+
+        // Completion colors (light)
+        result.completionBackground = Qt::white;
+        result.completionText = Qt::black;
+        result.completionBorder = QColor(0xCC, 0xCC, 0xCC);
+        result.completionSelectionBackground = QColor(0x30, 0x8C, 0xC6);
+        result.completionSelectionText = Qt::white;
+        result.completionIcon = QColor(0x00, 0x5C, 0x9E);
+        result.completionMatchHighlight = QColor(0xD0, 0xE8, 0xF8);
+        result.completionMatchText = QColor(0x00, 0x33, 0x66);
+        result.completionDeprecatedText = QColor(0x9A, 0x9A, 0x9A);
+        result.scrollbarHandle = QColor(0xBB, 0xBB, 0xBB);
+        result.scrollbarHandleHover = QColor(0x99, 0x99, 0x99);
     }
     return result;
 }

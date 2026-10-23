@@ -61,12 +61,13 @@ set(PAPIRO_APP_SOURCES
     src/editor/Editor.cpp
     src/editor/SyntaxHighlighter.cpp
     src/ui/ClipLibraryWidget.cpp
-    src/ui/Theme.cpp
-    src/ui/FileExplorerWidget.cpp
+    src/ui/FindReplaceDialog.cpp
+    src/ui/LSPCompletionWidget.cpp
     src/ui/MacroManagerDialog.cpp
     src/ui/PreferencesDialog.cpp
     src/ui/ToolsDialog.cpp
-    src/ui/FindReplaceDialog.cpp
+    src/ui/Theme.cpp
+    src/ui/FileExplorerWidget.cpp
 )
 
 qt_add_executable(Papiro WIN32 MACOSX_BUNDLE
@@ -128,6 +129,7 @@ if(BUILD_TESTING)
         tests/test_editor.cpp
         src/editor/Editor.cpp
         src/editor/SyntaxHighlighter.cpp
+        src/ui/LSPCompletionWidget.cpp
         src/ui/Theme.cpp
     )
     target_link_libraries(test_editor PRIVATE papiro_core Qt6::Widgets Qt6::Test)

@@ -16,6 +16,7 @@ class SyntaxDefinition;
 class SyntaxHighlighter;
 class MacroManager;
 class SpellChecker;
+class LSPCompletionWidget;
 
 /*! Plain text editing surface with a line number gutter and current line mark. */
 class Editor : public QPlainTextEdit {
@@ -93,6 +94,10 @@ public slots:
     void onLSPRenameResponse(const std::optional<LSP::WorkspaceEdit>& edit);
     void onLSPPrepareRenameResponse(const std::optional<LSP::Range>& range);
     void onLSPDiagnosticsReceived(const QString& uri, const QVector<LSP::Diagnostic>& diagnostics);
+    
+    // LSP Completion
+    void onLSPCompletionResponse(const QVector<LSP::CompletionItem>& items);
+    void onLSPCompletionCancelled();
 
 protected:
     void resizeEvent(QResizeEvent *event) override;
@@ -104,6 +109,7 @@ protected:
     void mouseMoveEvent(QMouseEvent *event) override;
     void mouseReleaseEvent(QMouseEvent *event) override;
     void paintEvent(QPaintEvent *event) override;
+    void focusOutEvent(QFocusEvent *event) override;
 
 private slots:
     void updateLineNumberAreaWidth();
@@ -137,6 +143,15 @@ private:
     LSP::TextDocumentPositionParams makePositionParams() const;
     LSP::ReferenceParams makeReferenceParams() const;
     LSP::RenameParams makeRenameParams(const QString& newName) const;
+    
+    // LSP Completion
+    void triggerCompletion();
+    void showCompletionWidget(const QVector<LSP::CompletionItem>& items);
+    void hideCompletionWidget();
+    bool isCompletionVisible() const;
+    bool handleCompletionKeyPress(QKeyEvent* event);
+    QString completionPrefix() const;
+    void applyCompletionItem(const LSP::CompletionItem& item);
 
 private:
     struct BlockPoint {
@@ -184,6 +199,10 @@ private:
     // Timer para debounce didChange
     QTimer m_didChangeTimer;
     QVector<LSP::TextDocumentContentChangeEvent> m_pendingChanges;
+
+    // LSP Completion
+    LSPCompletionWidget* m_completionWidget = nullptr;
+    bool m_completionTriggeredManually = false;
 
 public:
     void setDocumentPath(const QString& path);

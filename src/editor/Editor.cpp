@@ -6,6 +6,7 @@
 #include "core/SyntaxDefinition.h"
 #include "core/SpellChecker.h"
 #include "editor/SyntaxHighlighter.h"
+#include "ui/LSPCompletionWidget.h"
 #include "ui/Theme.h"
 
 #include <QApplication>
@@ -406,6 +407,13 @@ void Editor::resizeEvent(QResizeEvent *event)
 
 void Editor::keyPressEvent(QKeyEvent *event)
 {
+    // Handle completion widget keys first
+    if (isCompletionVisible()) {
+        if (handleCompletionKeyPress(event)) {
+            return;
+        }
+    }
+
     // Record actual text for macro playback. Key codes alone cannot represent
     // lowercase letters, accented characters or layout-specific symbols.
     if (m_macroManager && m_macroManager->recordingMacro()) {
@@ -1469,6 +1477,191 @@ void Editor::onLSPDiagnosticsReceived(const QString& uri, const QVector<LSP::Dia
         m_highlighter->setLSPDiagnostics(diagnostics);
     }
     emit lspDiagnosticsChanged();
+}
+
+// ============================================================================
+// LSP Completion
+// ============================================================================
+
+void Editor::triggerCompletion()
+{
+    if (!m_lspEnabled || !m_lspClient)
+        return;
+
+    LSP::TextDocumentPositionParams params = makePositionParams();
+    LSP::CompletionParams completionParams;
+    completionParams.textDocument = params.textDocument;
+    completionParams.position = params.position;
+    
+    // Set trigger kind - manually invoked
+    LSP::CompletionContext context;
+    context.triggerKind = LSP::CompletionContext::TriggerKind::Invoked;
+    completionParams.context = context;
+
+    m_completionTriggeredManually = true;
+    
+    m_lspClient->requestCompletion(params, [this](const QVector<LSP::CompletionItem>& items) {
+        onLSPCompletionResponse(items);
+    });
+}
+
+void Editor::onLSPCompletionResponse(const QVector<LSP::CompletionItem>& items)
+{
+    if (items.isEmpty()) {
+        hideCompletionWidget();
+        return;
+    }
+    
+    showCompletionWidget(items);
+}
+
+void Editor::onLSPCompletionCancelled()
+{
+    hideCompletionWidget();
+}
+
+void Editor::showCompletionWidget(const QVector<LSP::CompletionItem>& items)
+{
+    if (!m_completionWidget) {
+        m_completionWidget = new LSPCompletionWidget(this, this);
+        connect(m_completionWidget, &LSPCompletionWidget::completionAccepted,
+                this, [this](const LSP::CompletionItem& item) {
+            applyCompletionItem(item);
+        });
+        connect(m_completionWidget, &LSPCompletionWidget::completionCancelled,
+                this, &Editor::hideCompletionWidget);
+    }
+
+    // Position at cursor
+    QRect cursorRect = this->cursorRect();
+    QPoint position = cursorRect.bottomLeft();
+    
+    m_completionWidget->showCompletions(items, position);
+}
+
+void Editor::hideCompletionWidget()
+{
+    if (m_completionWidget && m_completionWidget->isVisible()) {
+        m_completionWidget->hideCompletions();
+    }
+    m_completionTriggeredManually = false;
+}
+
+bool Editor::isCompletionVisible() const
+{
+    return m_completionWidget && m_completionWidget->isVisible();
+}
+
+bool Editor::handleCompletionKeyPress(QKeyEvent* event)
+{
+    if (!m_completionWidget || !m_completionWidget->isVisible())
+        return false;
+
+    switch (event->key()) {
+        case Qt::Key_Down:
+            if (event->modifiers() == Qt::NoModifier) {
+                m_completionWidget->selectNext();
+                return true;
+            }
+            break;
+        case Qt::Key_Up:
+            if (event->modifiers() == Qt::NoModifier) {
+                m_completionWidget->selectPrevious();
+                return true;
+            }
+            break;
+        case Qt::Key_PageUp:
+            if (event->modifiers() == Qt::NoModifier) {
+                m_completionWidget->selectPageUp();
+                return true;
+            }
+            break;
+        case Qt::Key_PageDown:
+            if (event->modifiers() == Qt::NoModifier) {
+                m_completionWidget->selectPageDown();
+                return true;
+            }
+            break;
+        case Qt::Key_Return:
+        case Qt::Key_Enter:
+        case Qt::Key_Tab:
+            if (event->modifiers() == Qt::NoModifier) {
+                m_completionWidget->acceptCompletion();
+                return true;
+            }
+            break;
+        case Qt::Key_Escape:
+            if (event->modifiers() == Qt::NoModifier) {
+                m_completionWidget->cancelCompletion();
+                return true;
+            }
+            break;
+        default:
+            // Pass through printable characters to update filter
+            if (!event->text().isEmpty() && 
+                !(event->modifiers() & (Qt::ControlModifier | Qt::AltModifier | Qt::MetaModifier))) {
+                QString newPrefix = completionPrefix() + event->text();
+                m_completionWidget->setFilter(newPrefix);
+                // Don't consume the event - let it be processed for text input
+                return false;
+            }
+            // Backspace should also update filter
+            if (event->key() == Qt::Key_Backspace && event->modifiers() == Qt::NoModifier) {
+                QString prefix = completionPrefix();
+                if (!prefix.isEmpty()) {
+                    prefix.chop(1);
+                    m_completionWidget->setFilter(prefix);
+                }
+                return false;
+            }
+            break;
+    }
+    return false;
+}
+
+QString Editor::completionPrefix() const
+{
+    QTextCursor cursor = textCursor();
+    int position = cursor.positionInBlock();
+    QString blockText = cursor.block().text();
+    
+    // Find the word prefix before cursor
+    int start = position;
+    while (start > 0 && (blockText.at(start - 1).isLetterOrNumber() || blockText.at(start - 1) == QLatin1Char('_')))
+        --start;
+    
+    return blockText.mid(start, position - start);
+}
+
+void Editor::applyCompletionItem(const LSP::CompletionItem& item)
+{
+    QString insertText = item.insertText.value_or(item.label);
+    
+    // Calculate the prefix to replace
+    QString prefix = completionPrefix();
+    if (!prefix.isEmpty()) {
+        QTextCursor cursor = textCursor();
+        cursor.movePosition(QTextCursor::Left, QTextCursor::KeepAnchor, prefix.length());
+        cursor.insertText(insertText);
+        setTextCursor(cursor);
+    } else {
+        // No prefix, just insert
+        textCursor().insertText(insertText);
+    }
+}
+
+void Editor::focusOutEvent(QFocusEvent *event)
+{
+    // Hide completion widget when editor loses focus
+    if (m_completionWidget && m_completionWidget->isVisible()) {
+        // Delay to allow click on completion item
+        QTimer::singleShot(100, this, [this]() {
+            if (m_completionWidget && m_completionWidget->isVisible() && !hasFocus()) {
+                m_completionWidget->cancelCompletion();
+            }
+        });
+    }
+    QPlainTextEdit::focusOutEvent(event);
 }
 
 // ============================================================================
