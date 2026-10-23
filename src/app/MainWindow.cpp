@@ -210,13 +210,11 @@ void MainWindow::createActions()
     connect(newAction, &QAction::triggered, this, &MainWindow::newDocument);
 
     auto *openAction = makeAction(tr("&Open..."), QKeySequence::Open,
-                                  themedIcon(QStringLiteral("document-open"),
-                                             QStyle::SP_DirOpenIcon, this));
+                                  style()->standardIcon(QStyle::SP_DirOpenIcon));
     connect(openAction, &QAction::triggered, this, &MainWindow::openFiles);
 
     m_saveAction = makeAction(tr("&Save"), QKeySequence::Save,
-                              themedIcon(QStringLiteral("document-save"),
-                                         QStyle::SP_DialogSaveButton, this));
+                              style()->standardIcon(QStyle::SP_DialogSaveButton));
     connect(m_saveAction, &QAction::triggered, this, &MainWindow::saveCurrentDocument);
 
     m_saveAsAction = makeAction(tr("Save &As..."), QKeySequence::SaveAs);
