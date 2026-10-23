@@ -1,0 +1,12 @@
+# Build output
+build/
+compile_commands.json
+
+# Analysis target (proprietary binary, not part of the source tree)
+TextPad.exe
+
+# Local environment / packaging artifacts
+*.deb
+aqtinstall.log
+.cache/
+*.user

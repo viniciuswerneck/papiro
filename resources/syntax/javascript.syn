@@ -1,0 +1,11 @@
+[Syntax]
+Name=JavaScript
+Extensions=js;mjs;cjs;jsx;ts;tsx
+CaseSensitive=1
+Keywords=async await break case catch class const continue debugger default delete do else export extends false finally for from function get if import in instanceof let new null of return set static super switch this throw true try typeof undefined var void while with yield interface type enum implements private protected public readonly declare namespace as satisfies keyof infer
+LineComment=//
+BlockCommentStart=/*
+BlockCommentEnd=*/
+StringDelimiters=" ' `
+EscapeChar=\
+Numbers=1

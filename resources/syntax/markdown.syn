@@ -1,0 +1,11 @@
+[Syntax]
+Name=Markdown
+Extensions=md;markdown;mdown;mkd
+CaseSensitive=0
+Keywords=
+LineComment=
+BlockCommentStart=
+BlockCommentEnd=
+StringDelimiters="'
+EscapeChar=\
+Numbers=0

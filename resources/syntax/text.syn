@@ -1,0 +1,11 @@
+[Syntax]
+Name=Plain Text
+Extensions=txt;log;ini;cfg;conf
+CaseSensitive=0
+Keywords=
+LineComment=#
+BlockCommentStart=
+BlockCommentEnd=
+StringDelimiters="'
+EscapeChar=\
+Numbers=0

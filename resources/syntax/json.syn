@@ -1,0 +1,11 @@
+[Syntax]
+Name=JSON
+Extensions=json;jsonc
+CaseSensitive=0
+Keywords=true false null
+LineComment=//
+BlockCommentStart=/*
+BlockCommentEnd=*/
+StringDelimiters="
+EscapeChar=\
+Numbers=1

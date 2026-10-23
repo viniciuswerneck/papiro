@@ -1,0 +1,11 @@
+[Syntax]
+Name=Java
+Extensions=java
+CaseSensitive=1
+Keywords=abstract assert boolean break byte case catch char class const continue default do double else enum extends final finally float for if implements import instanceof int interface long native new package private protected public return short static strictfp super switch synchronized this throw throws transient try void volatile while yield record sealed permits non-sealed export module open opens to uses provides with transitive
+LineComment=//
+BlockCommentStart=/*
+BlockCommentEnd=*/
+StringDelimiters="'
+EscapeChar=\
+Numbers=1
