@@ -17,6 +17,7 @@ class SyntaxHighlighter;
 class MacroManager;
 class SpellChecker;
 class LSPCompletionWidget;
+class LSPHoverWidget;
 
 /*! Plain text editing surface with a line number gutter and current line mark. */
 class Editor : public QPlainTextEdit {
@@ -87,6 +88,7 @@ signals:
     void lspReferencesRequested(const LSP::ReferenceParams& params);
     void lspRenameRequested(const LSP::RenameParams& params);
     void lspDiagnosticsChanged();
+    void lspHoverRequested(const LSP::TextDocumentPositionParams& params);
 
 public slots:
     void onLSPDefinitionResponse(const QVector<LSP::Location>& locations);
@@ -99,6 +101,9 @@ public slots:
     void onLSPCompletionResponse(const QVector<LSP::CompletionItem>& items);
     void onLSPCompletionCancelled();
 
+    // LSP Hover
+    void onLSPHoverResponse(const std::optional<LSP::Hover>& hover);
+
 protected:
     void resizeEvent(QResizeEvent *event) override;
     void keyPressEvent(QKeyEvent *event) override;
@@ -110,6 +115,7 @@ protected:
     void mouseReleaseEvent(QMouseEvent *event) override;
     void paintEvent(QPaintEvent *event) override;
     void focusOutEvent(QFocusEvent *event) override;
+    void leaveEvent(QEvent *event) override;
 
 private slots:
     void updateLineNumberAreaWidth();
@@ -152,6 +158,12 @@ private:
     bool handleCompletionKeyPress(QKeyEvent* event);
     QString completionPrefix() const;
     void applyCompletionItem(const LSP::CompletionItem& item);
+
+    // LSP Hover
+    void triggerHover(const QPoint& position);
+    void showHoverWidget(const LSP::Hover& hover, const QPoint& globalPos);
+    void hideHoverWidget();
+    bool isHoverVisible() const;
 
 private:
     struct BlockPoint {
@@ -203,6 +215,12 @@ private:
     // LSP Completion
     LSPCompletionWidget* m_completionWidget = nullptr;
     bool m_completionTriggeredManually = false;
+
+    // LSP Hover
+    LSPHoverWidget* m_hoverWidget = nullptr;
+    QTimer m_hoverTimer;
+    QPoint m_lastHoverPos;
+    bool m_hoverTriggeredManually = false;
 
 public:
     void setDocumentPath(const QString& path);

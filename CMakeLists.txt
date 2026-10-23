@@ -63,6 +63,7 @@ set(PAPIRO_APP_SOURCES
     src/ui/ClipLibraryWidget.cpp
     src/ui/FindReplaceDialog.cpp
     src/ui/LSPCompletionWidget.cpp
+    src/ui/LSPHoverWidget.cpp
     src/ui/MacroManagerDialog.cpp
     src/ui/PreferencesDialog.cpp
     src/ui/ToolsDialog.cpp
@@ -130,6 +131,7 @@ if(BUILD_TESTING)
         src/editor/Editor.cpp
         src/editor/SyntaxHighlighter.cpp
         src/ui/LSPCompletionWidget.cpp
+        src/ui/LSPHoverWidget.cpp
         src/ui/Theme.cpp
     )
     target_link_libraries(test_editor PRIVATE papiro_core Qt6::Widgets Qt6::Test)

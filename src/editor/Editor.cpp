@@ -7,11 +7,13 @@
 #include "core/SpellChecker.h"
 #include "editor/SyntaxHighlighter.h"
 #include "ui/LSPCompletionWidget.h"
+#include "ui/LSPHoverWidget.h"
 #include "ui/Theme.h"
 
 #include <QApplication>
 #include <QClipboard>
 #include <QContextMenuEvent>
+#include <QDesktopServices>
 #include <QInputDialog>
 #include <QInputMethodEvent>
 #include <QKeyEvent>
@@ -82,6 +84,13 @@ Editor::Editor(QWidget *parent)
     m_didChangeTimer.setSingleShot(true);
     m_didChangeTimer.setInterval(300);
     connect(&m_didChangeTimer, &QTimer::timeout, this, &Editor::sendDidChange);
+
+    // Hover timer (800ms delay)
+    m_hoverTimer.setSingleShot(true);
+    m_hoverTimer.setInterval(800);
+    connect(&m_hoverTimer, &QTimer::timeout, this, [this]() {
+        triggerHover(m_lastHoverPos);
+    });
 
     updateLineNumberAreaWidth();
     highlightCurrentLine();
@@ -412,6 +421,16 @@ void Editor::keyPressEvent(QKeyEvent *event)
         if (handleCompletionKeyPress(event)) {
             return;
         }
+    }
+
+    // Ctrl+H - trigger hover at cursor position
+    if (event->key() == Qt::Key_H && event->modifiers() == Qt::ControlModifier) {
+        m_hoverTriggeredManually = true;
+        QRect cursorRect = this->cursorRect();
+        QPoint cursorPos = cursorRect.center();
+        triggerHover(cursorPos);
+        event->accept();
+        return;
     }
 
     // Record actual text for macro playback. Key codes alone cannot represent
@@ -1071,6 +1090,9 @@ void Editor::updateBlockSelection(const QPoint &position)
 
 void Editor::mousePressEvent(QMouseEvent *event)
 {
+    // Stop hover timer on any mouse press
+    m_hoverTimer.stop();
+
     if (event->button() == Qt::LeftButton
         && ((event->modifiers() & Qt::AltModifier) || m_blockSelectMode)) {
         setFocus(Qt::MouseFocusReason);
@@ -1097,6 +1119,13 @@ void Editor::mouseMoveEvent(QMouseEvent *event)
         event->accept();
         return;
     }
+
+    // Start hover timer for LSP hover (only if not manually triggered)
+    if (m_lspEnabled && m_lspClient && !m_hoverTriggeredManually) {
+        m_lastHoverPos = event->position().toPoint();
+        m_hoverTimer.start();
+    }
+
     QPlainTextEdit::mouseMoveEvent(event);
 }
 
@@ -1110,6 +1139,16 @@ void Editor::mouseReleaseEvent(QMouseEvent *event)
         return;
     }
     QPlainTextEdit::mouseReleaseEvent(event);
+}
+
+void Editor::leaveEvent(QEvent *event)
+{
+    // Hide hover when mouse leaves editor viewport
+    if (!m_hoverTriggeredManually) {
+        m_hoverTimer.stop();
+        hideHoverWidget();
+    }
+    QPlainTextEdit::leaveEvent(event);
 }
 
 void Editor::paintEvent(QPaintEvent *event)
@@ -1650,6 +1689,75 @@ void Editor::applyCompletionItem(const LSP::CompletionItem& item)
     }
 }
 
+// ============================================================================
+// LSP Hover
+// ============================================================================
+
+void Editor::triggerHover(const QPoint& position)
+{
+    if (!m_lspEnabled || !m_lspClient)
+        return;
+
+    // Convert viewport position to document position
+    QTextCursor cursor = cursorForPosition(position);
+    LSP::TextDocumentPositionParams params;
+    params.textDocument.uri = m_lspDocumentUri;
+    params.position.line = cursor.blockNumber();
+    params.position.character = cursor.positionInBlock();
+
+    emit lspHoverRequested(params);
+
+    m_lspClient->requestHover(params, [this](const std::optional<LSP::Hover>& hover) {
+        onLSPHoverResponse(hover);
+    });
+}
+
+void Editor::onLSPHoverResponse(const std::optional<LSP::Hover>& hover)
+{
+    if (!hover.has_value() || 
+        (std::holds_alternative<QString>(hover->contents) && std::get<QString>(hover->contents).isEmpty()) &&
+        (std::holds_alternative<LSP::MarkupContent>(hover->contents) && std::get<LSP::MarkupContent>(hover->contents).value.isEmpty()) &&
+        (std::holds_alternative<QVector<LSP::MarkupContent>>(hover->contents) && std::get<QVector<LSP::MarkupContent>>(hover->contents).isEmpty())) {
+        hideHoverWidget();
+        return;
+    }
+
+    showHoverWidget(*hover, viewport()->mapToGlobal(m_lastHoverPos));
+}
+
+void Editor::showHoverWidget(const LSP::Hover& hover, const QPoint& globalPos)
+{
+    if (!m_hoverWidget) {
+        m_hoverWidget = new LSPHoverWidget(this, this);
+        connect(m_hoverWidget, &LSPHoverWidget::linkActivated, this, [this](const QString& link) {
+            // Handle link activation - could be external URL or file:line
+            if (link.startsWith("http://") || link.startsWith("https://")) {
+                QDesktopServices::openUrl(QUrl(link));
+            } else if (link.startsWith("file://")) {
+                // Could implement go-to-definition for file links
+                // For now, just open externally
+                QDesktopServices::openUrl(QUrl(link));
+            }
+        });
+    }
+
+    m_hoverWidget->setFont(font());
+    m_hoverWidget->showHover(hover, globalPos);
+}
+
+void Editor::hideHoverWidget()
+{
+    if (m_hoverWidget && m_hoverWidget->isVisible()) {
+        m_hoverWidget->hideHover();
+    }
+    m_hoverTriggeredManually = false;
+}
+
+bool Editor::isHoverVisible() const
+{
+    return m_hoverWidget && m_hoverWidget->isVisible();
+}
+
 void Editor::focusOutEvent(QFocusEvent *event)
 {
     // Hide completion widget when editor loses focus
@@ -1661,6 +1769,16 @@ void Editor::focusOutEvent(QFocusEvent *event)
             }
         });
     }
+
+    // Hide hover widget when editor loses focus (unless manually triggered)
+    if (!m_hoverTriggeredManually && m_hoverWidget && m_hoverWidget->isVisible()) {
+        QTimer::singleShot(100, this, [this]() {
+            if (m_hoverWidget && m_hoverWidget->isVisible() && !hasFocus()) {
+                m_hoverWidget->hideHover();
+            }
+        });
+    }
+
     QPlainTextEdit::focusOutEvent(event);
 }
 
