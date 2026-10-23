@@ -383,7 +383,10 @@ int Editor::lineNumberAreaWidth() const
         maximum /= 10;
         ++digits;
     }
-    return 22 + fontMetrics().horizontalAdvance(QLatin1Char('9')) * digits;
+    const int lineNumberWidth = 16 + fontMetrics().horizontalAdvance(QLatin1Char('9')) * digits;
+    const int foldMarkerWidth = 16; // dedicated column for fold markers
+    const int gutterPadding = 8;    // padding between gutter and text
+    return lineNumberWidth + foldMarkerWidth + gutterPadding;
 }
 
 QPointF Editor::contentOffset() const
@@ -408,6 +411,10 @@ void Editor::lineNumberAreaPaintEvent(QPaintEvent *event)
     QPainter painter(m_lineNumberArea);
     painter.fillRect(event->rect(), Theme::colors().gutterBackground);
 
+    const int gutterPadding = 8;    // padding between gutter and text
+    const int foldMarkerWidth = 16; // dedicated column for fold markers
+    const int lineNumberAreaX = foldMarkerWidth; // line numbers start after fold column
+
     QTextBlock block = firstVisibleBlock();
     int blockNumber = block.blockNumber();
     int top = qRound(blockBoundingGeometry(block).translated(contentOffset()).top());
@@ -416,13 +423,18 @@ void Editor::lineNumberAreaPaintEvent(QPaintEvent *event)
     painter.setPen(Theme::colors().gutterText);
     while (block.isValid() && top <= event->rect().bottom()) {
         if (block.isVisible() && bottom >= event->rect().top()) {
+            // Draw fold marker in dedicated left column (0 to foldMarkerWidth)
             if (m_foldEnds.value(blockNumber, -1) > blockNumber) {
                 const int state = block.userState();
                 const bool folded = state > 0 && (state & BlockState::Folded);
-                painter.drawText(QRect(2, top, 10, fontMetrics().height()), Qt::AlignCenter,
+                painter.drawText(QRect(0, top, foldMarkerWidth, fontMetrics().height()),
+                                 Qt::AlignCenter,
                                  folded ? QStringLiteral("▶") : QStringLiteral("▼"));
             }
-            painter.drawText(0, top, m_lineNumberArea->width() - 6, fontMetrics().height(),
+            // Draw line number in dedicated column (after fold marker column)
+            painter.drawText(QRect(lineNumberAreaX, top,
+                                   m_lineNumberArea->width() - lineNumberAreaX - 4,
+                                   fontMetrics().height()),
                              Qt::AlignRight, QString::number(blockNumber + 1));
         }
         block = block.next();
