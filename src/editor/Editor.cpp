@@ -5,9 +5,11 @@
 #include "core/Macro.h"
 #include "core/SyntaxDefinition.h"
 #include "core/SpellChecker.h"
+#include "core/GitTypes.h"
 #include "editor/SyntaxHighlighter.h"
 #include "ui/LSPCompletionWidget.h"
 #include "ui/LSPHoverWidget.h"
+#include "ui/GitBlameView.h"
 #include "ui/Theme.h"
 
 #include <QApplication>
@@ -61,6 +63,7 @@ private:
 Editor::Editor(QWidget *parent)
     : QPlainTextEdit(parent)
     , m_lineNumberArea(new LineNumberArea(this))
+    , m_blameView(new GitBlameView(this, this))
 {
     setLineWrapMode(QPlainTextEdit::NoWrap);
     setFrameShape(QFrame::NoFrame);
@@ -90,6 +93,14 @@ Editor::Editor(QWidget *parent)
     m_hoverTimer.setInterval(800);
     connect(&m_hoverTimer, &QTimer::timeout, this, [this]() {
         triggerHover(m_lastHoverPos);
+    });
+
+    // Git Blame signals
+    connect(m_blameView, &GitBlameView::commitClicked, this, [this](const QString& hash) {
+        emit blameCommitClicked(hash);
+    });
+    connect(m_blameView, &GitBlameView::authorClicked, this, [this](const QString& email) {
+        emit blameAuthorClicked(email);
     });
 
     updateLineNumberAreaWidth();
@@ -375,6 +386,21 @@ int Editor::lineNumberAreaWidth() const
     return 22 + fontMetrics().horizontalAdvance(QLatin1Char('9')) * digits;
 }
 
+QPointF Editor::contentOffset() const
+{
+    return QPlainTextEdit::contentOffset();
+}
+
+QRectF Editor::blockBoundingGeometry(const QTextBlock& block) const
+{
+    return QPlainTextEdit::blockBoundingGeometry(block);
+}
+
+QRectF Editor::blockBoundingRect(const QTextBlock& block) const
+{
+    return QPlainTextEdit::blockBoundingRect(block);
+}
+
 void Editor::lineNumberAreaPaintEvent(QPaintEvent *event)
 {
     refreshFoldCache();
@@ -412,6 +438,7 @@ void Editor::resizeEvent(QResizeEvent *event)
     const QRect area = contentsRect();
     m_lineNumberArea->setGeometry(QRect(area.left(), area.top(), lineNumberAreaWidth(),
                                        area.height()));
+    updateBlameGeometry();
 }
 
 void Editor::keyPressEvent(QKeyEvent *event)
@@ -1167,7 +1194,12 @@ void Editor::paintEvent(QPaintEvent *event)
 
 void Editor::updateLineNumberAreaWidth()
 {
-    setViewportMargins(m_lineNumbersVisible ? lineNumberAreaWidth() : 0, 0, 0, 0);
+    int leftMargin = 0;
+    if (m_lineNumbersVisible)
+        leftMargin += lineNumberAreaWidth();
+    if (m_blameView && m_blameView->isBlameVisible())
+        leftMargin += 200; // Blame view width
+    setViewportMargins(leftMargin, 0, 0, 0);
 }
 
 void Editor::updateLineNumberArea(const QRect &rect, int dy)
@@ -1181,6 +1213,11 @@ void Editor::updateLineNumberArea(const QRect &rect, int dy)
 
     if (rect.contains(viewport()->rect()))
         updateLineNumberAreaWidth();
+
+    // Sync blame view on scroll
+    if (dy != 0 && m_blameView && m_blameView->isBlameVisible()) {
+        m_blameView->setScrollValue(verticalScrollBar()->value());
+    }
 }
 
 void Editor::highlightCurrentLine()
@@ -1756,6 +1793,55 @@ void Editor::hideHoverWidget()
 bool Editor::isHoverVisible() const
 {
     return m_hoverWidget && m_hoverWidget->isVisible();
+}
+
+// ============================================================================
+// Git Blame
+// ============================================================================
+
+void Editor::setBlame(const QVector<GitBlameLine>& blameLines)
+{
+    if (m_blameView) {
+        m_blameView->setBlame(blameLines);
+    }
+}
+
+void Editor::toggleBlame()
+{
+    if (!m_blameView)
+        return;
+
+    bool visible = !m_blameView->isBlameVisible();
+    m_blameView->setVisible(visible);
+    if (visible) {
+        m_blameView->updateGeometry();
+        m_blameView->raise();
+    }
+    updateLineNumberAreaWidth();
+}
+
+void Editor::updateBlameGeometry()
+{
+    if (!m_blameView || !m_blameView->isBlameVisible())
+        return;
+
+    const int blameWidth = 200;
+    const QRect editorRect = contentsRect();
+
+    // Position blame view to the left of the line number area
+    int x = editorRect.left();
+    if (m_lineNumbersVisible) {
+        x += lineNumberAreaWidth();
+    }
+    x -= blameWidth;
+
+    m_blameView->setGeometry(x, editorRect.top(), blameWidth, editorRect.height());
+    m_blameView->raise();
+}
+
+bool Editor::isBlameVisible() const
+{
+    return m_blameView && m_blameView->isBlameVisible();
 }
 
 void Editor::focusOutEvent(QFocusEvent *event)

@@ -1,12 +1,14 @@
 #pragma once
 
 #include "core/Encoding.h"
+#include "core/GitTypes.h"
 
 #include <QWidget>
 
 namespace papiro {
 
 class Editor;
+class GitRepo;
 
 /*! One open document: an Editor plus its on-disk identity and text metadata. */
 class Document : public QWidget {
@@ -34,10 +36,12 @@ public:
     void setLineEnding(LineEnding eol);
 
     void applySyntaxFor(const QString &fileName);
+    void requestGitBlame(GitRepo* gitRepo);
 
 signals:
     void modificationChanged(bool modified);
     void pathChanged(const QString &path);
+    void gitBlameReady(const QVector<GitBlameLine>& blameLines);
 
 private:
     Editor *m_editor;

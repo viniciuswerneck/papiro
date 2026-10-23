@@ -44,6 +44,8 @@ public:
 
     // Blame
     QVector<GitBlameLine> blame(const QString& filePath, int startLine = 1, int endLine = -1);
+    void blameAsync(const QString& filePath, int startLine, int endLine,
+                    std::function<void(const QVector<GitBlameLine>&)> callback);
 
     // Stage/Unstage
     bool stage(const QString& filePath);

@@ -632,6 +632,33 @@ QVector<GitBlameLine> GitRepo::blame(const QString& filePath, int startLine, int
     return parseBlame(output);
 }
 
+void GitRepo::blameAsync(const QString& filePath, int startLine, int endLine,
+                         std::function<void(const QVector<GitBlameLine>&)> callback) {
+    if (!m_valid) {
+        if (callback) callback({});
+        return;
+    }
+
+    QStringList args = {"blame", "--porcelain"};
+    if (startLine > 0 || endLine > 0) {
+        QString range;
+        if (endLine > 0) range = QString("%1,%2").arg(startLine).arg(endLine);
+        else range = QString("%1").arg(startLine);
+        args << "-L" << range;
+    }
+    args << "--" << relativeToRepo(filePath);
+
+    executeAsync(args, [this, callback](const QString& output, const QString& error, bool success) {
+        QVector<GitBlameLine> result;
+        if (success) {
+            result = parseBlame(output);
+        } else {
+            emit errorOccurred("blame", error);
+        }
+        if (callback) callback(result);
+    });
+}
+
 QVector<GitBlameLine> GitRepo::parseBlame(const QString& output) {
     QVector<GitBlameLine> result;
     QStringList lines = output.split('\n');

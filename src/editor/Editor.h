@@ -4,11 +4,13 @@
 
 #include "core/LSPClient.h"
 #include "core/LSPTypes.h"
+#include "core/GitTypes.h"
 
 #include <QPlainTextEdit>
 #include <QTextEdit>
 #include <QHash>
 #include <QTimer>
+#include <QVector>
 
 namespace papiro {
 
@@ -18,6 +20,7 @@ class MacroManager;
 class SpellChecker;
 class LSPCompletionWidget;
 class LSPHoverWidget;
+class GitBlameView;
 
 /*! Plain text editing surface with a line number gutter and current line mark. */
 class Editor : public QPlainTextEdit {
@@ -72,6 +75,11 @@ public:
     int lineNumberAreaWidth() const;
     void lineNumberAreaPaintEvent(QPaintEvent *event);
 
+    // Git Blame geometry helpers
+    QPointF contentOffset() const;
+    QRectF blockBoundingGeometry(const QTextBlock& block) const;
+    QRectF blockBoundingRect(const QTextBlock& block) const;
+
     // Macro recording hooks
     void setMacroManager(MacroManager *manager);
     void recordMacroAction(const QString &text);
@@ -89,6 +97,17 @@ signals:
     void lspRenameRequested(const LSP::RenameParams& params);
     void lspDiagnosticsChanged();
     void lspHoverRequested(const LSP::TextDocumentPositionParams& params);
+
+    // Git Blame signals
+    void blameCommitClicked(const QString& commitHash);
+    void blameAuthorClicked(const QString& authorEmail);
+
+public:
+    // Git Blame
+    void setBlame(const QVector<GitBlameLine>& blameLines);
+    void toggleBlame();
+    void updateBlameGeometry();
+    bool isBlameVisible() const;
 
 public slots:
     void onLSPDefinitionResponse(const QVector<LSP::Location>& locations);
@@ -221,6 +240,9 @@ private:
     QTimer m_hoverTimer;
     QPoint m_lastHoverPos;
     bool m_hoverTriggeredManually = false;
+
+    // Git Blame
+    GitBlameView* m_blameView = nullptr;
 
 public:
     void setDocumentPath(const QString& path);

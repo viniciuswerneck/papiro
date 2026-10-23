@@ -468,7 +468,7 @@ void MainWindow::createActions()
                                 themedIcon(QStringLiteral("vcs-log"), QStyle::SP_FileDialogListView, this));
     connect(m_gitLogAction, &QAction::triggered, this, &MainWindow::gitLog);
 
-    m_gitBlameAction = makeAction(tr("&Blame"), QKeySequence(),
+    m_gitBlameAction = makeAction(tr("&Blame"), QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_B),
                                   themedIcon(QStringLiteral("vcs-annotate"), QStyle::SP_FileDialogDetailedView, this));
     connect(m_gitBlameAction, &QAction::triggered, this, &MainWindow::gitBlame);
 
@@ -797,6 +797,10 @@ Document *MainWindow::addDocument()
             updateWindowTitle();
             updateStatus();
         }
+    });
+    connect(document, &Document::gitBlameReady, this, [this, editor](const QVector<GitBlameLine>& blameLines) {
+        editor->setBlame(blameLines);
+        editor->toggleBlame();
     });
     connect(editor, &QPlainTextEdit::cursorPositionChanged, this, [this, document] {
         if (document == currentDocument())
@@ -3068,26 +3072,16 @@ void MainWindow::gitBlame()
                              tr("No file open or not in a Git repository."));
         return;
     }
-    
-    QVector<GitBlameLine> blameLines = m_gitRepo->blame(document->filePath());
-    if (blameLines.isEmpty()) {
-        QMessageBox::information(this, tr("Git Blame"), tr("No blame information available."));
+
+    // Toggle inline blame view
+    Editor *editor = document->editor();
+    if (editor->isBlameVisible()) {
+        editor->toggleBlame();
         return;
     }
-    
-    QStringList items;
-    for (const GitBlameLine &line : blameLines) {
-        items << QStringLiteral("%1: %2 - %3 (%4)")
-                  .arg(line.lineNumber)
-                  .arg(line.commitShortHash)
-                  .arg(line.authorName)
-                  .arg(line.authorDate.toString(Qt::ISODate));
-    }
-    
-    bool ok = false;
-    QString selected = QInputDialog::getItem(this, tr("Git Blame"),
-                                             tr("Select line:"), items, 0, false, &ok);
-    // Just show the blame info for now
+
+    // Request blame asynchronously
+    document->requestGitBlame(m_gitRepo);
 }
 
 void MainWindow::gitDiff()

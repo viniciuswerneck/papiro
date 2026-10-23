@@ -1,5 +1,6 @@
 #include "app/Document.h"
 
+#include "core/GitRepo.h"
 #include "core/SyntaxDefinition.h"
 #include "editor/Editor.h"
 
@@ -117,6 +118,19 @@ void Document::applySyntaxFor(const QString &fileName)
         m_editor->applySyntax(*definition);
     else
         m_editor->clearSyntax();
+}
+
+void Document::requestGitBlame(GitRepo* gitRepo)
+{
+    if (!gitRepo || !gitRepo->isValid() || m_path.isEmpty())
+        return;
+
+    QString relativePath = gitRepo->relativeToRepo(m_path);
+    
+    // Use async blame for better performance on large files
+    gitRepo->blameAsync(relativePath, 1, -1, [this](const QVector<GitBlameLine>& blameLines) {
+        emit gitBlameReady(blameLines);
+    });
 }
 
 } // namespace papiro

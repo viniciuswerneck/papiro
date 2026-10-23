@@ -62,6 +62,7 @@ set(PAPIRO_APP_SOURCES
     src/editor/SyntaxHighlighter.cpp
     src/ui/ClipLibraryWidget.cpp
     src/ui/FindReplaceDialog.cpp
+    src/ui/GitBlameView.cpp
     src/ui/GitDiffView.cpp
     src/ui/LSPCompletionWidget.cpp
     src/ui/LSPHoverWidget.cpp
@@ -133,6 +134,7 @@ if(BUILD_TESTING)
         src/editor/SyntaxHighlighter.cpp
         src/ui/LSPCompletionWidget.cpp
         src/ui/LSPHoverWidget.cpp
+        src/ui/GitBlameView.cpp
         src/ui/Theme.cpp
     )
     target_link_libraries(test_editor PRIVATE papiro_core Qt6::Widgets Qt6::Test)
