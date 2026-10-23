@@ -4,6 +4,8 @@
 #include <QVector>
 #include <QString>
 #include <QDateTime>
+#include <QKeySequence>
+#include <QMap>
 
 class QPlainTextEdit;  // forward declaration
 
@@ -32,6 +34,7 @@ struct MacroAction {
 /*! A complete macro: sequence of actions with metadata. */
 class Macro : public QObject {
     Q_OBJECT
+    Q_PROPERTY(QKeySequence shortcut READ shortcut WRITE setShortcut NOTIFY shortcutChanged)
 
 public:
     explicit Macro(QObject *parent = nullptr);
@@ -44,6 +47,9 @@ public:
 
     QDateTime created() const { return m_created; }
     QDateTime modified() const { return m_modified; }
+
+    QKeySequence shortcut() const { return m_shortcut; }
+    void setShortcut(const QKeySequence &shortcut);
 
     const QVector<MacroAction> &actions() const { return m_actions; }
     QVector<MacroAction> &actions() { return m_actions; }
@@ -60,11 +66,15 @@ public:
     static Macro *fromTextFormat(const QString &text, QString *error = nullptr, QObject *parent = nullptr);
     QString toTextFormat() const;
 
+signals:
+    void shortcutChanged(const QKeySequence &shortcut);
+
 private:
     QString m_name;
     QString m_description;
     QDateTime m_created;
     QDateTime m_modified;
+    QKeySequence m_shortcut;
     QVector<MacroAction> m_actions;
 };
 
@@ -96,20 +106,45 @@ public:
     /*! Play built-in macro by index (0 = Macro01). */
     void playBuiltin(int index, QPlainTextEdit *editor, int repeatCount = 1);
 
-    /*! Assign a macro to a built-in slot (takes ownership). */
+    /*! Assign an existing macro to a built-in slot (manager retains ownership).
+     *  Passing nullptr clears the slot without deleting the macro. */
     void setBuiltinMacro(int index, Macro *macro);
+
+    /*! Clear a built-in slot without deleting its macro. */
+    void clearBuiltinMacro(int index);
 
     /*! Get built-in macro (may be nullptr). */
     Macro *builtinMacro(int index) const;
 
+    /*! Remove a user macro, clearing any slots that referenced it. */
+    bool removeUserMacro(Macro *macro);
+
     /*! All user macros (excluding built-in slots). */
     const QVector<Macro *> &userMacros() const { return m_userMacros; }
+
+    /*! Get the custom shortcut assigned to a macro, or empty if none. */
+    QKeySequence shortcutForMacro(Macro *macro) const;
+
+    /*! Assign a custom shortcut to a macro. Validates ownership and conflicts. */
+    void setShortcutForMacro(Macro *macro, const QKeySequence &shortcut);
+
+    /*! Remove any custom shortcut assigned to a macro. */
+    void removeShortcutForMacro(Macro *macro);
+
+    /*! Return all custom shortcut mappings (copy). */
+    QMap<Macro *, QKeySequence> allCustomShortcuts() const;
+
+    /*! Check if a shortcut is available (not used by built-ins, other macros, or reserved editor shortcuts). */
+    bool isShortcutAvailable(const QKeySequence &shortcut, Macro *exclude = nullptr) const;
+
+    /*! Get a human-readable description of what a shortcut conflicts with. */
+    QString shortcutConflictDescription(const QKeySequence &shortcut) const;
 
     /*! Load all macros from the user macros directory. */
     void loadFromDirectory(const QString &dir);
 
-    /*! Save all user macros to the user macros directory. */
-    void saveToDirectory(const QString &dir) const;
+    /*! Save all user macros and shortcut slots to the macros directory. */
+    bool saveToDirectory(const QString &dir) const;
 
     /*! Default user macros directory. */
     static QString defaultDirectory();
@@ -118,11 +153,13 @@ signals:
     void recordingStarted(Macro *macro);
     void recordingStopped(Macro *macro);
     void macroListChanged();
+    void shortcutChanged(Macro *macro, const QKeySequence &newShortcut);
 
 private:
     Macro *m_recording = nullptr;
     Macro *m_builtins[MaxBuiltinMacros] = {nullptr};
     QVector<Macro *> m_userMacros;
+    QMap<Macro *, QKeySequence> m_customShortcuts;
 };
 
 /*! Helper: execute a single MacroAction on an Editor (implemented in Editor.cpp). */

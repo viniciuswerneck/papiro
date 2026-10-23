@@ -7,5 +7,6 @@ LineComment=//
 BlockCommentStart=/*
 BlockCommentEnd=*/
 StringDelimiters=" ' `
+MultilineStringDelimiters=`
 EscapeChar=\
 Numbers=1

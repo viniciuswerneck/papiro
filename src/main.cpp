@@ -1,4 +1,5 @@
 #include "app/MainWindow.h"
+#include "ui/Theme.h"
 
 #include <QApplication>
 #include <QCoreApplication>
@@ -48,6 +49,10 @@ int main(int argc, char *argv[])
 
     QTranslator translator;
     installTranslation(application, translator, language);
+
+    // Apply the saved color theme before creating any widget.
+    papiro::Theme::apply(
+        papiro::Theme::fromKey(settings.value(QStringLiteral("ui/theme")).toString()));
 
     papiro::MainWindow window;
     window.show();

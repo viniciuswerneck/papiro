@@ -7,7 +7,9 @@
 
 #include <QFont>
 #include <QMainWindow>
+#include <QMap>
 #include <QRegularExpression>
+#include <QShortcut>
 #include <QStringList>
 
 class QAction;
@@ -18,6 +20,8 @@ class QMenu;
 class QPlainTextEdit;
 class QTabWidget;
 class QToolBar;
+class QTreeWidget;
+class QTreeWidgetItem;
 
 namespace papiro {
 
@@ -27,6 +31,7 @@ class ClipLibraryWidget;
 class FileExplorerWidget;
 class SpellChecker;
 class ToolManager;
+struct Preferences;
 
 class MainWindow : public QMainWindow {
     Q_OBJECT
@@ -60,6 +65,7 @@ private slots:
     void replaceAll();
     void goToLine();
     void chooseFont();
+    void openPreferences();
     void toggleWordWrap(bool enabled);
     void toggleLineNumbers(bool enabled);
     void toggleSpellCheck(bool enabled);
@@ -78,6 +84,7 @@ private slots:
     void playBuiltinMacro(int index);
     void saveMacroToSlot(int index);
     void manageMacros();
+    void updateMacroActions();
     // Clip Library
     void toggleClipLibrary(bool visible);
     // File Explorer
@@ -86,6 +93,9 @@ private slots:
     // External tools
     void configureTools();
     void toggleOutput(bool visible);
+    // Search results
+    void toggleSearchResults(bool visible);
+    void activateSearchResult(QTreeWidgetItem *item, int column);
     // Workspace
     void openWorkspace();
     void saveWorkspaceAs();
@@ -96,6 +106,8 @@ private slots:
     void printPreview();
     // Language
     void setLanguage(const QString &locale);
+    // Theme
+    void setTheme(const QString &key);
 
 private:
     void createActions();
@@ -110,12 +122,18 @@ private:
     void refreshTabTitle(Document *document);
     void applySettings();
     void saveSettings();
+    void restoreSession();
+    void saveSession();
     void applyFontToAll();
+    void applyPreferences(const Preferences &preferences);
     void updateRecentFiles(const QString &path);
     void rebuildRecentMenu();
     void setEncoding(TextEncoding encoding);
     void setLineEnding(LineEnding eol);
     void findInDocument(bool backward);
+    void findAll(const FindRequest &request);
+    void findAllInFolder(const FindRequest &request, const QString &folder);
+    void clearSearchResults();
     QString expandReplacement(const QString &replacement,
                               const QRegularExpressionMatch &match) const;
     QRegularExpression buildRegex(const FindRequest &request, QString *error) const;
@@ -160,6 +178,7 @@ private:
     QAction *m_findAction = nullptr;
     QAction *m_findNextAction = nullptr;
     QAction *m_findPreviousAction = nullptr;
+    QAction *m_preferencesAction = nullptr;
     QAction *m_wordWrapAction = nullptr;
     QAction *m_lineNumbersAction = nullptr;
     QAction *m_spellCheckAction = nullptr;
@@ -183,6 +202,10 @@ private:
     // Output / tools
     QAction *m_configureToolsAction = nullptr;
     QAction *m_toggleOutputAction = nullptr;
+    // Search results
+    QAction *m_toggleSearchResultsAction = nullptr;
+    // Session
+    QAction *m_restoreSessionAction = nullptr;
     // Workspace
     QAction *m_openWorkspaceAction = nullptr;
     QAction *m_saveWorkspaceAction = nullptr;
@@ -191,6 +214,8 @@ private:
     QAction *m_printPreviewAction = nullptr;
     QMenu *m_languageMenu = nullptr;
     QActionGroup *m_languageGroup = nullptr;
+    QMenu *m_themeMenu = nullptr;
+    QActionGroup *m_themeGroup = nullptr;
 
     QStringList m_recentFiles;
     QStringList m_recentWorkspaces;
@@ -200,6 +225,10 @@ private:
     bool m_wordWrap = false;
     bool m_lineNumbers = true;
     bool m_spellCheck = true;
+    bool m_searchMatchCase = false;
+    bool m_searchWholeWord = false;
+    bool m_searchRegex = false;
+    bool m_searchWrap = true;
 
     MacroManager *m_macroManager = nullptr;
     ClipLibrary *m_clipLibrary = nullptr;
@@ -210,7 +239,16 @@ private:
     ToolManager *m_toolManager = nullptr;
     QPlainTextEdit *m_outputView = nullptr;
     QDockWidget *m_outputDock = nullptr;
+    QTreeWidget *m_searchResultsView = nullptr;
+    QDockWidget *m_searchResultsDock = nullptr;
     SpellChecker *m_spellChecker = nullptr;
+
+    QMap<Macro *, QShortcut *> m_customShortcuts;
+
+    void registerCustomShortcut(Macro *macro, const QKeySequence &shortcut);
+    void unregisterCustomShortcut(Macro *macro);
+    void registerAllCustomShortcuts();
+    void unregisterAllCustomShortcuts();
 };
 
 } // namespace papiro

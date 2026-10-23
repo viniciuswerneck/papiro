@@ -4,10 +4,12 @@
 #include <QDataStream>
 #include <QDir>
 #include <QFile>
+#include <QHash>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QKeySequence>
+#include <QSet>
 #include <QStandardPaths>
 #include <QTextStream>
 
@@ -51,6 +53,15 @@ Macro::Macro(QObject *parent)
     , m_created(QDateTime::currentDateTime())
     , m_modified(m_created)
 {
+}
+
+void Macro::setShortcut(const QKeySequence &shortcut)
+{
+    if (m_shortcut != shortcut) {
+        m_shortcut = shortcut;
+        m_modified = QDateTime::currentDateTime();
+        emit shortcutChanged(shortcut);
+    }
 }
 
 void Macro::addAction(const MacroAction &action)
@@ -331,12 +342,46 @@ void MacroManager::setBuiltinMacro(int index, Macro *macro)
 {
     if (index < 0 || index >= MaxBuiltinMacros)
         return;
-    if (m_builtins[index])
-        m_builtins[index]->deleteLater();
     m_builtins[index] = macro;
-    if (macro)
+    if (macro) {
         macro->setParent(this);
+        if (macro != m_recording && !m_userMacros.contains(macro))
+            m_userMacros.append(macro);
+    }
     emit macroListChanged();
+}
+
+void MacroManager::clearBuiltinMacro(int index)
+{
+    if (index < 0 || index >= MaxBuiltinMacros)
+        return;
+    if (!m_builtins[index])
+        return;
+    m_builtins[index] = nullptr;
+    emit macroListChanged();
+}
+
+bool MacroManager::removeUserMacro(Macro *macro)
+{
+    if (!macro)
+        return false;
+
+    if (macro == m_recording) {
+        cancelRecording();
+        return true;
+    }
+
+    for (int i = 0; i < MaxBuiltinMacros; ++i) {
+        if (m_builtins[i] == macro)
+            m_builtins[i] = nullptr;
+    }
+
+    const bool removed = m_userMacros.removeOne(macro);
+    if (removed) {
+        macro->deleteLater();
+        emit macroListChanged();
+    }
+    return removed;
 }
 
 Macro *MacroManager::builtinMacro(int index) const
@@ -352,40 +397,268 @@ void MacroManager::loadFromDirectory(const QString &dir)
     if (!directory.exists())
         return;
 
+    QHash<QString, Macro *> macrosByFile;
     const QStringList files = directory.entryList({"*.tpm"}, QDir::Files, QDir::Name);
     for (const QString &file : files) {
         QString error;
         Macro *macro = Macro::loadFromFile(directory.filePath(file), &error, this);
         if (macro) {
             m_userMacros.append(macro);
+            macrosByFile.insert(file, macro);
         }
     }
+
+    // Restore built-in slot assignments and custom shortcuts saved next to the macro files.
+    QFile manifest(directory.filePath(QStringLiteral("slots.json")));
+    if (manifest.open(QIODevice::ReadOnly)) {
+        const QJsonDocument document = QJsonDocument::fromJson(manifest.readAll());
+        if (document.isObject()) {
+            const QJsonObject root = document.object();
+            const int version = root.value(QStringLiteral("version")).toInt(1);
+
+            const QJsonArray slotEntries = root.value(QStringLiteral("slots")).toArray();
+            for (const QJsonValue &value : slotEntries) {
+                const QJsonObject entry = value.toObject();
+                const int index = entry.value(QStringLiteral("slot")).toInt(-1);
+                const QString file = entry.value(QStringLiteral("file")).toString();
+                Macro *macro = macrosByFile.value(file, nullptr);
+                if (index >= 0 && index < MaxBuiltinMacros && macro)
+                    m_builtins[index] = macro;
+            }
+
+            // Load custom shortcuts (version >= 2)
+            if (version >= 2) {
+                const QJsonObject shortcutsObj = root.value(QStringLiteral("customShortcuts")).toObject();
+                for (auto it = shortcutsObj.constBegin(); it != shortcutsObj.constEnd(); ++it) {
+                    const QString file = it.key();
+                    const QKeySequence shortcut = QKeySequence::fromString(it.value().toString(), QKeySequence::PortableText);
+                    Macro *macro = macrosByFile.value(file, nullptr);
+                    if (macro && !shortcut.isEmpty()) {
+                        m_customShortcuts[macro] = shortcut;
+                        macro->setShortcut(shortcut);
+                    }
+                }
+            }
+        }
+    }
+
     emit macroListChanged();
 }
 
-void MacroManager::saveToDirectory(const QString &dir) const
+bool MacroManager::saveToDirectory(const QString &dir) const
 {
     QDir directory(dir);
-    if (!directory.exists())
-        directory.mkpath(".");
+    if (!directory.exists() && !QDir().mkpath(dir))
+        return false;
+
+    QHash<Macro *, QString> fileNames;
+    QSet<QString> writtenFiles;
+    bool allSaved = true;
 
     for (int i = 0; i < m_userMacros.size(); ++i) {
         Macro *macro = m_userMacros.at(i);
-        QString fileName = QString("macro_%1.tpm").arg(i + 1, 3, 10, QChar('0'));
-        if (!macro->name().isEmpty()) {
-            QString safeName = macro->name();
-            safeName.replace(QRegularExpression("[^a-zA-Z0-9_-]"), "_");
-            fileName = safeName + QString(".tpm");
-        }
+        const QString fileName = QStringLiteral("macro_%1.tpm")
+                                     .arg(i + 1, 3, 10, QLatin1Char('0'));
+        fileNames.insert(macro, fileName);
         QString error;
-        macro->saveToFile(directory.filePath(fileName), &error);
+        if (macro->saveToFile(directory.filePath(fileName), &error))
+            writtenFiles.insert(fileName);
+        else
+            allSaved = false;
     }
+
+    QJsonArray slotEntries;
+    for (int i = 0; i < MaxBuiltinMacros; ++i) {
+        Macro *macro = m_builtins[i];
+        if (!macro || !fileNames.contains(macro))
+            continue;
+        QJsonObject entry;
+        entry.insert(QStringLiteral("slot"), i);
+        entry.insert(QStringLiteral("file"), fileNames.value(macro));
+        slotEntries.append(entry);
+    }
+
+    QJsonObject customShortcutsObj;
+    for (auto it = m_customShortcuts.constBegin(); it != m_customShortcuts.constEnd(); ++it) {
+        if (fileNames.contains(it.key()))
+            customShortcutsObj[fileNames.value(it.key())] = it.value().toString(QKeySequence::PortableText);
+    }
+
+    QJsonObject root;
+    root.insert(QStringLiteral("version"), 2);
+    root.insert(QStringLiteral("slots"), slotEntries);
+    root.insert(QStringLiteral("customShortcuts"), customShortcutsObj);
+
+    QFile manifest(directory.filePath(QStringLiteral("slots.json")));
+    bool manifestSaved = false;
+    if (manifest.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+        manifestSaved = manifest.write(QJsonDocument(root).toJson(QJsonDocument::Indented)) >= 0;
+    }
+
+    // Remove macro files left behind by renamed or deleted macros. Do this only
+    // when every current macro was written successfully.
+    if (allSaved) {
+        const QStringList existing = directory.entryList({"*.tpm"}, QDir::Files, QDir::Name);
+        for (const QString &file : existing) {
+            if (!writtenFiles.contains(file))
+                directory.remove(file);
+        }
+    }
+
+    return allSaved && manifestSaved;
 }
 
 QString MacroManager::defaultDirectory()
 {
     return QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation)
         + QStringLiteral("/macros");
+}
+
+// ---------------------------------------------------------------------------
+// Custom shortcut management
+// ---------------------------------------------------------------------------
+
+QKeySequence MacroManager::shortcutForMacro(Macro *macro) const
+{
+    return m_customShortcuts.value(macro, QKeySequence());
+}
+
+void MacroManager::setShortcutForMacro(Macro *macro, const QKeySequence &shortcut)
+{
+    if (!macro)
+        return;
+
+    // Verify macro belongs to this manager (built-in or user macro)
+    bool owned = false;
+    for (int i = 0; i < MaxBuiltinMacros; ++i) {
+        if (m_builtins[i] == macro) {
+            owned = true;
+            break;
+        }
+    }
+    if (!owned && !m_userMacros.contains(macro))
+        return;
+
+    if (shortcut.isEmpty()) {
+        // Remove shortcut
+        if (m_customShortcuts.remove(macro)) {
+            macro->setShortcut(QKeySequence());
+            emit shortcutChanged(macro, QKeySequence());
+            emit macroListChanged();
+        }
+        return;
+    }
+
+    // Check for conflicts (excluding this macro)
+    if (!isShortcutAvailable(shortcut, macro))
+        return;
+
+    m_customShortcuts[macro] = shortcut;
+    macro->setShortcut(shortcut);
+    emit shortcutChanged(macro, shortcut);
+    emit macroListChanged();
+}
+
+void MacroManager::removeShortcutForMacro(Macro *macro)
+{
+    setShortcutForMacro(macro, QKeySequence());
+}
+
+QMap<Macro *, QKeySequence> MacroManager::allCustomShortcuts() const
+{
+    return m_customShortcuts;
+}
+
+static bool isReservedEditorShortcut(const QKeySequence &shortcut)
+{
+    // Hardcoded list of reserved editor shortcuts
+    static const QSet<QString> reserved = {
+        // File
+        "Ctrl+N", "Ctrl+O", "Ctrl+S", "Ctrl+Shift+S", "Ctrl+P", "Ctrl+W", "Ctrl+Q",
+        // Edit
+        "Ctrl+Z", "Ctrl+Y", "Ctrl+Shift+Z", "Ctrl+X", "Ctrl+C", "Ctrl+V", "Ctrl+Shift+V",
+        "Ctrl+A", "Ctrl+F", "Ctrl+H", "F3", "Shift+F3",
+        // View
+        "Ctrl++", "Ctrl+-", "Ctrl+0", "F11",
+        // Navigation
+        "Ctrl+G", "Ctrl+L", "Home", "End", "PageUp", "PageDown",
+        "Ctrl+Home", "Ctrl+End", "Alt+Left", "Alt+Right",
+        // Selection
+        "Shift+Left", "Shift+Right", "Shift+Up", "Shift+Down",
+        "Ctrl+Shift+Left", "Ctrl+Shift+Right", "Shift+Home", "Shift+End",
+        "Ctrl+Shift+Home", "Ctrl+Shift+End",
+        // Window/Tab
+        "Ctrl+Tab", "Ctrl+Shift+Tab", "Ctrl+1", "Ctrl+2", "Ctrl+3", "Ctrl+4",
+        "Ctrl+5", "Ctrl+6", "Ctrl+7", "Ctrl+8", "Ctrl+9",
+        // Tools
+        "F5", "F9", "F10", "F11", "F12",
+        // Help
+        "F1"
+    };
+
+    return reserved.contains(shortcut.toString(QKeySequence::PortableText));
+}
+
+bool MacroManager::isShortcutAvailable(const QKeySequence &shortcut, Macro *exclude) const
+{
+    if (shortcut.isEmpty())
+        return true;
+
+    const QString shortcutStr = shortcut.toString(QKeySequence::PortableText);
+
+    // Check built-in slots (Ctrl+Shift+1..9)
+    for (int i = 0; i < MaxBuiltinMacros; ++i) {
+        QKeySequence builtin(Qt::ControlModifier | Qt::ShiftModifier, Qt::Key_1 + i);
+        if (builtin == shortcut)
+            return false;
+    }
+
+    // Check other custom shortcuts
+    for (auto it = m_customShortcuts.constBegin(); it != m_customShortcuts.constEnd(); ++it) {
+        if (it.key() == exclude)
+            continue;
+        if (it.value() == shortcut)
+            return false;
+    }
+
+    // Check reserved editor shortcuts
+    if (isReservedEditorShortcut(shortcut))
+        return false;
+
+    return true;
+}
+
+QString MacroManager::shortcutConflictDescription(const QKeySequence &shortcut) const
+{
+    if (shortcut.isEmpty())
+        return QString();
+
+    const QString shortcutStr = shortcut.toString(QKeySequence::PortableText);
+
+    // Check built-in slots
+    for (int i = 0; i < MaxBuiltinMacros; ++i) {
+        QKeySequence builtin(Qt::ControlModifier | Qt::ShiftModifier, Qt::Key_1 + i);
+        if (builtin == shortcut) {
+            Macro *m = m_builtins[i];
+            if (m)
+                return tr("Built-in slot %1 (Macro%2)").arg(i + 1).arg(i + 1, 2, 10, QLatin1Char('0'));
+            return tr("Built-in slot %1 (Ctrl+Shift+%2)").arg(i + 1).arg(i + 1);
+        }
+    }
+
+    // Check other custom shortcuts
+    for (auto it = m_customShortcuts.constBegin(); it != m_customShortcuts.constEnd(); ++it) {
+        if (it.value() == shortcut) {
+            return tr("Macro \"%1\"").arg(it.key()->name());
+        }
+    }
+
+    // Check reserved editor shortcuts
+    if (isReservedEditorShortcut(shortcut)) {
+        return tr("Reserved editor shortcut");
+    }
+
+    return QString();
 }
 
 } // namespace papiro

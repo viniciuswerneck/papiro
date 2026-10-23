@@ -52,14 +52,25 @@
 - [x] Regex (QRegularExpression), case/whole-word/wrap
 - [x] Replace All com backrefs (`\1`, `\n`, `\t`)
 
+### Preferências
+- [x] Diálogo único em **Editar → Preferências...** (`Ctrl+,`)
+- [x] Fonte do editor, tema, restauração de sessão e opções de exibição
+- [x] Padrões de busca (case, palavra inteira, regex, wrap) aplicados ao Find/Replace
+- [x] Alterações aplicadas na hora e persistidas em `QSettings`
+- [x] Teste de integração do diálogo e da aplicação das preferências
+
 ### Macros
 - [x] `Macro` / `MacroAction` / `MacroManager` (core)
 - [x] Gravação de teclas, texto e comandos de editor
+- [x] Texto real digitado preservado (minúsculas, acentos e IME), não só key codes
 - [x] Replay com loop e coalescência de ações
 - [x] 9 slots built-in (Ctrl+Shift+1..9)
 - [x] Formato `.tpm` (JSON v1), diretório `~/.config/Papiro/macros/`
 - [x] Menu Macros + toolbar (Rec / Stop / Play)
-- [x] Gerenciador de macros (diálogo informativo)
+- [x] Gravação salva automaticamente em `~/.config/Papiro/macros/`
+- [x] Gerenciador real: renomear, excluir, reproduzir, atribuir/limpar slots
+- [x] Atribuições dos slots persistidas em `slots.json` e restauradas ao abrir
+- [x] Nomes dos slots aparecem no menu Macros e nos atalhos Ctrl+Shift+1..9
 
 ### Clip Library
 - [x] `Clip` / `ClipLibrary` (core) com UUID, categorias, tags, uso
@@ -74,7 +85,7 @@
 
 ### Internacionalização (i18n)
 - [x] Infraestrutura `QTranslator` + `.ts`/`.qm` embutidos (`:/i18n`)
-- [x] 182 strings extraídas com `lupdate`, traduzidas para **PT** e **ES** (EN canônico)
+- [x] 266 strings extraídas com `lupdate`, traduzidas para **PT**, **EN** e **ES**
 - [x] Menu **Exibir → Idioma** (English / Português / Español), persistido em QSettings
 - [x] Seleção automática pelo locale do sistema (`pt_BR` → `pt`)
 - [x] Plural correto (`numerusform`)
@@ -122,12 +133,79 @@
 - [x] Estado de dobra mantido por bloco (`QTextBlock::userState`)
 - [x] Recalculado automaticamente ao editar
 
+### Sessão automática
+- [x] Reabre os arquivos da sessão anterior com aba ativa (QSettings)
+- [x] Restaura posição do cursor (linha/coluna) de cada arquivo
+- [x] Restaura workspace aberto e layout dos docks/toolbar (`saveState`)
+- [x] Arquivo → **Restaurar Sessão Anterior** (ligável/desligável, persistido);
+      desligado, inicia com um documento vazio e limpa a sessão salva
+
+### Painel de resultados de busca
+- [x] Diálogo Find/Replace com botão **Find All**
+- [x] Dock **Search Results** (Ctrl+Alt+F) com agrupamento por arquivo,
+      linha, coluna e prévia do texto
+- [x] Busca em todas as abas abertas, respeitando case/whole-word/regex
+- [x] Duplo-clique/Enter navega até a ocorrência
+- [x] Limite de 5.000 resultados por busca (aviso de truncamento)
+
+### Testes automatizados (Qt Test)
+- [x] `test_core`: encoding/EOL, parser `.syn`, macros (JSON e texto),
+      workspace `.ppw` e Clip Library
+- [x] `test_editor`: auto-fechamento, wrap de seleção, backspace de par,
+      auto-indentação, go-to-line/coluna, duplicar/deletar linha
+- [x] `test_mainwindow`: restauração de sessão (abrir → fechar → reabrir),
+      sessão desativada e painel de resultados de busca
+- [x] `ctest` habilitado no CMake (`BUILD_TESTING`), rodando em `offscreen`
+- [x] Correção descoberta pelos testes: validação UTF-8 estrita (sequências
+      incompletas/overlong não eram detectadas como Windows-1252)
+
+### Syntax multi-linha
+- [x] Estado de sintaxe persistente entre blocos (block comments e strings)
+- [x] Delimitadores multi-linha configuráveis por `.syn`
+      (`MultilineStringDelimiters`)
+- [x] Python: `"""` e `'''` atravessam linhas
+- [x] JavaScript/TypeScript: template literals com backtick
+- [x] Strings normais (`"`, `'`) não vazam mais para a linha seguinte
+- [x] Delimitadores ordenados por tamanho (evita `"` vencer `"""`)
+- [x] `QTextBlock::userState` separado: bits baixos = sintaxe, bit `0x1000` =
+      folding; rehighlight não perde mais o estado de dobra
+
+### Temas claro/escuro
+- [x] `ui/Theme` centraliza paletas e cores de sintaxe
+- [x] Menu **View → Theme** com Light/Dark, persistido em `ui/theme`
+- [x] Paleta global aplicada antes da janela abrir (sem “flash” claro)
+- [x] Cores do editor: linha atual, par de colchetes, gutter e sintaxe
+      (keyword/comment/string/número) trocam junto com o tema
+- [x] `Editor::refreshTheme()` e `SyntaxHighlighter::refreshTheme()` atualizam
+      abas abertas na hora
+- [x] Teste garantindo que o highlighter muda de cor e que as paletas diferem
+
+### Busca em pasta/arquivos
+- [x] Campo de pasta no diálogo de busca, com botão para escolher diretório
+- [x] Botão **Find in Folder** varre subpastas recursivamente
+- [x] Resultados agrupados por caminho relativo, com linha/coluna/prévia
+- [x] Clique no resultado abre o arquivo (mesmo fora das abas abertas) e
+      posiciona o cursor
+- [x] Limites de segurança: 5 MB por arquivo, 5000 arquivos e 5000 resultados
+- [x] Detecção de binários e leitura com o mesmo `decodeFile` do editor
+- [x] **Find in Folder...** também no botão direito do explorador de arquivos
+
+### Menu de contexto e seleção em bloco
+- [x] Menu de contexto próprio no editor: desfazer/refazer, recortar, copiar,
+      colar, excluir, selecionar tudo, duplicar/excluir linha, dobrar bloco,
+      localizar/substituir, ir para linha e sugestões ortográficas
+- [x] Seleção retangular com **Alt+arrastar** ou **Column Selection Mode**
+      (ativável pelo botão direito)
+- [x] Copiar/recortar/excluir em bloco preservam colunas, com padding de espaços
+- [x] Colar sobre seleção em bloco substitui a região e mantém o fluxo normal
+- [x] Desenho da seleção em bloco com a cor de destaque do tema
+- [x] Testes cobrindo seleção programática, Alt+arrastar, copiar e recortar
+
 ---
 
 ## 🚧 Em andamento
 
-- [ ] **Syntax avançado** — estados multi-linha e realce adicionais
-- [ ] **Sessão automática** — restaurar arquivos abertos ao iniciar
+- [ ] **Atalhos personalizados de macros** — combinações além dos 9 slots fixos
 
 ---
 
@@ -137,12 +215,15 @@
 src/
   core/     Encoding, SyntaxDefinition, Macro, ClipLibrary, SpellChecker,
             ExternalTool, Workspace                    (sem GUI)
-  editor/   Editor (folding, auto-close, bracket match), SyntaxHighlighter
+  editor/   Editor (folding, auto-close, bracket match), SyntaxHighlighter,
+            BlockState
   app/      Document, MainWindow
-  ui/       FindReplaceDialog, ClipLibraryWidget, FileExplorerWidget, ToolsDialog
+  ui/       Theme, FindReplaceDialog, MacroManagerDialog, PreferencesDialog,
+            ClipLibraryWidget, FileExplorerWidget, ToolsDialog
 resources/
   syntax/   *.syn
 translations/ papiro_{pt,en,es}.ts -> :/i18n/*.qm
+tests/      test_core, test_editor, test_mainwindow (Qt Test)
 ```
 
 ## 🔨 Build
@@ -156,6 +237,9 @@ cmake -B build -DCMAKE_BUILD_TYPE=Release \
   -DOPENGL_gl_LIBRARY=$HOME/.local/gl/usr/lib/x86_64-linux-gnu/libGL.so .
 cmake --build build --config Release -j$(nproc)
 ./build/Papiro
+
+# Testes (Qt Test, rodam em offscreen)
+ctest --test-dir build --output-on-failure
 ```
 
 ## 🌐 Traduções
@@ -169,30 +253,42 @@ $HOME/Qt/6.8.3/gcc_64/bin/lupdate -no-obsolete src \
 ## 📌 Estado ao encerrar (23/10/2026)
 
 - Build Release atualizado e funcionando (`build/Papiro`)
-- App em execução na sessão Wayland (último PID conhecido: 98859)
+- Testes: `core`, `editor` e `mainwindow` passando (100%)
+- App em execução na sessão Wayland (último PID conhecido: 709893)
 - Dependências locais:
   - Qt 6.8.3: `~/Qt/6.8.3/gcc_64`
   - OpenGL: `~/.local/gl`
   - Hunspell dev/libs: `~/.local/hunspell`
   - Dicionários: `~/.local/share/hunspell` (pt_BR, es_ES, en_US)
 - Configs do usuário: `~/.config/Papiro/` (`cliplib.json`, `macros/`, `tools.json`,
-  `Papiro.conf` com idioma/fonte/workspaces recentes)
+  `Papiro.conf` com idioma/fonte/workspaces recentes/sessão)
 - `TextPad.exe` é o alvo de análise e **não** deve ser modificado nem commitado
 
 ## ▶️ Retomar amanhã
 
 1. Recompilar: comando em **Build** acima (já configurado, basta `cmake --build build`)
 2. Rodar: `cd build && setsid nohup ./Papiro > /tmp/papiro_run.log 2>&1 &`
-3. Próximos passos sugeridos:
-   - [ ] **Sessão automática** — reabrir arquivos/aba ao iniciar (QSettings)
-   - [ ] **Painel de resultados de busca** — lista de ocorrências no dock inferior
-   - [ ] **Syntax avançado** — estados multi-linha extras (heredoc, template strings)
-   - [ ] **Temas claro/escuro** + cores de sintaxe configuráveis
-   - [ ] **Testes automatizados** (Qt Test) para core e editor
+3. Verificar: `ctest --test-dir build --output-on-failure`
+4. Próximos passos sugeridos:
+   - [ ] **Atalhos de macros** — permitir combinações além dos 9 slots fixos
+   - [ ] **Empacotamento** — AppImage/instalador e atalho de desktop
 
 ## 🔍 Verificações rápidas
 
 - Folding validado com teste isolado (dobrar bloco externo oculta linhas internas)
 - Spell checker validado: `pt_BR` carrega, aceita "casa" e rejeita "xzqwv"
-- Traduções: 182/182 finalizadas em PT, EN e ES
+- Traduções: 266/266 finalizadas em PT, EN e ES
+- `ctest`: 3/3 suítes passando (core, editor, mainwindow)
+- Atalhos de macros validados em teste: `Ctrl+F9`, `Ctrl+F10`,
+  `Ctrl+Shift+F9` e `Ctrl+Shift+1`
+- Preferências validadas: tema aplicado na hora e opções de busca repassadas
+  ao diálogo Find/Replace
+- Syntax multi-linha validado: block comment, `"""`/`'''` e template literals,
+  com estado de folding preservado após rehighlight
+- Busca em pasta validada com subdiretórios e abertura do resultado
+- Seleção em bloco validada com Alt+arrastar, copiar e recortar
+- Macros validadas: gravação, persistência em disco, renomeação, exclusão e
+  restauração das atribuições dos slots
+- Reprodução de macros preserva o texto real digitado (minúsculas e acentos),
+  incluindo entrada por IME/dead keys
 

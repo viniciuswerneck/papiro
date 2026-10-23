@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>com.github.papiro</id>
+  <name>Papiro</name>
+  <summary>A focused, cross-platform text editor</summary>
+  <description>
+    <p>Papiro is a modern text editor built with Qt 6, featuring syntax highlighting, macros, clip library, spell checking, and more.</p>
+  </description>
+  <project_license>MIT</project_license>
+  <url type="homepage">https://github.com/usuario/papiro</url>
+  <url type="bugtracker">https://github.com/usuario/papiro/issues</url>
+  <provides>
+    <binary>papiro</binary>
+  </provides>
+  <releases>
+    <release version="0.1.0" date="2026-10-23"/>
+  </releases>
+</component>

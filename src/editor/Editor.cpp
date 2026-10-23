@@ -4,8 +4,12 @@
 #include "core/SyntaxDefinition.h"
 #include "core/SpellChecker.h"
 #include "editor/SyntaxHighlighter.h"
+#include "ui/Theme.h"
 
+#include <QApplication>
+#include <QClipboard>
 #include <QContextMenuEvent>
+#include <QInputMethodEvent>
 #include <QKeyEvent>
 #include <QMenu>
 #include <QMimeData>
@@ -14,6 +18,8 @@
 #include <QTextBlock>
 #include <QTextCursor>
 #include <QTextDocument>
+#include <QTextLayout>
+#include <QTextLine>
 
 namespace papiro {
 namespace {
@@ -58,6 +64,8 @@ Editor::Editor(QWidget *parent)
     connect(this, &QPlainTextEdit::cursorPositionChanged, this, &Editor::highlightCurrentLine);
     connect(document(), &QTextDocument::contentsChanged, this, [this] {
         m_foldCacheDirty = true;
+        if (m_blockSelection)
+            clearBlockSelection();
         if (m_foldsActive)
             applyFolds();
     });
@@ -137,13 +145,26 @@ void Editor::setBaseFont(const QFont &font)
     updateLineNumberAreaWidth();
 }
 
-void Editor::gotoLine(int lineNumber)
+void Editor::refreshTheme()
+{
+    if (m_highlighter)
+        m_highlighter->refreshTheme();
+    highlightCurrentLine();
+    viewport()->update();
+    if (m_lineNumberArea)
+        m_lineNumberArea->update();
+}
+
+void Editor::gotoLine(int lineNumber, int column)
 {
     const QTextBlock block = document()->findBlockByNumber(qMax(0, lineNumber - 1));
     if (!block.isValid())
         return;
     QTextCursor cursor(block);
     cursor.movePosition(QTextCursor::StartOfBlock);
+    const int maxColumn = qMax(0, block.length() - 1);
+    cursor.movePosition(QTextCursor::Right, QTextCursor::MoveAnchor,
+                        qBound(0, column - 1, maxColumn));
     setTextCursor(cursor);
     centerCursor();
 }
@@ -223,7 +244,7 @@ void Editor::applyFolds()
 
     for (QTextBlock block = document()->firstBlock(); block.isValid(); block = block.next()) {
         const int state = block.userState();
-        if (state <= 0 || !(state & FoldedBlockState))
+        if (state <= 0 || !(state & BlockState::Folded))
             continue;
         const int end = m_foldEnds.value(block.blockNumber(), -1);
         if (end <= block.blockNumber())
@@ -260,7 +281,7 @@ void Editor::toggleFold(int blockNumber)
     int state = block.userState();
     if (state < 0)
         state = 0;
-    block.setUserState(state ^ FoldedBlockState);
+    block.setUserState(state ^ BlockState::Folded);
     applyFolds();
 
     if (!textCursor().block().isVisible()) {
@@ -285,7 +306,7 @@ void Editor::foldAll()
         int state = block.userState();
         if (state < 0)
             state = 0;
-        block.setUserState(state | FoldedBlockState);
+        block.setUserState(state | BlockState::Folded);
     }
     applyFolds();
 }
@@ -294,8 +315,8 @@ void Editor::unfoldAll()
 {
     for (QTextBlock block = document()->firstBlock(); block.isValid(); block = block.next()) {
         const int state = block.userState();
-        if (state > 0 && (state & FoldedBlockState))
-            block.setUserState(state & ~FoldedBlockState);
+        if (state > 0 && (state & BlockState::Folded))
+            block.setUserState(state & ~BlockState::Folded);
     }
     applyFolds();
 }
@@ -331,19 +352,19 @@ void Editor::lineNumberAreaPaintEvent(QPaintEvent *event)
     refreshFoldCache();
 
     QPainter painter(m_lineNumberArea);
-    painter.fillRect(event->rect(), QColor(0xF2, 0xF2, 0xF2));
+    painter.fillRect(event->rect(), Theme::colors().gutterBackground);
 
     QTextBlock block = firstVisibleBlock();
     int blockNumber = block.blockNumber();
     int top = qRound(blockBoundingGeometry(block).translated(contentOffset()).top());
     int bottom = top + qRound(blockBoundingRect(block).height());
 
-    painter.setPen(QColor(0x8A, 0x8A, 0x8A));
+    painter.setPen(Theme::colors().gutterText);
     while (block.isValid() && top <= event->rect().bottom()) {
         if (block.isVisible() && bottom >= event->rect().top()) {
             if (m_foldEnds.value(blockNumber, -1) > blockNumber) {
                 const int state = block.userState();
-                const bool folded = state > 0 && (state & FoldedBlockState);
+                const bool folded = state > 0 && (state & BlockState::Folded);
                 painter.drawText(QRect(2, top, 10, fontMetrics().height()), Qt::AlignCenter,
                                  folded ? QStringLiteral("▶") : QStringLiteral("▼"));
             }
@@ -367,13 +388,67 @@ void Editor::resizeEvent(QResizeEvent *event)
 
 void Editor::keyPressEvent(QKeyEvent *event)
 {
-    // Record key press for macro
+    // Record actual text for macro playback. Key codes alone cannot represent
+    // lowercase letters, accented characters or layout-specific symbols.
     if (m_macroManager && m_macroManager->recordingMacro()) {
-        // Only record "interesting" keys, not every modifier-only press
-        if (!(event->key() == Qt::Key_Control || event->key() == Qt::Key_Shift
-              || event->key() == Qt::Key_Alt || event->key() == Qt::Key_Meta)) {
+        const QString text = event->text();
+        bool printable = !text.isEmpty();
+        for (const QChar ch : text) {
+            if (!ch.isPrint()) {
+                printable = false;
+                break;
+            }
+        }
+
+        if (printable) {
+            recordMacroAction(text);
+        } else if (!(event->key() == Qt::Key_Control || event->key() == Qt::Key_Shift
+                     || event->key() == Qt::Key_Alt || event->key() == Qt::Key_Meta)) {
             recordMacroKeyPress(event->key(), event->modifiers());
         }
+    }
+
+    if (m_blockSelection) {
+        if (event->key() == Qt::Key_Escape) {
+            clearBlockSelection();
+            event->accept();
+            return;
+        }
+        if (event->matches(QKeySequence::Copy)) {
+            copySelection();
+            event->accept();
+            return;
+        }
+        if (event->matches(QKeySequence::Cut)) {
+            cutSelection();
+            event->accept();
+            return;
+        }
+        if (event->matches(QKeySequence::Paste)) {
+            pasteSelection();
+            event->accept();
+            return;
+        }
+        if (event->matches(QKeySequence::SelectAll)) {
+            clearBlockSelection();
+            QPlainTextEdit::selectAll();
+            event->accept();
+            return;
+        }
+        if (!isReadOnly()
+            && (event->key() == Qt::Key_Delete || event->key() == Qt::Key_Backspace)) {
+            deleteBlockSelection();
+            event->accept();
+            return;
+        }
+        if (!isReadOnly() && !event->text().isEmpty()
+            && !(event->modifiers() & (Qt::ControlModifier | Qt::AltModifier
+                                       | Qt::MetaModifier))) {
+            deleteBlockSelection();
+            QPlainTextEdit::keyPressEvent(event);
+            return;
+        }
+        clearBlockSelection();
     }
 
     const Qt::KeyboardModifiers blockingModifiers =
@@ -585,7 +660,7 @@ void Editor::addBracketMatchSelections(QList<QTextEdit::ExtraSelection> &selecti
         return;
 
     QTextCharFormat format;
-    format.setBackground(QColor(0xDF, 0xEB, 0xFF));
+    format.setBackground(Theme::colors().bracketMatch);
     format.setFontWeight(QFont::Bold);
 
     for (int location : {bracketPosition, match}) {
@@ -598,8 +673,19 @@ void Editor::addBracketMatchSelections(QList<QTextEdit::ExtraSelection> &selecti
     }
 }
 
+void Editor::inputMethodEvent(QInputMethodEvent *event)
+{
+    if (m_macroManager && m_macroManager->recordingMacro()
+        && !event->commitString().isEmpty()) {
+        recordMacroAction(event->commitString());
+    }
+    QPlainTextEdit::inputMethodEvent(event);
+}
+
 void Editor::insertFromMimeData(const QMimeData *source)
 {
+    if (m_blockSelection)
+        deleteBlockSelection();
     if (source->hasText()) {
         recordMacroAction(source->text());
     }
@@ -608,15 +694,18 @@ void Editor::insertFromMimeData(const QMimeData *source)
 
 void Editor::contextMenuEvent(QContextMenuEvent *event)
 {
-    QMenu *menu = createStandardContextMenu();
+    QMenu menu(this);
+    const bool hasBlock = m_blockSelection;
+    const bool hasLinear = textCursor().hasSelection();
+    const bool hasSelection = hasBlock || hasLinear;
 
-    QTextCursor cursor = cursorForPosition(event->pos());
-    cursor.select(QTextCursor::WordUnderCursor);
-    const QString word = cursor.selectedText();
+    QTextCursor wordCursor = cursorForPosition(event->pos());
+    wordCursor.select(QTextCursor::WordUnderCursor);
+    const QString word = wordCursor.selectedText();
 
     if (m_spellChecker && m_spellChecker->isLoaded() && word.size() >= 2
         && !m_spellChecker->isCorrect(word)) {
-        auto *spellingMenu = new QMenu(tr("Spelling"), menu);
+        auto *spellingMenu = menu.addMenu(tr("Spelling"));
         const QStringList suggestions = m_spellChecker->suggestions(word, 6);
         if (suggestions.isEmpty()) {
             QAction *none = spellingMenu->addAction(tr("(no suggestions)"));
@@ -624,8 +713,8 @@ void Editor::contextMenuEvent(QContextMenuEvent *event)
         } else {
             for (const QString &suggestion : suggestions) {
                 QAction *action = spellingMenu->addAction(suggestion);
-                connect(action, &QAction::triggered, this, [this, cursor, suggestion]() {
-                    QTextCursor replacement = cursor;
+                connect(action, &QAction::triggered, this, [this, wordCursor, suggestion]() {
+                    QTextCursor replacement = wordCursor;
                     replacement.insertText(suggestion);
                     setTextCursor(replacement);
                 });
@@ -634,17 +723,381 @@ void Editor::contextMenuEvent(QContextMenuEvent *event)
         spellingMenu->addSeparator();
         QAction *addAction = spellingMenu->addAction(tr("Add to dictionary"));
         connect(addAction, &QAction::triggered, this, [this, word]() {
-            m_spellChecker->addToDictionary(word);
+            if (m_spellChecker)
+                m_spellChecker->addToDictionary(word);
         });
-
-        if (!menu->actions().isEmpty())
-            menu->insertMenu(menu->actions().first(), spellingMenu);
-        else
-            menu->addMenu(spellingMenu);
+        menu.addSeparator();
     }
 
-    menu->exec(event->globalPos());
-    delete menu;
+    QAction *undoAction = menu.addAction(tr("&Undo"));
+    undoAction->setShortcut(QKeySequence::Undo);
+    undoAction->setEnabled(!isReadOnly() && document()->isUndoAvailable());
+    connect(undoAction, &QAction::triggered, this, &QPlainTextEdit::undo);
+
+    QAction *redoAction = menu.addAction(tr("&Redo"));
+    redoAction->setShortcut(QKeySequence::Redo);
+    redoAction->setEnabled(!isReadOnly() && document()->isRedoAvailable());
+    connect(redoAction, &QAction::triggered, this, &QPlainTextEdit::redo);
+
+    menu.addSeparator();
+
+    QAction *cutAction = menu.addAction(tr("Cu&t"));
+    cutAction->setShortcut(QKeySequence::Cut);
+    cutAction->setEnabled(!isReadOnly() && hasSelection);
+    connect(cutAction, &QAction::triggered, this, &Editor::cutSelection);
+
+    QAction *copyAction = menu.addAction(tr("&Copy"));
+    copyAction->setShortcut(QKeySequence::Copy);
+    copyAction->setEnabled(hasSelection);
+    connect(copyAction, &QAction::triggered, this, &Editor::copySelection);
+
+    QAction *pasteAction = menu.addAction(tr("&Paste"));
+    pasteAction->setShortcut(QKeySequence::Paste);
+    pasteAction->setEnabled(!isReadOnly() && canPaste());
+    connect(pasteAction, &QAction::triggered, this, &Editor::pasteSelection);
+
+    QAction *deleteAction = menu.addAction(tr("&Delete"));
+    deleteAction->setShortcut(QKeySequence::Delete);
+    deleteAction->setEnabled(!isReadOnly() && hasSelection);
+    connect(deleteAction, &QAction::triggered, this, [this]() {
+        if (m_blockSelection) {
+            deleteBlockSelection();
+        } else {
+            QTextCursor cursor = textCursor();
+            cursor.removeSelectedText();
+            setTextCursor(cursor);
+        }
+    });
+
+    menu.addSeparator();
+
+    QAction *selectAllAction = menu.addAction(tr("Select &All"));
+    selectAllAction->setShortcut(QKeySequence::SelectAll);
+    connect(selectAllAction, &QAction::triggered, this, &Editor::selectAll);
+
+    menu.addSeparator();
+
+    QAction *duplicateAction = menu.addAction(tr("D&uplicate Line"));
+    duplicateAction->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_D));
+    duplicateAction->setEnabled(!isReadOnly());
+    connect(duplicateAction, &QAction::triggered, this, &Editor::duplicateCurrentLine);
+
+    QAction *deleteLineAction = menu.addAction(tr("Delete &Line"));
+    deleteLineAction->setShortcut(QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_K));
+    deleteLineAction->setEnabled(!isReadOnly());
+    connect(deleteLineAction, &QAction::triggered, this, &Editor::deleteCurrentLine);
+
+    QAction *foldAction = menu.addAction(tr("Toggle &Fold"));
+    connect(foldAction, &QAction::triggered, this, &Editor::toggleFoldAtCursor);
+
+    menu.addSeparator();
+
+    QAction *columnModeAction = menu.addAction(tr("&Column Selection Mode"));
+    columnModeAction->setCheckable(true);
+    columnModeAction->setChecked(m_blockSelectMode);
+    connect(columnModeAction, &QAction::toggled, this, &Editor::setBlockSelectionMode);
+
+    QAction *findAction = menu.addAction(tr("&Find / Replace..."));
+    findAction->setShortcut(QKeySequence::Find);
+    connect(findAction, &QAction::triggered, this, &Editor::findRequested);
+
+    QAction *gotoAction = menu.addAction(tr("&Go to Line..."));
+    gotoAction->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_G));
+    connect(gotoAction, &QAction::triggered, this, &Editor::gotoLineRequested);
+
+    menu.exec(event->globalPos());
+}
+
+void Editor::setBlockSelectionMode(bool enabled)
+{
+    if (m_blockSelectMode == enabled)
+        return;
+    m_blockSelectMode = enabled;
+    if (!enabled)
+        m_blockSelecting = false;
+}
+
+Editor::BlockPoint Editor::blockPointAt(const QPoint &position) const
+{
+    BlockPoint point;
+    const QTextCursor cursor = cursorForPosition(position);
+    const QTextBlock block = cursor.block();
+    if (!block.isValid())
+        return point;
+
+    point.block = block.blockNumber();
+    point.column = cursor.positionInBlock();
+
+    QTextLayout *layout = block.layout();
+    if (layout && layout->lineCount() > 0) {
+        QTextCursor lineStart(document());
+        lineStart.setPosition(block.position());
+        const QTextLine line = layout->lineAt(0);
+        const qreal x = position.x() - cursorRect(lineStart).x() - line.x();
+        point.column = line.xToCursor(x);
+    }
+
+    point.column = qBound(0, point.column, block.length());
+    return point;
+}
+
+QTextCursor Editor::cursorForBlockPoint(const BlockPoint &point) const
+{
+    QTextCursor cursor(document());
+    const QTextBlock block = document()->findBlockByNumber(point.block);
+    if (!block.isValid())
+        return cursor;
+    cursor.setPosition(block.position() + qBound(0, point.column, block.length()));
+    return cursor;
+}
+
+int Editor::blockSelectionTop() const
+{
+    return qMin(m_blockAnchor.block, m_blockCursor.block);
+}
+
+int Editor::blockSelectionBottom() const
+{
+    return qMax(m_blockAnchor.block, m_blockCursor.block);
+}
+
+int Editor::blockSelectionLeft() const
+{
+    return qMin(m_blockAnchor.column, m_blockCursor.column);
+}
+
+int Editor::blockSelectionRight() const
+{
+    return qMax(m_blockAnchor.column, m_blockCursor.column);
+}
+
+QList<QRect> Editor::blockSelectionRects() const
+{
+    QList<QRect> rectangles;
+    if (!m_blockSelection || !m_blockAnchor.isValid() || !m_blockCursor.isValid())
+        return rectangles;
+
+    const int left = blockSelectionLeft();
+    const int right = blockSelectionRight();
+    for (int number = blockSelectionTop(); number <= blockSelectionBottom(); ++number) {
+        const QTextBlock block = document()->findBlockByNumber(number);
+        if (!block.isValid() || !block.isVisible())
+            continue;
+
+        const int start = qMin(left, block.length());
+        const int end = qMin(right, block.length());
+
+        QTextCursor startCursor(document());
+        startCursor.setPosition(block.position() + start);
+        QTextCursor endCursor(document());
+        endCursor.setPosition(block.position() + end);
+
+        const QRect startRect = cursorRect(startCursor);
+        const QRect endRect = cursorRect(endCursor);
+        const int x1 = qMin(startRect.x(), endRect.x());
+        const int x2 = qMax(startRect.x(), endRect.x());
+        if (x2 <= x1 || startRect.height() <= 0)
+            continue;
+        rectangles.append(QRect(QPoint(x1, startRect.y()), QSize(x2 - x1, startRect.height())));
+    }
+    return rectangles;
+}
+
+QString Editor::blockSelectionText() const
+{
+    if (!m_blockSelection || !m_blockAnchor.isValid())
+        return QString();
+
+    const int left = blockSelectionLeft();
+    const int right = blockSelectionRight();
+    const int width = right - left;
+    if (width <= 0)
+        return QString();
+
+    QStringList lines;
+    for (int number = blockSelectionTop(); number <= blockSelectionBottom(); ++number) {
+        const QTextBlock block = document()->findBlockByNumber(number);
+        if (!block.isValid())
+            continue;
+        const QString text = block.text();
+        const int start = qMin(left, text.size());
+        const int end = qMin(right, text.size());
+        QString piece = text.mid(start, qMax(0, end - start));
+        if (piece.size() < width)
+            piece += QString(width - piece.size(), QLatin1Char(' '));
+        lines.append(piece);
+    }
+    return lines.join(QLatin1Char('\n'));
+}
+
+void Editor::clearBlockSelection()
+{
+    if (!m_blockSelection && !m_blockSelecting)
+        return;
+    m_blockSelection = false;
+    m_blockSelecting = false;
+    viewport()->update();
+    emit blockSelectionChanged();
+}
+
+void Editor::copySelection()
+{
+    if (m_blockSelection) {
+        const QString text = blockSelectionText();
+        if (!text.isEmpty())
+            QApplication::clipboard()->setText(text);
+        return;
+    }
+    QPlainTextEdit::copy();
+}
+
+void Editor::cutSelection()
+{
+    if (!m_blockSelection) {
+        QPlainTextEdit::cut();
+        return;
+    }
+    if (isReadOnly())
+        return;
+
+    const QString text = blockSelectionText();
+    if (!text.isEmpty())
+        QApplication::clipboard()->setText(text);
+    deleteBlockSelection();
+}
+
+void Editor::pasteSelection()
+{
+    if (!m_blockSelection) {
+        QPlainTextEdit::paste();
+        return;
+    }
+    if (isReadOnly())
+        return;
+
+    deleteBlockSelection();
+    QPlainTextEdit::paste();
+}
+
+void Editor::deleteBlockSelection()
+{
+    if (!m_blockSelection || isReadOnly() || !m_blockAnchor.isValid())
+        return;
+
+    const int top = blockSelectionTop();
+    const int left = blockSelectionLeft();
+    const int right = blockSelectionRight();
+
+    QTextCursor editorCursor(document());
+    editorCursor.beginEditBlock();
+    for (int number = blockSelectionBottom(); number >= top; --number) {
+        const QTextBlock block = document()->findBlockByNumber(number);
+        if (!block.isValid() || !block.isVisible())
+            continue;
+        const int start = qMin(left, block.length());
+        const int end = qMin(right, block.length());
+        if (end <= start)
+            continue;
+
+        editorCursor.setPosition(block.position() + start);
+        editorCursor.setPosition(block.position() + end, QTextCursor::KeepAnchor);
+        editorCursor.removeSelectedText();
+    }
+    editorCursor.endEditBlock();
+
+    clearBlockSelection();
+    setTextCursor(cursorForBlockPoint({top, left}));
+    ensureCursorVisible();
+}
+
+void Editor::selectAll()
+{
+    clearBlockSelection();
+    QPlainTextEdit::selectAll();
+}
+
+void Editor::selectBlock(int anchorBlock, int anchorColumn, int currentBlock, int currentColumn)
+{
+    const QTextBlock anchor = document()->findBlockByNumber(anchorBlock);
+    const QTextBlock current = document()->findBlockByNumber(currentBlock);
+    if (!anchor.isValid() || !current.isValid())
+        return;
+
+    m_blockAnchor = {anchorBlock, qBound(0, anchorColumn, anchor.length())};
+    m_blockCursor = {currentBlock, qBound(0, currentColumn, current.length())};
+    m_blockSelection = true;
+    m_blockSelecting = false;
+    setTextCursor(cursorForBlockPoint(m_blockCursor));
+    viewport()->update();
+    emit blockSelectionChanged();
+}
+
+void Editor::updateBlockSelection(const QPoint &position)
+{
+    const BlockPoint point = blockPointAt(position);
+    if (point == m_blockCursor)
+        return;
+    m_blockCursor = point;
+    setTextCursor(cursorForBlockPoint(point));
+    ensureCursorVisible();
+    viewport()->update();
+}
+
+void Editor::mousePressEvent(QMouseEvent *event)
+{
+    if (event->button() == Qt::LeftButton
+        && ((event->modifiers() & Qt::AltModifier) || m_blockSelectMode)) {
+        setFocus(Qt::MouseFocusReason);
+        m_blockAnchor = blockPointAt(event->position().toPoint());
+        m_blockCursor = m_blockAnchor;
+        m_blockSelection = true;
+        m_blockSelecting = true;
+        setTextCursor(cursorForBlockPoint(m_blockCursor));
+        viewport()->update();
+        emit blockSelectionChanged();
+        event->accept();
+        return;
+    }
+
+    if (m_blockSelection)
+        clearBlockSelection();
+    QPlainTextEdit::mousePressEvent(event);
+}
+
+void Editor::mouseMoveEvent(QMouseEvent *event)
+{
+    if (m_blockSelecting) {
+        updateBlockSelection(event->position().toPoint());
+        event->accept();
+        return;
+    }
+    QPlainTextEdit::mouseMoveEvent(event);
+}
+
+void Editor::mouseReleaseEvent(QMouseEvent *event)
+{
+    if (m_blockSelecting && event->button() == Qt::LeftButton) {
+        updateBlockSelection(event->position().toPoint());
+        m_blockSelecting = false;
+        emit blockSelectionChanged();
+        event->accept();
+        return;
+    }
+    QPlainTextEdit::mouseReleaseEvent(event);
+}
+
+void Editor::paintEvent(QPaintEvent *event)
+{
+    QPlainTextEdit::paintEvent(event);
+
+    if (!m_blockSelection)
+        return;
+
+    QPainter painter(viewport());
+    QColor color = palette().color(QPalette::Highlight);
+    color.setAlpha(80);
+    for (const QRect &rectangle : blockSelectionRects())
+        painter.fillRect(rectangle, color);
 }
 
 void Editor::updateLineNumberAreaWidth()
@@ -670,7 +1123,7 @@ void Editor::highlightCurrentLine()
     QList<QTextEdit::ExtraSelection> selections;
     if (!isReadOnly()) {
         QTextEdit::ExtraSelection selection;
-        selection.format.setBackground(QColor(0xF5, 0xF7, 0xFA));
+        selection.format.setBackground(Theme::colors().currentLine);
         selection.format.setProperty(QTextFormat::FullWidthSelection, true);
         selection.cursor = textCursor();
         selection.cursor.clearSelection();
@@ -758,8 +1211,8 @@ bool executeMacroAction(const MacroAction &action, QPlainTextEdit *editor)
             if (action.key >= Qt::Key_Space && action.key <= Qt::Key_AsciiTilde
                 && (action.modifiers == Qt::NoModifier || action.modifiers == Qt::ShiftModifier)) {
                 QChar ch(static_cast<ushort>(action.key));
-                if (action.modifiers == Qt::ShiftModifier)
-                    ch = ch.toUpper();
+                if (action.key >= Qt::Key_A && action.key <= Qt::Key_Z)
+                    ch = (action.modifiers & Qt::ShiftModifier) ? ch.toUpper() : ch.toLower();
                 editor->insertPlainText(ch);
                 return true;
             }

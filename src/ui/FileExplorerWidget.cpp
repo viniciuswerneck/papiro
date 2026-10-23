@@ -91,9 +91,10 @@ void FileExplorerWidget::handleDoubleClick(const QModelIndex &index)
 void FileExplorerWidget::showContextMenu(const QPoint &position)
 {
     const QModelIndex index = m_tree->indexAt(position);
-    if (!index.isValid())
+    const QFileInfo info = index.isValid() ? m_model->fileInfo(index)
+                                           : QFileInfo(m_model->rootPath());
+    if (!info.exists())
         return;
-    const QFileInfo info = m_model->fileInfo(index);
 
     QMenu menu(this);
     if (info.isFile()) {
@@ -105,6 +106,11 @@ void FileExplorerWidget::showContextMenu(const QPoint &position)
     QAction *copyPath = menu.addAction(tr("Copy Path"));
     connect(copyPath, &QAction::triggered, this, [info] {
         QApplication::clipboard()->setText(QDir::toNativeSeparators(info.absoluteFilePath()));
+    });
+    QAction *findInFolder = menu.addAction(tr("Find in &Folder..."));
+    connect(findInFolder, &QAction::triggered, this, [this, info] {
+        emit findInFolderRequested(info.isDir() ? info.absoluteFilePath()
+                                                : info.absolutePath());
     });
     menu.exec(m_tree->viewport()->mapToGlobal(position));
 }

@@ -1,7 +1,5 @@
 #include "core/Encoding.h"
 
-#include <QStringConverter>
-
 namespace papiro {
 namespace {
 
@@ -83,11 +81,50 @@ QByteArray encodeUtf16(const QString &text, bool littleEndian)
 
 bool looksLikeValidUtf8(const QByteArray &data)
 {
-    if (data.isEmpty())
-        return true;
-    QStringDecoder decoder(QStringConverter::Utf8);
-    decoder.decode(QByteArrayView(data));
-    return !decoder.hasError();
+    const auto *bytes = reinterpret_cast<const uchar *>(data.constData());
+    const int size = data.size();
+    int i = 0;
+    while (i < size) {
+        const uchar lead = bytes[i];
+        if (lead < 0x80) {
+            ++i;
+            continue;
+        }
+
+        int continuation = 0;
+        if (lead >= 0xC2 && lead <= 0xDF) {
+            continuation = 1;
+        } else if (lead >= 0xE0 && lead <= 0xEF) {
+            continuation = 2;
+        } else if (lead >= 0xF0 && lead <= 0xF4) {
+            continuation = 3;
+        } else {
+            // Continuation byte without a lead, overlong 2-byte lead (C0/C1)
+            // or a byte beyond U+10FFFF.
+            return false;
+        }
+
+        if (i + continuation >= size)
+            return false;
+
+        for (int j = 1; j <= continuation; ++j) {
+            if ((bytes[i + j] & 0xC0) != 0x80)
+                return false;
+        }
+
+        // Reject overlong encodings and UTF-16 surrogate code points.
+        if (lead == 0xE0 && bytes[i + 1] < 0xA0)
+            return false;
+        if (lead == 0xED && bytes[i + 1] > 0x9F)
+            return false;
+        if (lead == 0xF0 && bytes[i + 1] < 0x90)
+            return false;
+        if (lead == 0xF4 && bytes[i + 1] > 0x8F)
+            return false;
+
+        i += continuation + 1;
+    }
+    return true;
 }
 
 } // namespace

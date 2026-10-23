@@ -24,11 +24,16 @@ public:
 
     void setFindText(const QString &text);
     void focusFindField();
+    void setSearchFolder(const QString &path);
+    QString searchFolder() const;
+    void setSearchOptions(bool matchCase, bool wholeWord, bool regex, bool wrap);
 
     FindRequest request() const;
 
 signals:
     void findNextRequested(const papiro::FindRequest &request, bool backward);
+    void findAllRequested(const papiro::FindRequest &request);
+    void findAllInFolderRequested(const papiro::FindRequest &request, const QString &folder);
     void replaceRequested(const papiro::FindRequest &request, const QString &replacement);
     void replaceAllRequested(const papiro::FindRequest &request, const QString &replacement);
 
@@ -36,9 +41,11 @@ private:
     void emitFind(bool backward);
     void emitReplace();
     void emitReplaceAll();
+    void emitFindInFolder();
 
     QLineEdit *m_find = nullptr;
     QLineEdit *m_replace = nullptr;
+    QLineEdit *m_folder = nullptr;
     QCheckBox *m_matchCase = nullptr;
     QCheckBox *m_wholeWord = nullptr;
     QCheckBox *m_regex = nullptr;

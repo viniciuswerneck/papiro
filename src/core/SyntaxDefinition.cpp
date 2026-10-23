@@ -69,6 +69,7 @@ SyntaxDefinition SyntaxDefinition::fromText(const QString &text, QString *error)
     definition.extensions.clear();
     definition.keywords.clear();
     definition.stringDelimiters.clear();
+    definition.multilineStringDelimiters.clear();
 
     const QStringList lines = text.split(QLatin1Char('\n'));
     for (int index = 0; index < lines.size(); ++index) {
@@ -109,6 +110,8 @@ SyntaxDefinition SyntaxDefinition::fromText(const QString &text, QString *error)
             definition.blockCommentEnd = value;
         } else if (key == QLatin1String("stringdelimiters")) {
             definition.stringDelimiters = splitList(value, true);
+        } else if (key == QLatin1String("multilinestringdelimiters")) {
+            definition.multilineStringDelimiters = splitList(value, true);
         } else if (key == QLatin1String("escapechar")) {
             definition.escapeChar = value;
         } else if (key == QLatin1String("numbers")) {

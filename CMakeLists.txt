@@ -51,18 +51,24 @@ target_link_libraries(papiro_core PUBLIC Qt6::Core Qt6::Gui)
 # ---------------------------------------------------------------------------
 # Application
 # ---------------------------------------------------------------------------
-qt_add_executable(Papiro WIN32 MACOSX_BUNDLE
-    src/main.cpp
+set(PAPIRO_APP_SOURCES
     src/app/MainWindow.cpp
     src/app/Document.cpp
     src/editor/Editor.cpp
     src/editor/SyntaxHighlighter.cpp
     src/ui/ClipLibraryWidget.cpp
+    src/ui/Theme.cpp
     src/ui/FileExplorerWidget.cpp
+    src/ui/MacroManagerDialog.cpp
+    src/ui/PreferencesDialog.cpp
     src/ui/ToolsDialog.cpp
     src/ui/FindReplaceDialog.cpp
 )
 
+qt_add_executable(Papiro WIN32 MACOSX_BUNDLE
+    src/main.cpp
+    ${PAPIRO_APP_SOURCES}
+)
 target_link_libraries(Papiro PRIVATE papiro_core Qt6::Widgets Qt6::PrintSupport)
 target_compile_definitions(Papiro PRIVATE PAPIRO_VERSION="${PROJECT_VERSION}")
 
@@ -102,13 +108,112 @@ install(TARGETS Papiro
 )
 
 # ---------------------------------------------------------------------------
-# Tests (disabled for now)
+# Tests
 # ---------------------------------------------------------------------------
-# include(CTest)
-# if(BUILD_TESTING)
-#     find_package(Qt6 REQUIRED COMPONENTS Test)
-#
-#     qt_add_executable(test_core tests/test_core.cpp)
-#     target_link_libraries(test_core PRIVATE papiro_core Qt6::Test)
-#     add_test(NAME core COMMAND test_core)
-# endif()
+include(CTest)
+if(BUILD_TESTING)
+    find_package(Qt6 REQUIRED COMPONENTS Test)
+
+    qt_add_executable(test_core tests/test_core.cpp)
+    target_link_libraries(test_core PRIVATE papiro_core Qt6::Test)
+    add_test(NAME core COMMAND test_core)
+
+    # Editor lives in the app target, so compile the two editor sources it
+    # needs into the test binary as well.
+    qt_add_executable(test_editor
+        tests/test_editor.cpp
+        src/editor/Editor.cpp
+        src/editor/SyntaxHighlighter.cpp
+        src/ui/Theme.cpp
+    )
+    target_link_libraries(test_editor PRIVATE papiro_core Qt6::Widgets Qt6::Test)
+    add_test(NAME editor COMMAND test_editor)
+
+    # MainWindow integration tests (session restore and friends).
+    qt_add_executable(test_mainwindow
+        tests/test_mainwindow.cpp
+        ${PAPIRO_APP_SOURCES}
+    )
+    target_link_libraries(test_mainwindow PRIVATE papiro_core Qt6::Widgets
+                          Qt6::PrintSupport Qt6::Test)
+    add_test(NAME mainwindow COMMAND test_mainwindow)
+
+    file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/test-config)
+
+    set_tests_properties(core editor PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+    set_tests_properties(mainwindow PROPERTIES ENVIRONMENT
+        "QT_QPA_PLATFORM=offscreen;XDG_CONFIG_HOME=${CMAKE_CURRENT_BINARY_DIR}/test-config")
+endif()
+
+# ---------------------------------------------------------------------------
+# CPack Packaging Configuration
+# ---------------------------------------------------------------------------
+include(CPack)
+
+# Common package metadata
+set(CPACK_PACKAGE_NAME "Papiro")
+set(CPACK_PACKAGE_VERSION ${PROJECT_VERSION})
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "A focused, cross-platform text editor")
+set(CPACK_PACKAGE_VENDOR "Papiro Project")
+set(CPACK_PACKAGE_CONTACT "https://github.com/usuario/papiro")
+set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
+set(CPACK_PACKAGE_INSTALL_DIRECTORY "Papiro")
+
+# Consistent package file naming
+set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${CPACK_PACKAGE_VERSION}-${CMAKE_SYSTEM_NAME}-${CMAKE_SYSTEM_PROCESSOR}")
+
+# ---------------------------------------------------------------------------
+# DEB (Linux)
+# ---------------------------------------------------------------------------
+set(CPACK_DEBIAN_PACKAGE_MAINTAINER "Papiro Project")
+set(CPACK_DEBIAN_PACKAGE_SECTION "editors")
+set(CPACK_DEBIAN_PACKAGE_PRIORITY "optional")
+set(CPACK_DEBIAN_PACKAGE_DEPENDS "libqt6core6, libqt6widgets6, libqt6printsupport6, libgl1")
+set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
+# Extra control fields file
+set(CPACK_DEBIAN_CONTROL_EXTRA "${CMAKE_CURRENT_SOURCE_DIR}/packaging/linux/debian-control-extra.txt")
+
+# ---------------------------------------------------------------------------
+# RPM (Linux)
+# ---------------------------------------------------------------------------
+set(CPACK_RPM_PACKAGE_SUMMARY "A focused, cross-platform text editor")
+set(CPACK_RPM_PACKAGE_LICENSE "MIT")
+set(CPACK_RPM_PACKAGE_GROUP "Applications/Editors")
+set(CPACK_RPM_PACKAGE_REQUIRES "qt6-qtbase, qt6-qtprintsupport")
+
+# ---------------------------------------------------------------------------
+# NSIS (Windows)
+# ---------------------------------------------------------------------------
+set(CPACK_NSIS_PACKAGE_NAME "Papiro")
+set(CPACK_NSIS_DISPLAY_NAME "Papiro Text Editor")
+set(CPACK_NSIS_HELP_URL "https://github.com/usuario/papiro")
+set(CPACK_NSIS_URL_INFO_ABOUT "https://github.com/usuario/papiro")
+set(CPACK_NSIS_CONTACT "usuario@exemplo.com")
+set(CPACK_NSIS_MODIFY_PATH ON)
+set(CPACK_NSIS_INSTALLED_ICON_NAME "bin/papiro.ico")
+set(CPACK_NSIS_UNINSTALL_TITLE "Uninstall Papiro")
+set(CPACK_NSIS_COMPRESSOR "zstd")
+
+# ---------------------------------------------------------------------------
+# Portable ZIP (cross-platform)
+# ---------------------------------------------------------------------------
+set(CPACK_GENERATOR "ZIP")
+set(CPACK_ZIP_PACKAGE_NAME "Papiro-${PROJECT_VERSION}-${CMAKE_SYSTEM_NAME}-${CMAKE_SYSTEM_PROCESSOR}")
+
+# ---------------------------------------------------------------------------
+# Install rules for packaging
+# ---------------------------------------------------------------------------
+# Install binary
+install(TARGETS Papiro RUNTIME DESTINATION bin)
+
+# Install .desktop file
+install(FILES resources/papiro.desktop DESTINATION share/applications)
+
+# Install AppStream metainfo
+install(FILES resources/papiro.metainfo.xml DESTINATION share/metainfo)
+
+# Install icons
+install(FILES resources/icons/papiro.svg DESTINATION share/icons/hicolor/scalable/apps)
+install(FILES resources/icons/papiro.png DESTINATION share/icons/hicolor/256x256/apps)
+
+

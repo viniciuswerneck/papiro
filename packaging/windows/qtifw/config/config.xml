@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Installer>
+  <Name>Papiro</Name>
+  <Version>0.1.0</Version>
+  <Title>Papiro Text Editor Setup</Title>
+  <Publisher>Papiro Project</Publisher>
+  <StartMenuDir>Papiro</StartMenuDir>
+  <TargetDir>@ApplicationsDir@/Papiro</TargetDir>
+  <RemoteRepositories/>
+  <ComponentGroups>
+    <ComponentGroup>
+      <Name>com.papiro.app</Name>
+      <DisplayName>Papiro Text Editor</DisplayName>
+      <Description>Install Papiro Text Editor</Description>
+      <Version>0.1.0</Version>
+      <ReleaseDate>2026-10-23</ReleaseDate>
+      <Default>true</Default>
+      <Script>installscript.qs</Script>
+    </ComponentGroup>
+  </ComponentGroups>
+</Installer>

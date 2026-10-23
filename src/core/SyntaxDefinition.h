@@ -13,7 +13,8 @@ namespace papiro {
  * sections in brackets, `Key=Value` lines, `;` or `#` to start a comment line.
  * Recognized keys: Name, Description, Extensions, CaseSensitive, Keywords,
  * LineComment, BlockCommentStart, BlockCommentEnd, StringDelimiters,
- * EscapeChar and Numbers. See resources/syntax for examples.
+ * MultilineStringDelimiters, EscapeChar and Numbers. See resources/syntax for
+ * examples.
  */
 struct SyntaxDefinition {
     QString name = QStringLiteral("Plain Text");
@@ -25,6 +26,9 @@ struct SyntaxDefinition {
     QString blockCommentStart;
     QString blockCommentEnd;
     QStringList stringDelimiters;
+    /*! Delimiters whose strings may continue on following lines (e.g. Python
+     *  triple quotes or JavaScript template literals). */
+    QStringList multilineStringDelimiters;
     QString escapeChar = QStringLiteral("\\");
     bool highlightNumbers = true;
 

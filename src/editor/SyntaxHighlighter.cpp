@@ -1,10 +1,13 @@
 #include "editor/SyntaxHighlighter.h"
 
 #include "core/SpellChecker.h"
+#include "ui/Theme.h"
 
 #include <QColor>
 #include <QFont>
 #include <QRegularExpression>
+
+#include <algorithm>
 
 namespace papiro {
 
@@ -19,14 +22,49 @@ SyntaxHighlighter::SyntaxHighlighter(QTextDocument *document, const SyntaxDefini
         && !definition.blockCommentEnd.isEmpty();
     m_hasLineComment = !definition.lineComment.isEmpty();
 
-    m_keywordFormat.setForeground(QColor(0x00, 0x33, 0xB3));
+    const auto addToken = [this](const QString &text, bool multiline) {
+        if (text.isEmpty())
+            return;
+        for (StringToken &token : m_stringTokens) {
+            if (token.text == text) {
+                token.multiline = token.multiline || multiline;
+                return;
+            }
+        }
+        m_stringTokens.append({text, multiline});
+    };
+
+    for (const QString &delimiter : definition.stringDelimiters)
+        addToken(delimiter, false);
+    for (const QString &delimiter : definition.multilineStringDelimiters)
+        addToken(delimiter, true);
+
+    // Match the longest delimiter first so """ wins over " and ```` over `.
+    std::stable_sort(m_stringTokens.begin(), m_stringTokens.end(),
+                     [](const StringToken &a, const StringToken &b) {
+                         return a.text.size() > b.text.size();
+                     });
+
+    updateFormats();
+}
+
+void SyntaxHighlighter::updateFormats()
+{
+    const Theme::Colors colors = Theme::colors();
+    m_keywordFormat.setForeground(colors.keyword);
     m_keywordFormat.setFontWeight(QFont::DemiBold);
 
-    m_commentFormat.setForeground(QColor(0x8A, 0x8A, 0x8A));
+    m_commentFormat.setForeground(colors.comment);
     m_commentFormat.setFontItalic(true);
 
-    m_stringFormat.setForeground(QColor(0x06, 0x7D, 0x17));
-    m_numberFormat.setForeground(QColor(0x17, 0x50, 0xEB));
+    m_stringFormat.setForeground(colors.string);
+    m_numberFormat.setForeground(colors.number);
+}
+
+void SyntaxHighlighter::refreshTheme()
+{
+    updateFormats();
+    rehighlight();
 }
 
 bool SyntaxHighlighter::startsWithAt(const QString &text, int position, const QString &token) const
@@ -46,6 +84,34 @@ bool SyntaxHighlighter::isIdentifierStart(QChar ch) const
 bool SyntaxHighlighter::isIdentifierChar(QChar ch) const
 {
     return ch.isLetterOrNumber() || ch == QLatin1Char('_');
+}
+
+int SyntaxHighlighter::findStringEnd(const QString &text, int from, const QString &delimiter) const
+{
+    const bool allowEscape = !m_definition.escapeChar.isEmpty();
+    int cursor = qMax(0, from);
+    while (cursor < text.size()) {
+        if (allowEscape && startsWithAt(text, cursor, m_definition.escapeChar)) {
+            cursor += m_definition.escapeChar.size() + 1;
+            continue;
+        }
+        if (startsWithAt(text, cursor, delimiter))
+            return cursor + delimiter.size();
+        ++cursor;
+    }
+    return -1;
+}
+
+int SyntaxHighlighter::previousSyntaxState() const
+{
+    return previousBlockState() & BlockState::SyntaxMask;
+}
+
+void SyntaxHighlighter::setSyntaxState(int state)
+{
+    // Keep the fold bit (and any other non-syntax bits) untouched.
+    const int preserved = currentBlock().userState() & ~BlockState::SyntaxMask;
+    setCurrentBlockState(preserved | (state & BlockState::SyntaxMask));
 }
 
 void SyntaxHighlighter::setSpellChecker(SpellChecker *checker)
@@ -97,41 +163,33 @@ void SyntaxHighlighter::applySyntax(const QString &text)
 
     const int length = text.size();
     int position = 0;
+    const int previous = previousSyntaxState();
 
-    if (previousBlockState() == 1 && m_hasBlockComment) {
-        const int end = text.indexOf(m_definition.blockCommentEnd);
-        if (end < 0) {
-            setFormat(0, length, m_commentFormat);
-            setCurrentBlockState(1);
-            return;
-        }
-        const int stop = end + m_definition.blockCommentEnd.size();
-        setFormat(0, stop, m_commentFormat);
-        position = stop;
-    }
-
-    if (previousBlockState() == 2 && !m_definition.stringDelimiters.isEmpty()) {
-        const QString delimiter = m_definition.stringDelimiters.first();
-        const bool allowEscape = !m_definition.escapeChar.isEmpty();
-        int cursor = 0;
-        while (cursor < length) {
-            if (allowEscape && startsWithAt(text, cursor, m_definition.escapeChar)) {
-                cursor += m_definition.escapeChar.size() + 1;
-                continue;
+    if (previous == BlockCommentState) {
+        if (m_hasBlockComment) {
+            const int end = text.indexOf(m_definition.blockCommentEnd);
+            if (end < 0) {
+                setFormat(0, length, m_commentFormat);
+                setSyntaxState(BlockCommentState);
+                return;
             }
-            if (startsWithAt(text, cursor, delimiter)) {
-                cursor += delimiter.size();
-                break;
+            const int stop = end + m_definition.blockCommentEnd.size();
+            setFormat(0, stop, m_commentFormat);
+            position = stop;
+        }
+    } else if (previous >= MultilineStringStateBase) {
+        const int index = previous - MultilineStringStateBase;
+        if (index >= 0 && index < m_stringTokens.size() && m_stringTokens.at(index).multiline) {
+            const QString &delimiter = m_stringTokens.at(index).text;
+            const int stop = findStringEnd(text, 0, delimiter);
+            if (stop < 0) {
+                setFormat(0, length, m_stringFormat);
+                setSyntaxState(previous);
+                return;
             }
-            ++cursor;
+            setFormat(0, stop, m_stringFormat);
+            position = stop;
         }
-        cursor = qMin(cursor, length);
-        setFormat(0, cursor, m_stringFormat);
-        if (cursor >= length) {
-            setCurrentBlockState(2);
-            return;
-        }
-        position = cursor;
     }
 
     while (position < length) {
@@ -147,8 +205,8 @@ void SyntaxHighlighter::applySyntax(const QString &text)
                                          position + m_definition.blockCommentStart.size());
             if (end < 0) {
                 setFormat(position, length - position, m_commentFormat);
-                setCurrentBlockState(1);
-                break;
+                setSyntaxState(BlockCommentState);
+                return;
             }
             const int stop = end + m_definition.blockCommentEnd.size();
             setFormat(position, stop - position, m_commentFormat);
@@ -157,32 +215,20 @@ void SyntaxHighlighter::applySyntax(const QString &text)
         }
 
         bool stringHandled = false;
-        for (const QString &delimiter : m_definition.stringDelimiters) {
-            if (delimiter.isEmpty() || !startsWithAt(text, position, delimiter))
+        for (int i = 0; i < m_stringTokens.size(); ++i) {
+            const StringToken &token = m_stringTokens.at(i);
+            if (!startsWithAt(text, position, token.text))
                 continue;
 
-            const bool allowEscape = !m_definition.escapeChar.isEmpty();
-            int cursor = position + delimiter.size();
-            bool closed = false;
-            while (cursor < length) {
-                if (allowEscape && startsWithAt(text, cursor, m_definition.escapeChar)) {
-                    cursor += m_definition.escapeChar.size() + 1;
-                    continue;
-                }
-                if (startsWithAt(text, cursor, delimiter)) {
-                    cursor += delimiter.size();
-                    closed = true;
-                    break;
-                }
-                ++cursor;
-            }
-            cursor = qMin(cursor, length);
-            setFormat(position, cursor - position, m_stringFormat);
-            if (!closed) {
-                setCurrentBlockState(2);
+            const int end = findStringEnd(text, position + token.text.size(), token.text);
+            if (end < 0) {
+                setFormat(position, length - position, m_stringFormat);
+                setSyntaxState(token.multiline ? MultilineStringStateBase + i : 0);
                 return;
             }
-            position = cursor;
+
+            setFormat(position, end - position, m_stringFormat);
+            position = end;
             stringHandled = true;
             break;
         }
@@ -220,7 +266,7 @@ void SyntaxHighlighter::applySyntax(const QString &text)
         ++position;
     }
 
-    setCurrentBlockState(0);
+    setSyntaxState(0);
 }
 
 } // namespace papiro

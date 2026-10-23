@@ -10,6 +10,9 @@
 #include "editor/Editor.h"
 #include "ui/ClipLibraryWidget.h"
 #include "ui/FileExplorerWidget.h"
+#include "ui/MacroManagerDialog.h"
+#include "ui/PreferencesDialog.h"
+#include "ui/Theme.h"
 #include "ui/ToolsDialog.h"
 
 #include <QAction>
@@ -17,13 +20,16 @@
 #include <QApplication>
 #include <QCloseEvent>
 #include <QDir>
+#include <QDirIterator>
 #include <QDragEnterEvent>
 #include <QDropEvent>
 #include <QDockWidget>
+#include <QFile>
 #include <QFileDialog>
 #include <QFileInfo>
 #include <QFontDatabase>
 #include <QFontDialog>
+#include <QHeaderView>
 #include <QIcon>
 #include <QInputDialog>
 #include <QKeySequence>
@@ -39,6 +45,7 @@
 #include <QPrinter>
 #include <QProcess>
 #include <QSettings>
+#include <QShortcut>
 #include <QStatusBar>
 #include <QStyle>
 #include <QTabWidget>
@@ -46,6 +53,7 @@
 #include <QTextCursor>
 #include <QTextDocument>
 #include <QToolBar>
+#include <QTreeWidget>
 #include <QUrl>
 
 namespace papiro {
@@ -64,6 +72,24 @@ QString displayPath(const QString &path)
     const QFileInfo info(path);
     const QString native = QDir::toNativeSeparators(info.absoluteFilePath());
     return native;
+}
+
+bool looksLikeBinary(const QByteArray &data)
+{
+    const bool utf16Bom = data.startsWith("\xFF\xFE") || data.startsWith("\xFE\xFF");
+    if (utf16Bom)
+        return false;
+    if (data.contains('\0'))
+        return true;
+
+    const int sample = qMin(data.size(), 4096);
+    int controlCharacters = 0;
+    for (int i = 0; i < sample; ++i) {
+        const uchar byte = static_cast<uchar>(data.at(i));
+        if (byte < 0x09 || (byte > 0x0D && byte < 0x20))
+            ++controlCharacters;
+    }
+    return sample > 0 && controlCharacters * 10 > sample;
 }
 
 } // namespace
@@ -103,8 +129,27 @@ MainWindow::MainWindow(QWidget *parent)
         spellLanguage = QLocale::system().name();
     m_spellChecker->load(SpellChecker::defaultDictionaryFor(spellLanguage));
 
-    // Load macros
+    // Load macros and keep the slot actions/labels in sync with the manager.
     m_macroManager->loadFromDirectory(MacroManager::defaultDirectory());
+
+    // Connect MacroManager signals for dynamic custom shortcuts
+    connect(m_macroManager, &MacroManager::shortcutChanged, this,
+            [this](Macro *macro, const QKeySequence &shortcut) {
+                registerCustomShortcut(macro, shortcut);
+            });
+
+    connect(m_macroManager, &MacroManager::macroListChanged, this, [this] {
+        unregisterAllCustomShortcuts();
+        registerAllCustomShortcuts();
+        updateMacroActions();
+    });
+
+    connect(m_macroManager, &MacroManager::macroListChanged, this,
+            &MainWindow::updateMacroActions);
+    updateMacroActions();
+
+    // Register existing custom shortcuts on startup
+    registerAllCustomShortcuts();
 
     // Load clip library
     m_clipLibrary->load();
@@ -118,7 +163,14 @@ MainWindow::MainWindow(QWidget *parent)
     m_lineNumbersAction->setChecked(m_lineNumbers);
     m_spellCheckAction->setChecked(m_spellCheck);
 
-    newDocument();
+    // Restore dock/toolbar layout once all docks exist, then reopen the
+    // documents from the previous session (or start with an empty document).
+    QSettings windowSettings;
+    const QByteArray windowState = windowSettings.value(QStringLiteral("window/state")).toByteArray();
+    if (!windowState.isEmpty())
+        restoreState(windowState);
+
+    restoreSession();
     applyFontToAll();
     rebuildRecentMenu();
     updateWindowTitle();
@@ -189,21 +241,21 @@ void MainWindow::createActions()
                              themedIcon(QStringLiteral("edit-cut"), QStyle::SP_ArrowUp, this));
     connect(m_cutAction, &QAction::triggered, this, [this] {
         if (auto *document = currentDocument())
-            document->editor()->cut();
+            document->editor()->cutSelection();
     });
 
     m_copyAction = makeAction(tr("&Copy"), QKeySequence::Copy,
                               themedIcon(QStringLiteral("edit-copy"), QStyle::SP_FileIcon, this));
     connect(m_copyAction, &QAction::triggered, this, [this] {
         if (auto *document = currentDocument())
-            document->editor()->copy();
+            document->editor()->copySelection();
     });
 
     m_pasteAction = makeAction(tr("&Paste"), QKeySequence::Paste,
                                themedIcon(QStringLiteral("edit-paste"), QStyle::SP_ArrowDown, this));
     connect(m_pasteAction, &QAction::triggered, this, [this] {
         if (auto *document = currentDocument())
-            document->editor()->paste();
+            document->editor()->pasteSelection();
     });
 
     auto *selectAllAction = makeAction(tr("Select &All"), QKeySequence::SelectAll);
@@ -242,6 +294,10 @@ void MainWindow::createActions()
 
     auto *replaceAction = makeAction(tr("&Replace..."), QKeySequence(Qt::CTRL | Qt::Key_H));
     connect(replaceAction, &QAction::triggered, this, &MainWindow::showFindReplace);
+
+    m_preferencesAction = makeAction(tr("&Preferences..."),
+                                     QKeySequence(Qt::CTRL | Qt::Key_Comma));
+    connect(m_preferencesAction, &QAction::triggered, this, &MainWindow::openPreferences);
 
     m_wordWrapAction = makeAction(tr("&Word Wrap"));
     m_wordWrapAction->setCheckable(true);
@@ -341,6 +397,13 @@ void MainWindow::createActions()
     m_toggleOutputAction->setChecked(false);
     connect(m_toggleOutputAction, &QAction::toggled, this, &MainWindow::toggleOutput);
 
+    m_toggleSearchResultsAction = makeAction(tr("Search &Results"),
+                                             QKeySequence(Qt::CTRL | Qt::ALT | Qt::Key_F));
+    m_toggleSearchResultsAction->setCheckable(true);
+    m_toggleSearchResultsAction->setChecked(false);
+    connect(m_toggleSearchResultsAction, &QAction::toggled, this,
+            &MainWindow::toggleSearchResults);
+
     // Workspace
     m_openWorkspaceAction = makeAction(tr("Open &Workspace..."),
                                        QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_W));
@@ -349,6 +412,19 @@ void MainWindow::createActions()
     m_saveWorkspaceAction = makeAction(tr("Save Workspace &As..."),
                                        QKeySequence(Qt::CTRL | Qt::ALT | Qt::Key_S));
     connect(m_saveWorkspaceAction, &QAction::triggered, this, &MainWindow::saveWorkspaceAs);
+
+    // Session
+    m_restoreSessionAction = makeAction(tr("Restore Previous Session"));
+    m_restoreSessionAction->setCheckable(true);
+    {
+        QSettings sessionSettings;
+        m_restoreSessionAction->setChecked(
+            sessionSettings.value(QStringLiteral("session/restore"), true).toBool());
+    }
+    connect(m_restoreSessionAction, &QAction::toggled, this, [](bool enabled) {
+        QSettings sessionSettings;
+        sessionSettings.setValue(QStringLiteral("session/restore"), enabled);
+    });
 
     // Print
     m_printAction = makeAction(tr("&Print..."), QKeySequence::Print);
@@ -388,6 +464,31 @@ void MainWindow::createActions()
         setLanguage(action->data().toString());
     });
 
+    // Theme selection
+    m_themeGroup = new QActionGroup(this);
+    m_themeGroup->setExclusive(true);
+    const struct {
+        const char *label;
+        Theme::Mode mode;
+    } themes[] = {
+        {QT_TRANSLATE_NOOP("papiro::MainWindow", "&Light"), Theme::Mode::Light},
+        {QT_TRANSLATE_NOOP("papiro::MainWindow", "&Dark"), Theme::Mode::Dark},
+    };
+    QSettings themeSettings;
+    const Theme::Mode currentTheme = Theme::fromKey(
+        themeSettings.value(QStringLiteral("ui/theme")).toString());
+    for (const auto &entry : themes) {
+        auto *action = new QAction(tr(entry.label), this);
+        action->setCheckable(true);
+        action->setData(Theme::key(entry.mode));
+        if (entry.mode == currentTheme)
+            action->setChecked(true);
+        m_themeGroup->addAction(action);
+    }
+    connect(m_themeGroup, &QActionGroup::triggered, this, [this](QAction *action) {
+        setTheme(action->data().toString());
+    });
+
     // File
     auto *fileMenu = menuBar()->addMenu(tr("&File"));
     fileMenu->addAction(newAction);
@@ -395,6 +496,7 @@ void MainWindow::createActions()
     fileMenu->addAction(m_openFolderAction);
     m_recentMenu = fileMenu->addMenu(tr("Open &Recent"));
     m_workspaceMenu = fileMenu->addMenu(tr("Recent &Workspaces"));
+    fileMenu->addAction(m_restoreSessionAction);
     fileMenu->addSeparator();
     fileMenu->addAction(m_openWorkspaceAction);
     fileMenu->addAction(m_saveWorkspaceAction);
@@ -423,6 +525,8 @@ void MainWindow::createActions()
     editMenu->addAction(deleteLineAction);
     editMenu->addSeparator();
     editMenu->addAction(gotoAction);
+    editMenu->addSeparator();
+    editMenu->addAction(m_preferencesAction);
 
     // Search
     auto *searchMenu = menuBar()->addMenu(tr("&Search"));
@@ -501,8 +605,11 @@ void MainWindow::createActions()
     viewMenu->addAction(m_toggleFileExplorerAction);
     viewMenu->addAction(m_toggleClipLibraryAction);
     viewMenu->addAction(m_toggleOutputAction);
+    viewMenu->addAction(m_toggleSearchResultsAction);
     m_languageMenu = viewMenu->addMenu(tr("&Language"));
     m_languageMenu->addActions(m_languageGroup->actions());
+    m_themeMenu = viewMenu->addMenu(tr("&Theme"));
+    m_themeMenu->addActions(m_themeGroup->actions());
 
     // Macros
     m_macroMenu = menuBar()->addMenu(tr("&Macros"));
@@ -586,6 +693,13 @@ Document *MainWindow::addDocument()
     editor->setLineWrapMode(m_wordWrap ? QPlainTextEdit::WidgetWidth : QPlainTextEdit::NoWrap);
     editor->setMacroManager(m_macroManager);
     editor->setSpellChecker(m_spellCheck ? m_spellChecker : nullptr);
+
+    connect(editor, &Editor::findRequested, this, &MainWindow::showFindReplace);
+    connect(editor, &Editor::gotoLineRequested, this, &MainWindow::goToLine);
+    connect(editor, &Editor::blockSelectionChanged, this, [this, document] {
+        if (document == currentDocument())
+            updateActions();
+    });
 
     connect(document, &Document::modificationChanged, this, [this, document](bool) {
         refreshTabTitle(document);
@@ -785,6 +899,7 @@ void MainWindow::closeTab(int index)
 
     m_tabs->removeTab(index);
     document->deleteLater();
+    clearSearchResults();
     updateWindowTitle();
     updateStatus();
     updateActions();
@@ -801,6 +916,7 @@ void MainWindow::closeEvent(QCloseEvent *event)
         }
     }
     saveSettings();
+    unregisterAllCustomShortcuts();
     event->accept();
 }
 
@@ -887,7 +1003,8 @@ void MainWindow::updateActions()
 
     m_undoAction->setEnabled(hasDocument && editor->document()->isUndoAvailable());
     m_redoAction->setEnabled(hasDocument && editor->document()->isRedoAvailable());
-    const bool hasSelection = hasDocument && editor->textCursor().hasSelection();
+    const bool hasSelection = hasDocument
+        && (editor->textCursor().hasSelection() || editor->hasBlockSelection());
     m_cutAction->setEnabled(hasSelection);
     m_copyAction->setEnabled(hasSelection);
     m_pasteAction->setEnabled(hasDocument && editor->canPaste());
@@ -974,6 +1091,293 @@ void MainWindow::findInDocument(bool backward)
     editor->setTextCursor(found);
     editor->ensureCursorVisible();
     statusBar()->showMessage(tr("Match found"), 2000);
+}
+
+void MainWindow::findAll(const FindRequest &request)
+{
+    if (!m_searchResultsView)
+        return;
+
+    QString error;
+    const QRegularExpression expression = buildRegex(request, &error);
+    if (!expression.isValid()) {
+        statusBar()->showMessage(tr("Invalid regular expression: %1").arg(error), 6000);
+        return;
+    }
+
+    m_searchResultsView->clear();
+
+    constexpr int MaxResults = 5000;
+    int total = 0;
+    int documentCount = 0;
+    bool truncated = false;
+
+    for (int i = 0; i < m_tabs->count() && !truncated; ++i) {
+        auto *document = qobject_cast<Document *>(m_tabs->widget(i));
+        if (!document)
+            continue;
+
+        QTextDocument *textDocument = document->editor()->document();
+        QTreeWidgetItem *root = nullptr;
+        int position = 0;
+
+        while (!truncated) {
+            const QTextCursor found = textDocument->find(expression, position);
+            if (found.isNull())
+                break;
+
+            if (!found.hasSelection()) {
+                // Zero-length match: move forward to avoid an endless loop.
+                const int next = found.position() + 1;
+                if (next <= position)
+                    break;
+                position = next;
+                continue;
+            }
+
+            if (!root) {
+                root = new QTreeWidgetItem(m_searchResultsView);
+                root->setFirstColumnSpanned(true);
+                QFont font = root->font(0);
+                font.setBold(true);
+                root->setFont(0, font);
+                root->setToolTip(0, document->displayPath());
+                ++documentCount;
+            }
+
+            QString preview = found.block().text().trimmed();
+            if (preview.size() > 160)
+                preview = preview.left(157) + QStringLiteral("...");
+
+            auto *item = new QTreeWidgetItem(root);
+            item->setText(0, QString::number(found.blockNumber() + 1));
+            item->setText(1, QString::number(found.positionInBlock() + 1));
+            item->setText(2, preview);
+            item->setData(0, Qt::UserRole, QVariant::fromValue(static_cast<void *>(document)));
+            item->setData(0, Qt::UserRole + 1, found.selectionStart());
+            item->setData(0, Qt::UserRole + 2, document->filePath());
+
+            position = found.selectionEnd();
+            ++total;
+            if (total >= MaxResults)
+                truncated = true;
+        }
+
+        if (root)
+            root->setText(0, tr("%1 (%2)").arg(document->displayName()).arg(root->childCount()));
+    }
+
+    if (total == 0) {
+        auto *empty = new QTreeWidgetItem(m_searchResultsView);
+        empty->setText(0, tr("No matches for \"%1\"").arg(request.pattern));
+        empty->setFlags(empty->flags() & ~Qt::ItemIsEnabled);
+        statusBar()->showMessage(tr("No matches for \"%1\".").arg(request.pattern), 5000);
+    } else {
+        QString message = tr("%n match(es) found in %1 document(s).", "", total)
+                              .arg(documentCount);
+        if (truncated)
+            message += QLatin1Char(' ') + tr("Showing the first %1.").arg(total);
+        statusBar()->showMessage(message, 6000);
+    }
+
+    if (total <= 500)
+        m_searchResultsView->expandAll();
+
+    if (m_searchResultsDock) {
+        m_searchResultsDock->show();
+        m_searchResultsDock->raise();
+    }
+    if (m_toggleSearchResultsAction)
+        m_toggleSearchResultsAction->setChecked(true);
+}
+
+void MainWindow::findAllInFolder(const FindRequest &request, const QString &folder)
+{
+    if (!m_searchResultsView)
+        return;
+
+    const QFileInfo folderInfo(folder);
+    if (!folderInfo.isDir()) {
+        statusBar()->showMessage(tr("Invalid search folder: %1").arg(folder), 6000);
+        return;
+    }
+
+    QString error;
+    const QRegularExpression expression = buildRegex(request, &error);
+    if (!expression.isValid()) {
+        statusBar()->showMessage(tr("Invalid regular expression: %1").arg(error), 6000);
+        return;
+    }
+
+    m_searchResultsView->clear();
+
+    constexpr int MaxResults = 5000;
+    constexpr int MaxFiles = 5000;
+    constexpr qint64 MaxFileSize = 5 * 1024 * 1024;
+
+    int total = 0;
+    int fileCount = 0;
+    bool truncated = false;
+    bool filesTruncated = false;
+
+    QStringList files;
+    QDirIterator iterator(folderInfo.absoluteFilePath(),
+                          QDir::Files | QDir::NoSymLinks,
+                          QDirIterator::Subdirectories);
+    while (iterator.hasNext()) {
+        const QString path = iterator.next();
+        const QFileInfo info(path);
+        if (info.size() > MaxFileSize)
+            continue;
+        files.append(path);
+        if (files.size() >= MaxFiles) {
+            filesTruncated = true;
+            break;
+        }
+    }
+    files.sort();
+
+    QApplication::setOverrideCursor(Qt::WaitCursor);
+    for (const QString &path : files) {
+        if (total >= MaxResults) {
+            truncated = true;
+            break;
+        }
+
+        QFile file(path);
+        if (!file.open(QIODevice::ReadOnly))
+            continue;
+        const QByteArray data = file.read(MaxFileSize + 1);
+        if (data.size() > MaxFileSize || looksLikeBinary(data))
+            continue;
+
+        const QString text = decodeFile(data).text;
+        if (text.isEmpty())
+            continue;
+
+        QTreeWidgetItem *root = nullptr;
+        const QString relativePath = QDir(folderInfo.absoluteFilePath()).relativeFilePath(path);
+        int lineStart = 0;
+        int lineNumber = 1;
+
+        while (lineStart <= text.size()) {
+            const int lineEnd = text.indexOf(QLatin1Char('\n'), lineStart);
+            const QString line = lineEnd < 0 ? text.mid(lineStart)
+                                             : text.mid(lineStart, lineEnd - lineStart);
+
+            QRegularExpressionMatchIterator matches = expression.globalMatch(line);
+            while (matches.hasNext()) {
+                const QRegularExpressionMatch match = matches.next();
+                if (match.capturedLength() == 0)
+                    continue;
+
+                if (!root) {
+                    root = new QTreeWidgetItem(m_searchResultsView);
+                    root->setFirstColumnSpanned(true);
+                    QFont font = root->font(0);
+                    font.setBold(true);
+                    root->setFont(0, font);
+                    root->setText(0, relativePath);
+                    root->setToolTip(0, displayPath(path));
+                    ++fileCount;
+                }
+
+                QString preview = line.trimmed();
+                if (preview.size() > 160)
+                    preview = preview.left(157) + QStringLiteral("...");
+
+                auto *item = new QTreeWidgetItem(root);
+                item->setText(0, QString::number(lineNumber));
+                item->setText(1, QString::number(match.capturedStart() + 1));
+                item->setText(2, preview);
+                item->setData(0, Qt::UserRole, QVariant());
+                item->setData(0, Qt::UserRole + 1, lineStart + match.capturedStart());
+                item->setData(0, Qt::UserRole + 2, displayPath(path));
+
+                ++total;
+                if (total >= MaxResults) {
+                    truncated = true;
+                    break;
+                }
+            }
+
+            if (truncated)
+                break;
+            if (lineEnd < 0)
+                break;
+            lineStart = lineEnd + 1;
+            ++lineNumber;
+        }
+
+        if (root) {
+            root->setText(0, tr("%1 (%2)").arg(relativePath).arg(root->childCount()));
+        }
+    }
+    QApplication::restoreOverrideCursor();
+
+    if (total == 0) {
+        auto *empty = new QTreeWidgetItem(m_searchResultsView);
+        empty->setText(0, tr("No matches for \"%1\" in %2")
+                              .arg(request.pattern, QDir::toNativeSeparators(folder)));
+        empty->setFlags(empty->flags() & ~Qt::ItemIsEnabled);
+        statusBar()->showMessage(tr("No matches for \"%1\".").arg(request.pattern), 5000);
+    } else {
+        QString message = tr("%n match(es) found in %1 file(s).", "", total).arg(fileCount);
+        if (truncated)
+            message += QLatin1Char(' ') + tr("Showing the first %1.").arg(total);
+        if (filesTruncated)
+            message += QLatin1Char(' ') + tr("Only the first %1 files were scanned.").arg(MaxFiles);
+        statusBar()->showMessage(message, 6000);
+    }
+
+    if (total <= 500)
+        m_searchResultsView->expandAll();
+
+    if (m_searchResultsDock) {
+        m_searchResultsDock->show();
+        m_searchResultsDock->raise();
+    }
+    if (m_toggleSearchResultsAction)
+        m_toggleSearchResultsAction->setChecked(true);
+}
+
+void MainWindow::clearSearchResults()
+{
+    if (m_searchResultsView)
+        m_searchResultsView->clear();
+}
+
+void MainWindow::activateSearchResult(QTreeWidgetItem *item, int)
+{
+    if (!item || !item->parent())
+        return;
+
+    auto *document = static_cast<Document *>(item->data(0, Qt::UserRole).value<void *>());
+    if (!document || m_tabs->indexOf(document) < 0) {
+        const QString path = item->data(0, Qt::UserRole + 2).toString();
+        if (path.isEmpty())
+            return;
+        openFile(path);
+        document = currentDocument();
+        if (!document || document->filePath() != QFileInfo(path).absoluteFilePath())
+            return;
+    }
+
+    const int index = m_tabs->indexOf(document);
+    if (index < 0)
+        return;
+
+    m_tabs->setCurrentIndex(index);
+
+    Editor *editor = document->editor();
+    editor->clearBlockSelection();
+    const int position = qBound(0, item->data(0, Qt::UserRole + 1).toInt(),
+                                qMax(0, editor->document()->characterCount() - 1));
+    QTextCursor cursor(editor->document());
+    cursor.setPosition(position);
+    editor->setTextCursor(cursor);
+    editor->centerCursor();
+    editor->setFocus();
 }
 
 void MainWindow::replaceCurrent()
@@ -1097,6 +1501,8 @@ void MainWindow::showFindReplace()
 {
     if (!m_findDialog) {
         m_findDialog = new FindReplaceDialog(this);
+        m_findDialog->setSearchOptions(m_searchMatchCase, m_searchWholeWord, m_searchRegex,
+                                       m_searchWrap);
         connect(m_findDialog, &FindReplaceDialog::findNextRequested, this,
                 [this](const FindRequest &request, bool backward) {
                     m_lastFind = request;
@@ -1114,12 +1520,34 @@ void MainWindow::showFindReplace()
                     m_lastReplacement = replacement;
                     replaceAll();
                 });
+        connect(m_findDialog, &FindReplaceDialog::findAllRequested, this,
+                [this](const FindRequest &request) {
+                    m_lastFind = request;
+                    findAll(request);
+                });
+        connect(m_findDialog, &FindReplaceDialog::findAllInFolderRequested, this,
+                [this](const FindRequest &request, const QString &folder) {
+                    m_lastFind = request;
+                    findAllInFolder(request, folder);
+                });
     }
 
     if (Document *document = currentDocument()) {
         const QString selection = document->editor()->textCursor().selectedText();
         if (!selection.isEmpty() && !selection.contains(QChar::ParagraphSeparator))
             m_findDialog->setFindText(selection);
+    }
+
+    const QString currentFolder = m_findDialog->searchFolder();
+    if (currentFolder.isEmpty() || !QFileInfo(currentFolder).isDir()) {
+        QString defaultFolder;
+        if (Document *document = currentDocument(); document && !document->filePath().isEmpty())
+            defaultFolder = QFileInfo(document->filePath()).absolutePath();
+        else if (m_fileExplorer && !m_fileExplorer->rootPath().isEmpty())
+            defaultFolder = m_fileExplorer->rootPath();
+        if (defaultFolder.isEmpty())
+            defaultFolder = QDir::homePath();
+        m_findDialog->setSearchFolder(defaultFolder);
     }
 
     m_findDialog->show();
@@ -1155,6 +1583,64 @@ void MainWindow::chooseFont()
         return;
     m_editorFont = font;
     applyFontToAll();
+}
+
+void MainWindow::openPreferences()
+{
+    Preferences current;
+    current.editorFont = m_editorFont;
+    current.theme = Theme::mode();
+    current.restoreSession = m_restoreSessionAction->isChecked();
+    current.wordWrap = m_wordWrap;
+    current.lineNumbers = m_lineNumbers;
+    current.spellCheck = m_spellCheck;
+    current.searchMatchCase = m_searchMatchCase;
+    current.searchWholeWord = m_searchWholeWord;
+    current.searchRegex = m_searchRegex;
+    current.searchWrap = m_searchWrap;
+
+    PreferencesDialog dialog(current, this);
+    if (dialog.exec() != QDialog::Accepted)
+        return;
+
+    applyPreferences(dialog.preferences());
+}
+
+void MainWindow::applyPreferences(const Preferences &preferences)
+{
+    if (preferences.editorFont != m_editorFont) {
+        m_editorFont = preferences.editorFont;
+        applyFontToAll();
+    }
+
+    if (preferences.wordWrap != m_wordWrap)
+        m_wordWrapAction->setChecked(preferences.wordWrap);
+    if (preferences.lineNumbers != m_lineNumbers)
+        m_lineNumbersAction->setChecked(preferences.lineNumbers);
+    if (preferences.spellCheck != m_spellCheck)
+        m_spellCheckAction->setChecked(preferences.spellCheck);
+    if (preferences.restoreSession != m_restoreSessionAction->isChecked())
+        m_restoreSessionAction->setChecked(preferences.restoreSession);
+
+    const QString themeKey = Theme::key(preferences.theme);
+    if (themeKey != Theme::key(Theme::mode())) {
+        setTheme(themeKey);
+        for (QAction *action : m_themeGroup->actions()) {
+            if (action->data().toString() == themeKey)
+                action->setChecked(true);
+        }
+    }
+
+    m_searchMatchCase = preferences.searchMatchCase;
+    m_searchWholeWord = preferences.searchWholeWord;
+    m_searchRegex = preferences.searchRegex;
+    m_searchWrap = preferences.searchWrap;
+    if (m_findDialog) {
+        m_findDialog->setSearchOptions(m_searchMatchCase, m_searchWholeWord, m_searchRegex,
+                                       m_searchWrap);
+    }
+
+    saveSettings();
 }
 
 void MainWindow::toggleWordWrap(bool enabled)
@@ -1336,6 +1822,13 @@ void MainWindow::applySettings()
     m_editorFont.setFixedPitch(true);
     settings.endGroup();
 
+    settings.beginGroup(QStringLiteral("search"));
+    m_searchMatchCase = settings.value(QStringLiteral("matchCase"), false).toBool();
+    m_searchWholeWord = settings.value(QStringLiteral("wholeWord"), false).toBool();
+    m_searchRegex = settings.value(QStringLiteral("regex"), false).toBool();
+    m_searchWrap = settings.value(QStringLiteral("wrap"), true).toBool();
+    settings.endGroup();
+
     m_recentFiles = settings.value(QStringLiteral("files/recent")).toStringList();
     m_recentWorkspaces = settings.value(QStringLiteral("workspaces/recent")).toStringList();
 
@@ -1351,6 +1844,7 @@ void MainWindow::saveSettings()
     QSettings settings;
     settings.beginGroup(QStringLiteral("window"));
     settings.setValue(QStringLiteral("geometry"), saveGeometry());
+    settings.setValue(QStringLiteral("state"), saveState());
     settings.endGroup();
 
     settings.beginGroup(QStringLiteral("editor"));
@@ -1361,10 +1855,110 @@ void MainWindow::saveSettings()
     settings.setValue(QStringLiteral("fontSize"), m_editorFont.pointSize());
     settings.endGroup();
 
+    settings.beginGroup(QStringLiteral("search"));
+    settings.setValue(QStringLiteral("matchCase"), m_searchMatchCase);
+    settings.setValue(QStringLiteral("wholeWord"), m_searchWholeWord);
+    settings.setValue(QStringLiteral("regex"), m_searchRegex);
+    settings.setValue(QStringLiteral("wrap"), m_searchWrap);
+    settings.endGroup();
+
     settings.setValue(QStringLiteral("files/recent"), m_recentFiles);
     settings.setValue(QStringLiteral("workspaces/recent"), m_recentWorkspaces);
     if (m_fileExplorer)
         settings.setValue(QStringLiteral("explorer/root"), m_fileExplorer->rootPath());
+
+    saveSession();
+}
+
+void MainWindow::restoreSession()
+{
+    QSettings settings;
+    if (!settings.value(QStringLiteral("session/restore"), true).toBool()) {
+        newDocument();
+        return;
+    }
+
+    const QStringList files = settings.value(QStringLiteral("session/files")).toStringList();
+    const QVariantList lines = settings.value(QStringLiteral("session/lines")).toList();
+    const QVariantList columns = settings.value(QStringLiteral("session/columns")).toList();
+    const int savedActive = settings.value(QStringLiteral("session/active"), -1).toInt();
+
+    // Restoring must not reorder the recent-files list.
+    const QStringList recentBefore = m_recentFiles;
+
+    int activeTab = -1;
+    for (int i = 0; i < files.size(); ++i) {
+        const QString path = files.at(i);
+        if (!QFileInfo(path).isFile())
+            continue;
+
+        openFile(path);
+
+        Document *document = currentDocument();
+        if (!document || document->filePath() != QFileInfo(path).absoluteFilePath())
+            continue;
+
+        const int line = i < lines.size() ? qMax(1, lines.at(i).toInt()) : 1;
+        const int column = i < columns.size() ? qMax(1, columns.at(i).toInt()) : 1;
+        document->editor()->gotoLine(line, column);
+
+        if (i == savedActive)
+            activeTab = m_tabs->currentIndex();
+    }
+
+    if (m_tabs->count() == 0)
+        newDocument();
+    else if (activeTab >= 0 && activeTab < m_tabs->count())
+        m_tabs->setCurrentIndex(activeTab);
+
+    const QString workspace = settings.value(QStringLiteral("session/workspace")).toString();
+    if (!workspace.isEmpty() && QFileInfo(workspace).isFile())
+        m_workspacePath = workspace;
+
+    m_recentFiles = recentBefore;
+    rebuildRecentMenu();
+
+    updateWindowTitle();
+}
+
+void MainWindow::saveSession()
+{
+    QSettings settings;
+    if (!settings.value(QStringLiteral("session/restore"), true).toBool()) {
+        settings.remove(QStringLiteral("session/files"));
+        settings.remove(QStringLiteral("session/lines"));
+        settings.remove(QStringLiteral("session/columns"));
+        settings.remove(QStringLiteral("session/active"));
+        settings.remove(QStringLiteral("session/workspace"));
+        return;
+    }
+
+    QStringList files;
+    QVariantList lines;
+    QVariantList columns;
+    int active = -1;
+    Document *current = currentDocument();
+
+    for (int i = 0; i < m_tabs->count(); ++i) {
+        auto *document = qobject_cast<Document *>(m_tabs->widget(i));
+        if (!document || document->filePath().isEmpty())
+            continue;
+
+        files.append(document->filePath());
+        lines.append(document->editor()->currentLine());
+        columns.append(document->editor()->currentColumn());
+        if (document == current)
+            active = files.size() - 1;
+    }
+
+    if (active < 0 && !files.isEmpty())
+        active = 0;
+
+    settings.setValue(QStringLiteral("session/files"), files);
+    settings.setValue(QStringLiteral("session/lines"), lines);
+    settings.setValue(QStringLiteral("session/columns"), columns);
+    settings.setValue(QStringLiteral("session/active"), active);
+    settings.setValue(QStringLiteral("session/workspace"), m_workspacePath);
 }
 
 void MainWindow::applyFontToAll()
@@ -1412,12 +2006,18 @@ void MainWindow::stopMacroRecording()
     m_playMacroAction->setEnabled(true);
 
     if (macro && !macro->actions().isEmpty()) {
-        statusBar()->showMessage(tr("Macro recorded: %1 actions").arg(macro->actions().size()), 4000);
+        const bool saved = m_macroManager->saveToDirectory(MacroManager::defaultDirectory());
+        if (saved) {
+            statusBar()->showMessage(
+                tr("Macro recorded: %1 actions").arg(macro->actions().size()), 4000);
+        } else {
+            statusBar()->showMessage(
+                tr("Macro recorded, but it could not be saved to disk."), 6000);
+        }
     } else {
         statusBar()->showMessage(tr("Macro recording cancelled (empty)"), 3000);
-        if (macro) {
-            macro->deleteLater();
-        }
+        if (macro)
+            m_macroManager->removeUserMacro(macro);
     }
 }
 
@@ -1459,8 +2059,12 @@ void MainWindow::saveMacroToSlot(int index)
 
     Macro *last = userMacros.last();
     m_macroManager->setBuiltinMacro(index, last);
-    m_macroSlotActions[index]->setText(tr("Macro %1").arg(index + 1));
-    statusBar()->showMessage(tr("Macro saved to slot %1").arg(index + 1), 3000);
+    const bool saved = m_macroManager->saveToDirectory(MacroManager::defaultDirectory());
+    statusBar()->showMessage(saved
+                                 ? tr("Macro saved to slot %1").arg(index + 1)
+                                 : tr("Macro assigned to slot %1, but the assignment could not be saved.")
+                                       .arg(index + 1),
+                             5000);
 }
 
 void MainWindow::manageMacros()
@@ -1468,18 +2072,77 @@ void MainWindow::manageMacros()
     if (!m_macroManager)
         return;
 
-    // Simple dialog to manage macros - for now just show info
-    const auto &userMacros = m_macroManager->userMacros();
-    QString msg = tr("Total user macros: %1\n").arg(userMacros.size());
-    msg += tr("\nBuilt-in slots (Ctrl+Shift+1..9):\n");
+    MacroManagerDialog dialog(m_macroManager, this);
+    connect(&dialog, &MacroManagerDialog::playRequested, this, [this](Macro *macro) {
+        if (auto *editor = currentEditor())
+            m_macroManager->playMacro(macro, editor);
+    });
+    connect(&dialog, &MacroManagerDialog::macrosChanged, this,
+            &MainWindow::updateMacroActions);
+    dialog.exec();
+    updateMacroActions();
+}
+
+void MainWindow::updateMacroActions()
+{
+    if (!m_macroManager)
+        return;
+
     for (int i = 0; i < MacroManager::MaxBuiltinMacros; ++i) {
-        Macro *m = m_macroManager->builtinMacro(i);
-        if (m)
-            msg += tr("  Slot %1: %2 (%3 actions)\n").arg(i + 1).arg(m->name()).arg(m->actions().size());
-        else
-            msg += tr("  Slot %1: (empty)\n").arg(i + 1);
+        if (!m_macroSlotActions[i])
+            continue;
+        Macro *macro = m_macroManager->builtinMacro(i);
+        if (macro) {
+            m_macroSlotActions[i]->setText(
+                tr("Macro %1: %2").arg(i + 1).arg(macro->name()));
+            m_macroSlotActions[i]->setToolTip(
+                tr("Play \"%1\" (Ctrl+Shift+%2)").arg(macro->name()).arg(i + 1));
+        } else {
+            m_macroSlotActions[i]->setText(tr("Macro %1 (empty)").arg(i + 1));
+            m_macroSlotActions[i]->setToolTip(
+                tr("No macro assigned to Ctrl+Shift+%1").arg(i + 1));
+        }
     }
-    QMessageBox::information(this, tr("Manage Macros"), msg);
+}
+
+void MainWindow::registerCustomShortcut(Macro *macro, const QKeySequence &shortcut)
+{
+    if (!macro || shortcut.isEmpty())
+        return;
+    unregisterCustomShortcut(macro);
+
+    auto *sc = new QShortcut(shortcut, this);
+    sc->setContext(Qt::ApplicationShortcut);
+    connect(sc, &QShortcut::activated, this, [this, macro]() {
+        if (auto *editor = currentEditor())
+            m_macroManager->playMacro(macro, editor);
+    });
+    m_customShortcuts[macro] = sc;
+}
+
+void MainWindow::unregisterCustomShortcut(Macro *macro)
+{
+    if (auto it = m_customShortcuts.find(macro); it != m_customShortcuts.end()) {
+        it.value()->deleteLater();
+        m_customShortcuts.erase(it);
+    }
+}
+
+void MainWindow::registerAllCustomShortcuts()
+{
+    if (!m_macroManager)
+        return;
+    for (auto it = m_macroManager->allCustomShortcuts().constBegin();
+         it != m_macroManager->allCustomShortcuts().constEnd(); ++it) {
+        registerCustomShortcut(it.key(), it.value());
+    }
+}
+
+void MainWindow::unregisterAllCustomShortcuts()
+{
+    for (auto *sc : m_customShortcuts)
+        sc->deleteLater();
+    m_customShortcuts.clear();
 }
 
 // ---------------------------------------------------------------------------
@@ -1497,6 +2160,12 @@ void MainWindow::createDockWidgets()
     addDockWidget(Qt::LeftDockWidgetArea, m_fileExplorerDock);
 
     connect(m_fileExplorer, &FileExplorerWidget::fileActivated, this, &MainWindow::openFile);
+    connect(m_fileExplorer, &FileExplorerWidget::findInFolderRequested, this,
+            [this](const QString &folder) {
+                showFindReplace();
+                if (m_findDialog)
+                    m_findDialog->setSearchFolder(folder);
+            });
     connect(m_fileExplorerDock, &QDockWidget::visibilityChanged, this, [this](bool visible) {
         m_toggleFileExplorerAction->blockSignals(true);
         m_toggleFileExplorerAction->setChecked(visible);
@@ -1527,6 +2196,33 @@ void MainWindow::createDockWidgets()
         m_toggleOutputAction->blockSignals(true);
         m_toggleOutputAction->setChecked(visible);
         m_toggleOutputAction->blockSignals(false);
+    });
+
+    // Search results pane, sharing the bottom area with the output pane.
+    m_searchResultsView = new QTreeWidget(this);
+    m_searchResultsView->setObjectName(QStringLiteral("SearchResultsView"));
+    m_searchResultsView->setColumnCount(3);
+    m_searchResultsView->setHeaderLabels({tr("Line"), tr("Col"), tr("Text")});
+    m_searchResultsView->setRootIsDecorated(true);
+    m_searchResultsView->setUniformRowHeights(true);
+    m_searchResultsView->setAlternatingRowColors(true);
+    m_searchResultsView->setSelectionMode(QAbstractItemView::SingleSelection);
+    m_searchResultsView->header()->setStretchLastSection(true);
+
+    m_searchResultsDock = new QDockWidget(tr("Search Results"), this);
+    m_searchResultsDock->setObjectName(QStringLiteral("SearchResultsDock"));
+    m_searchResultsDock->setWidget(m_searchResultsView);
+    m_searchResultsDock->setAllowedAreas(Qt::BottomDockWidgetArea | Qt::TopDockWidgetArea);
+    addDockWidget(Qt::BottomDockWidgetArea, m_searchResultsDock);
+    m_searchResultsDock->hide();
+    tabifyDockWidget(m_outputDock, m_searchResultsDock);
+
+    connect(m_searchResultsView, &QTreeWidget::itemActivated, this,
+            &MainWindow::activateSearchResult);
+    connect(m_searchResultsDock, &QDockWidget::visibilityChanged, this, [this](bool visible) {
+        m_toggleSearchResultsAction->blockSignals(true);
+        m_toggleSearchResultsAction->setChecked(visible);
+        m_toggleSearchResultsAction->blockSignals(false);
     });
 
     m_clipLibraryWidget = new ClipLibraryWidget(m_clipLibrary, this);
@@ -1594,6 +2290,12 @@ void MainWindow::toggleOutput(bool visible)
         m_outputDock->setVisible(visible);
 }
 
+void MainWindow::toggleSearchResults(bool visible)
+{
+    if (m_searchResultsDock)
+        m_searchResultsDock->setVisible(visible);
+}
+
 void MainWindow::openWorkspace()
 {
     const QString path = QFileDialog::getOpenFileName(
@@ -1624,6 +2326,7 @@ bool MainWindow::loadWorkspace(const QString &path)
         m_tabs->removeTab(0);
         widget->deleteLater();
     }
+    clearSearchResults();
 
     if (!workspace.rootPath.isEmpty() && QFileInfo(workspace.rootPath).isDir()) {
         if (m_fileExplorer)
@@ -1899,6 +2602,25 @@ void MainWindow::runTool(int index)
             });
 
     process->start(program, arguments);
+}
+
+void MainWindow::setTheme(const QString &key)
+{
+    const Theme::Mode mode = Theme::fromKey(key);
+    Theme::apply(mode);
+
+    QSettings settings;
+    settings.setValue(QStringLiteral("ui/theme"), Theme::key(mode));
+
+    for (int i = 0; i < m_tabs->count(); ++i) {
+        if (auto *document = qobject_cast<Document *>(m_tabs->widget(i)))
+            document->editor()->refreshTheme();
+    }
+    if (m_outputView)
+        m_outputView->viewport()->update();
+    for (QWidget *widget : QApplication::allWidgets())
+        widget->update();
+    updateStatus();
 }
 
 void MainWindow::setLanguage(const QString &locale)
