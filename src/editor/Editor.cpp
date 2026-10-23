@@ -69,6 +69,11 @@ Editor::Editor(QWidget *parent)
     setFrameShape(QFrame::NoFrame);
     setTabStopDistance(4 * fontMetrics().horizontalAdvance(QLatin1Char(' ')));
 
+    // Configure line number area (gutter) for proper background rendering
+    m_lineNumberArea->setAttribute(Qt::WA_OpaquePaintEvent);
+    m_lineNumberArea->setAutoFillBackground(true);
+    m_lineNumberArea->setBackgroundRole(QPalette::Base);
+
     connect(this, &QPlainTextEdit::blockCountChanged, this,
             &Editor::updateLineNumberAreaWidth);
     connect(this, &QPlainTextEdit::updateRequest, this, &Editor::updateLineNumberArea);
@@ -1824,7 +1829,7 @@ void Editor::toggleBlame()
         return;
 
     bool visible = !m_blameView->isBlameVisible();
-    m_blameView->setVisible(visible);
+    m_blameView->setBlameVisible(visible);
     if (visible) {
         m_blameView->updateGeometry();
         m_blameView->raise();

@@ -21,8 +21,8 @@ public:
 
     void setBlame(const QVector<GitBlameLine>& blameLines);
     void clearBlame();
-    void setVisible(bool visible);
-    bool isBlameVisible() const { return m_visible; }
+    void setBlameVisible(bool visible);
+    bool isBlameVisible() const { return m_blameVisible; }
 
     // Positioning: column to the left of the editor (gutter)
     void updateGeometry();
@@ -60,7 +60,7 @@ private:
     Editor* m_editor = nullptr;
     QVector<GitBlameLine> m_blameLines;
     QVector<BlameLineInfo> m_lineInfos;
-    bool m_visible = false;
+    bool m_blameVisible = false;
     int m_hoveredLine = -1;
     BlameLineInfo* m_hoveredPart = nullptr; // nullptr = none, or points to hash/author/time rect
     QTimer m_tooltipTimer;

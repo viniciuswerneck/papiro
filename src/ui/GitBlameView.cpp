@@ -63,11 +63,11 @@ void GitBlameView::clearBlame()
     update();
 }
 
-void GitBlameView::setVisible(bool visible)
+void GitBlameView::setBlameVisible(bool visible)
 {
-    if (m_visible == visible)
+    if (m_blameVisible == visible)
         return;
-    m_visible = visible;
+    m_blameVisible = visible;
     QWidget::setVisible(visible);
     if (visible) {
         calculateLineRects();
@@ -77,7 +77,7 @@ void GitBlameView::setVisible(bool visible)
 
 void GitBlameView::updateGeometry()
 {
-    if (!m_editor || !m_visible)
+    if (!m_editor || !m_blameVisible)
         return;
 
     calculateLineRects();
@@ -208,7 +208,7 @@ GitBlameView::BlameLineInfo* GitBlameView::hitTest(const QPoint& pos)
 
 void GitBlameView::paintEvent(QPaintEvent* event)
 {
-    if (!m_visible || m_lineInfos.isEmpty()) {
+    if (!m_blameVisible || m_lineInfos.isEmpty()) {
         QWidget::paintEvent(event);
         return;
     }
@@ -263,7 +263,7 @@ void GitBlameView::paintEvent(QPaintEvent* event)
 
 void GitBlameView::mousePressEvent(QMouseEvent* event)
 {
-    if (!m_visible || event->button() != Qt::LeftButton)
+    if (!m_blameVisible || event->button() != Qt::LeftButton)
         return;
 
     BlameLineInfo* info = hitTest(event->pos());
