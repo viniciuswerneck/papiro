@@ -203,13 +203,6 @@ void TestEditor::virtualColumnSurvivesShortLines()
     QCOMPARE(editor.currentLine(), 3);
     QCOMPARE(editor.textCursor().positionInBlock(), 10);
     QCOMPARE(editor.virtualCursorColumn(), 10);
-
-    QTest::keyClick(&editor, Qt::Key_Left);
-    QCOMPARE(editor.textCursor().positionInBlock(), 9);
-    QCOMPARE(editor.virtualCursorColumn(), -1);
-    QTest::keyClick(&editor, Qt::Key_Left);
-    QCOMPARE(editor.textCursor().positionInBlock(), 8);
-    QCOMPARE(editor.virtualCursorColumn(), -1);
 }
 
 void TestEditor::virtualShiftSelectionExtends()
@@ -257,6 +250,16 @@ void TestEditor::typingPastEndPadsWithSpaces()
     cursor.setPosition(editor.document()->findBlockByNumber(0).position() + 2);
     editor.setTextCursor(cursor);
 
+    QTest::keyClick(&editor, Qt::Key_Right);
+    QTest::keyClick(&editor, Qt::Key_Right);
+    QCOMPARE(editor.virtualCursorColumn(), 4);
+
+    QTest::keyClick(&editor, Qt::Key_Left);
+    QCOMPARE(editor.textCursor().positionInBlock(), 2);
+    QCOMPARE(editor.virtualCursorColumn(), 3);
+    QTest::keyClick(&editor, Qt::Key_Left);
+    QCOMPARE(editor.textCursor().positionInBlock(), 2);
+    QCOMPARE(editor.virtualCursorColumn(), -1);
     QTest::keyClick(&editor, Qt::Key_Right);
     QTest::keyClick(&editor, Qt::Key_Right);
     QCOMPARE(editor.virtualCursorColumn(), 4);

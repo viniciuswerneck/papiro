@@ -123,13 +123,6 @@ DiffResult DiffDialog::computeDiff(const QString &oldText, const QString &newTex
 
     for (const QPair<int, int> &range : ranges) {
         DiffHunk hunk;
-        const Edit &first = edits[range.first];
-        // When the hunk starts with an insertion/deletion there is no line on
-        // the other side: use the position just before the insertion point.
-        hunk.oldStart = (first.type == DiffLine::Type::Addition)
-            ? oldPosition[range.first] : oldPosition[range.first] + 1;
-        hunk.newStart = (first.type == DiffLine::Type::Deletion)
-            ? newPosition[range.first] : newPosition[range.first] + 1;
 
         for (int index = range.first; index <= range.second; ++index) {
             const Edit &edit = edits[index];
@@ -153,6 +146,13 @@ DiffResult DiffDialog::computeDiff(const QString &oldText, const QString &newTex
             }
             hunk.lines.append(line);
         }
+
+        // A hunk that contains no line from one side starts just before the
+        // insertion/deletion point (e.g. -0,0 for a new file).
+        hunk.oldStart = (hunk.oldCount == 0) ? oldPosition[range.first]
+                                             : oldPosition[range.first] + 1;
+        hunk.newStart = (hunk.newCount == 0) ? newPosition[range.first]
+                                             : newPosition[range.first] + 1;
 
         result.hunks.append(hunk);
     }

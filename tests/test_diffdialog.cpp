@@ -34,6 +34,7 @@ private slots:
     void pureAddition();
     void pureDeletion();
     void modification();
+    void changesAtFileBoundaries();
     void multipleSeparatedChanges();
     void closeChangesMergeIntoOneHunk();
     void contextAndBlankLines();
@@ -136,6 +137,27 @@ void TestDiffDialog::modification()
     }
     QVERIFY(sawDeletion);
     QVERIFY(sawAddition);
+}
+
+void TestDiffDialog::changesAtFileBoundaries()
+{
+    // Insertion before the first line: context starts at old line 1.
+    const DiffResult prefix = DiffDialog::computeDiff(
+        QStringLiteral("a\nb"), QStringLiteral("x\na\nb"));
+    QCOMPARE(prefix.hunks.size(), 1);
+    QCOMPARE(prefix.hunks.first().oldStart, 1);
+    QCOMPARE(prefix.hunks.first().oldCount, 2);
+    QCOMPARE(prefix.hunks.first().newStart, 1);
+    QCOMPARE(prefix.hunks.first().newCount, 3);
+
+    // Deletion of the last line: the new side ends before it.
+    const DiffResult suffix = DiffDialog::computeDiff(
+        QStringLiteral("a\nb\nc"), QStringLiteral("a\nb"));
+    QCOMPARE(suffix.hunks.size(), 1);
+    QCOMPARE(suffix.hunks.first().oldStart, 1);
+    QCOMPARE(suffix.hunks.first().oldCount, 3);
+    QCOMPARE(suffix.hunks.first().newStart, 1);
+    QCOMPARE(suffix.hunks.first().newCount, 2);
 }
 
 void TestDiffDialog::multipleSeparatedChanges()

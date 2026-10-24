@@ -299,10 +299,10 @@ void PrintPreviewDialog::createUi()
 
     m_fontCombo = new QFontComboBox(this);
     m_fontCombo->setObjectName(QStringLiteral("PrintPreviewFontFamily"));
-    if (!m_fontFamily.isEmpty()) {
-        const QFont configured(m_fontFamily);
-        m_fontCombo->setCurrentFont(configured);
-    }
+    if (!m_fontFamily.isEmpty())
+        m_fontCombo->setCurrentFont(QFont(m_fontFamily));
+    else
+        m_fontCombo->setCurrentFont(QFontDatabase::systemFont(QFontDatabase::FixedFont));
 
     m_fontSizeSpin = new QSpinBox(this);
     m_fontSizeSpin->setObjectName(QStringLiteral("PrintPreviewFontSize"));
@@ -457,11 +457,14 @@ void PrintPreviewDialog::paintDocument(QPrinter *printer)
     if (!printer)
         return;
 
+    // Paint in paper coordinates; margins are handled by the dialog itself.
+    printer->setFullPage(true);
+
     QPainter painter;
     if (!painter.begin(printer))
         return;
 
-    const int resolution = printer->resolution();
+    const int resolution = printer->resolution() > 0 ? printer->resolution() : 72;
     const QRectF paperRect(printer->pageLayout().fullRectPixels(resolution));
     const qreal pixelsPerMm = resolution / MillimetersPerInch;
 
