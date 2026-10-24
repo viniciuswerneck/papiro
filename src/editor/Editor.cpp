@@ -1156,7 +1156,9 @@ void Editor::mousePressEvent(QMouseEvent *event)
         return;
     }
 
-    if (m_blockSelection)
+    // Only clear block selection on left button press (starting new linear selection)
+    // Right click should preserve block selection for context menu actions
+    if (m_blockSelection && event->button() == Qt::LeftButton)
         clearBlockSelection();
     QPlainTextEdit::mousePressEvent(event);
 }

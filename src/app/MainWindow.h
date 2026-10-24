@@ -70,6 +70,7 @@ private slots:
     void replaceAllInBlockSelection(Editor *editor, const QRegularExpression &expression);
     void replaceAllInDocument(Editor *editor, const QRegularExpression &expression);
     void goToLine();
+    void goToLineColumn();
     void chooseFont();
     void openPreferences();
     void toggleWordWrap(bool enabled);
@@ -114,19 +115,6 @@ private slots:
     void setLanguage(const QString &locale);
     // Theme
     void setTheme(const QString &key);
-    // Git
-    void updateGitStatus();
-    void updateGitBranchLabel(const QString &branch, bool dirty);
-    void onGitRepositoryChanged();
-    void gitCommit();
-    void gitPush();
-    void gitPull();
-    void gitBranch();
-    void gitLog();
-    void gitBlame();
-    void gitDiff();
-    void showGitDiff(const QVector<GitDiffFile>& diffs);
-    void onGitDiffOpenFile(const QString& filePath, int line);
     // Keyboard Shortcuts
     void showKeyboardShortcuts();
 
@@ -175,9 +163,6 @@ private:
     QLabel *m_encodingLabel = nullptr;
     QLabel *m_eolLabel = nullptr;
     QLabel *m_syntaxLabel = nullptr;
-    // Git status bar
-    QLabel *m_gitBranchLabel = nullptr;
-    QLabel *m_gitDirtyIndicator = nullptr;
 
     QMenu *m_recentMenu = nullptr;
     QMenu *m_encodingMenu = nullptr;
@@ -186,7 +171,7 @@ private:
     QMenu *m_macroSlotMenu = nullptr;
     QMenu *m_toolsMenu = nullptr;
     QMenu *m_workspaceMenu = nullptr;
-    QMenu *m_gitMenu = nullptr;
+    
     QActionGroup *m_encodingGroup = nullptr;
     QActionGroup *m_eolGroup = nullptr;
     QList<QAction *> m_recentActions;
@@ -241,16 +226,7 @@ private:
     QActionGroup *m_languageGroup = nullptr;
     QMenu *m_themeMenu = nullptr;
     QActionGroup *m_themeGroup = nullptr;
-    // Git actions
-    QAction *m_gitCommitAction = nullptr;
-    QAction *m_gitPushAction = nullptr;
-    QAction *m_gitPullAction = nullptr;
-    QAction *m_gitBranchAction = nullptr;
-    QAction *m_gitLogAction = nullptr;
-    QAction *m_gitBlameAction = nullptr;
-    QAction *m_gitDiffAction = nullptr;
-    QAction *m_gitToggleAction = nullptr;
-    QAction *m_toggleGitDiffAction = nullptr;
+    
     QAction *m_keyboardShortcutsAction = nullptr;
 
     QStringList m_recentFiles;
@@ -278,12 +254,6 @@ private:
     QTreeWidget *m_searchResultsView = nullptr;
     QDockWidget *m_searchResultsDock = nullptr;
     SpellChecker *m_spellChecker = nullptr;
-    // Git
-    GitRepo *m_gitRepo = nullptr;
-    QString m_currentRepoPath;
-    // Git Diff View
-    GitDiffView *m_gitDiffView = nullptr;
-    QDockWidget *m_gitDiffDock = nullptr;
 
     QMap<Macro *, QShortcut *> m_customShortcuts;
 
@@ -291,9 +261,6 @@ private:
     void unregisterCustomShortcut(Macro *macro);
     void registerAllCustomShortcuts();
     void unregisterAllCustomShortcuts();
-    // Git helpers
-    void detectGitRepo(const QString &filePath);
-    void clearGitRepo();
 };
 
 } // namespace papiro
