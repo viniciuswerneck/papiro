@@ -144,6 +144,17 @@ if(BUILD_TESTING)
     target_link_libraries(test_editor PRIVATE papiro_core Qt6::Widgets Qt6::Test)
     add_test(NAME editor COMMAND test_editor)
 
+    # Diff dialog: diff algorithm, change navigation and syntax highlighting.
+    qt_add_executable(test_diffdialog
+        tests/test_diffdialog.cpp
+        src/ui/DiffDialog.cpp
+        src/editor/SyntaxHighlighter.cpp
+        src/ui/Theme.cpp
+    )
+    target_link_libraries(test_diffdialog PRIVATE papiro_core Qt6::Widgets Qt6::Test)
+    add_test(NAME diffdialog COMMAND test_diffdialog)
+    set_tests_properties(diffdialog PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+
     # MainWindow integration tests (session restore and friends).
     qt_add_executable(test_mainwindow
         tests/test_mainwindow.cpp
