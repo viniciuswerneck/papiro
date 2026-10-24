@@ -8,6 +8,7 @@
 #include <QPair>
 
 class QComboBox;
+class QLabel;
 class QPlainTextEdit;
 class QSplitter;
 class QToolButton;
@@ -54,6 +55,9 @@ public:
 
     static DiffResult computeDiff(const QString &oldText, const QString &newText);
 
+    /*! Number of contiguous change blocks in the current view. */
+    int changeCount() const { return m_changes.size(); }
+
 private slots:
     void onModeChanged();
     void onNextChange();
@@ -78,8 +82,11 @@ private:
     void navigateToChange(int index);
 
     struct ChangePosition {
-        int blockNumber = -1;
-        int lineNumber = -1;
+        int blockNumber = -1;    // First display block of the change in the active view
+        int lineNumber = -1;     // Real file line number (new side for additions)
+        int lineCount = 0;       // Number of display rows in the change block
+        int oldLineNumber = -1;
+        int newLineNumber = -1;
         bool isAddition = false;
         bool isDeletion = false;
     };
@@ -90,6 +97,7 @@ private:
     QToolButton* m_prevButton = nullptr;
     QPushButton* m_swapButton = nullptr;
     QWidget* m_toolbar = nullptr;
+    QLabel* m_identicalLabel = nullptr;
 
     // Side-by-side mode
     QSplitter* m_splitter = nullptr;
@@ -104,10 +112,13 @@ private:
 
     // Data
     DiffResult m_diff;
+    QString m_oldText;
+    QString m_newText;
     QString m_oldTitle = "Old";
     QString m_newTitle = "New";
     QVector<ChangePosition> m_changes;
     int m_currentChangeIndex = -1;
+    bool m_hasData = false;
 
     // Syntax highlighting
     SyntaxHighlighter* m_oldHighlighter = nullptr;
