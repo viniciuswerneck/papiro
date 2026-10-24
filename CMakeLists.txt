@@ -149,6 +149,7 @@ if(BUILD_TESTING)
     # Diff dialog: diff algorithm, change navigation and syntax highlighting.
     qt_add_executable(test_diffdialog
         tests/test_diffdialog.cpp
+        tests/macro_stub.cpp
         src/ui/DiffDialog.cpp
         src/editor/SyntaxHighlighter.cpp
         src/ui/Theme.cpp
@@ -167,8 +168,8 @@ if(BUILD_TESTING)
     add_test(NAME mainwindow COMMAND test_mainwindow)
 
     # Java runner (JDK detection + compile/run) is QtCore-only.
-    qt_add_executable(test_java tests/test_java_runner.cpp)
-    target_link_libraries(test_java PRIVATE papiro_core Qt6::Test)
+    qt_add_executable(test_java tests/test_java_runner.cpp tests/macro_stub.cpp)
+    target_link_libraries(test_java PRIVATE papiro_core Qt6::Widgets Qt6::Test)
     add_test(NAME java COMMAND test_java)
 
     file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/test-config)

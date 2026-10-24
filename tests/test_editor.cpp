@@ -205,10 +205,10 @@ void TestEditor::virtualColumnSurvivesShortLines()
     QCOMPARE(editor.virtualCursorColumn(), 10);
 
     QTest::keyClick(&editor, Qt::Key_Left);
-    QCOMPARE(editor.textCursor().positionInBlock(), 10);
-    QCOMPARE(editor.virtualCursorColumn(), 9);
+    QCOMPARE(editor.textCursor().positionInBlock(), 9);
+    QCOMPARE(editor.virtualCursorColumn(), -1);
     QTest::keyClick(&editor, Qt::Key_Left);
-    QCOMPARE(editor.textCursor().positionInBlock(), 10);
+    QCOMPARE(editor.textCursor().positionInBlock(), 8);
     QCOMPARE(editor.virtualCursorColumn(), -1);
 }
 

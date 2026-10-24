@@ -28,6 +28,7 @@ class QTreeWidgetItem;
 
 namespace papiro {
 class GitDiffView;
+class JavaRunner;
 
 class Document;
 class Editor;
@@ -123,6 +124,8 @@ private slots:
     // Print
     void printDocument();
     void printPreview();
+    // Java
+    void runJava();
     // Language
     void setLanguage(const QString &locale);
     // Theme
@@ -168,6 +171,7 @@ private:
                                       const QString &linePattern,
                                       const QString &columnPattern,
                                       const QString &workingDirectory);
+    void appendJavaOutput(const QString &text);
     bool loadWorkspace(const QString &path);
     void updateRecentWorkspaces(const QString &path);
     void rebuildWorkspaceMenu();
@@ -199,6 +203,7 @@ private:
     QAction *m_saveAsAction = nullptr;
     QAction *m_saveAllAction = nullptr;
     QAction *m_markCleanAction = nullptr;
+    QAction *m_runJavaAction = nullptr;
     QAction *m_closeAction = nullptr;
     QAction *m_undoAction = nullptr;
     QAction *m_redoAction = nullptr;
@@ -282,6 +287,8 @@ private:
     QDockWidget *m_searchResultsDock = nullptr;
     SpellChecker *m_spellChecker = nullptr;
     LSPManager *m_lspManager = nullptr;
+    JavaRunner *m_javaRunner = nullptr;
+    QString m_javaOutputBuffer;
     QLabel *m_lspStatusLabel = nullptr;
 
     QMap<Macro *, QShortcut *> m_customShortcuts;

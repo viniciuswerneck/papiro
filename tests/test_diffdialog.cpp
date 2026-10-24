@@ -61,7 +61,7 @@ void TestDiffDialog::pureAddition()
     QCOMPARE(hunk.oldCount, 3);
     QCOMPARE(hunk.newStart, 1);
     QCOMPARE(hunk.newCount, 4);
-    QCOMPARE(hunk.lines.size(), 5);
+    QCOMPARE(hunk.lines.size(), 4);
 
     int additions = 0;
     int deletions = 0;

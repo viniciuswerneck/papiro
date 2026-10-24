@@ -128,19 +128,32 @@
 ## 🚀 Próximos Passos Sugeridos
 
 1. **Quick wins (1-2 dias cada):**
-   - [ ] Whitespace display (tabs/espaços/EOL)
-   - [ ] Sort lines (até 3 chaves)
-   - [ ] Cursor free positioning option
-   - [ ] Multiline regex option
+   - [x] Whitespace display (tabs/espaços/EOL)
+   - [x] Sort lines (até 3 chaves)
+   - [x] Cursor free positioning option
+   - [x] Multiline regex option
 
 2. **Médio prazo (1-2 semanas cada):**
-   - [ ] Split/Clone view
-   - [ ] Diff tool (reusar GitDiffView)
-   - [ ] External tool error parsing
+   - [x] Split/Clone view
+   - [x] Diff tool (reusar GitDiffView)
+   - [x] External tool error parsing
 
 3. **Longo prazo (se necessário):**
-   - [ ] Huge file support (memory mapping)
-   - [ ] Print preview avançado
+   - [x] Huge file support (memory mapping) — modo somente leitura com mmap e prévia limitada
+   - [x] Print preview avançado
+
+### Extras implementados além da lista
+
+- [x] Mark Clean command (File → Mark Document Clean, `Ctrl+Shift+M`)
+- [x] Drag & drop de texto entre abas
+- [x] Integração Java JDK (detecta JDK, compila e executa `.java` em Tools)
+- [x] Join/Split lines inteligente (`Ctrl+J` e Edit → Split Lines)
+
+### Não aplicável / fora do escopo
+
+- WildEdit é um aplicativo separado (batch edit em árvore de arquivos).
+- Clip Libraries como add-ons: o Papiro já tem biblioteca de snippets embutida.
+
 
 ---
 

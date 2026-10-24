@@ -3,6 +3,7 @@
 #include "editor/Editor.h"
 #include "ui/FindReplaceDialog.h"
 #include "ui/PreferencesDialog.h"
+#include "ui/PrintPreviewDialog.h"
 #include "ui/Theme.h"
 
 #include <QAction>
@@ -10,6 +11,7 @@
 #include <QCheckBox>
 #include <QComboBox>
 #include <QDir>
+#include <QDateTime>
 #include <QFile>
 #include <QFileInfo>
 #include <QLabel>
@@ -44,6 +46,7 @@ private slots:
     void themeActionPersists();
     void largeFileOpensInReadOnlyPreview();
     void markCleanClearsModifiedState();
+    void printPreviewExpandsTokens();
 
 private:
     QTemporaryDir m_settingsDirectory;
@@ -569,6 +572,16 @@ void TestMainWindow::markCleanClearsModifiedState()
     QVERIFY(!document->isModified());
 
     QVERIFY(window.close());
+}
+
+void TestMainWindow::printPreviewExpandsTokens()
+{
+    const QDateTime when(QDate(2026, 10, 24), QTime(15, 30));
+    const QString expanded = PrintPreviewDialog::expandTokens(
+        QStringLiteral("${filename}|${page}/${totalPages}|${date}|${unknown}"),
+        QStringLiteral("a.txt"), QStringLiteral("/tmp/a.txt"),
+        QStringLiteral("Title"), when, 2, 7);
+    QCOMPARE(expanded, QStringLiteral("a.txt|2/7|2026-10-24|${unknown}"));
 }
 
 QTEST_MAIN(TestMainWindow)

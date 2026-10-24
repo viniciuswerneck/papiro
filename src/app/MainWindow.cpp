@@ -3,6 +3,7 @@
 #include "app/Document.h"
 #include "core/ClipLibrary.h"
 #include "core/ExternalTool.h"
+#include "core/JavaRunner.h"
 #include "core/GitRepo.h"
 #include "core/Macro.h"
 #include "core/SpellChecker.h"
@@ -17,6 +18,7 @@
 #include "ui/MacroManagerDialog.h"
 #include "ui/Theme.h"
 #include "ui/PreferencesDialog.h"
+#include "ui/PrintPreviewDialog.h"
 #include "ui/KeyboardShortcutsDialog.h"
 #include "ui/Theme.h"
 #include "ui/ToolsDialog.h"
@@ -390,6 +392,22 @@ void MainWindow::createActions()
     auto *sortLinesAction = makeAction(tr("Sort &Lines"), QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_S));
     connect(sortLinesAction, &QAction::triggered, this, &MainWindow::sortLines);
 
+    auto *joinLinesAction = makeAction(tr("&Join Lines"), QKeySequence(Qt::CTRL | Qt::Key_J));
+    connect(joinLinesAction, &QAction::triggered, this, [this] {
+        if (Editor *editor = currentEditor())
+            editor->joinLines();
+    });
+
+    auto *splitLinesAction = makeAction(tr("S&plit Lines"));
+    connect(splitLinesAction, &QAction::triggered, this, [this] {
+        if (Editor *editor = currentEditor())
+            editor->splitLines();
+    });
+
+    m_runJavaAction = makeAction(tr("Compile && Run &Java"),
+                                 QKeySequence(Qt::CTRL | Qt::ALT | Qt::Key_J));
+    connect(m_runJavaAction, &QAction::triggered, this, &MainWindow::runJava);
+
     m_zoomInAction = makeAction(tr("Zoom &In"), QKeySequence::ZoomIn);
     connect(m_zoomInAction, &QAction::triggered, this, &MainWindow::zoomIn);
 
@@ -599,6 +617,8 @@ void MainWindow::createActions()
     editMenu->addAction(duplicateAction);
     editMenu->addAction(deleteLineAction);
     editMenu->addAction(sortLinesAction);
+    editMenu->addAction(joinLinesAction);
+    editMenu->addAction(splitLinesAction);
     editMenu->addSeparator();
     editMenu->addAction(gotoAction);
     editMenu->addSeparator();
@@ -709,6 +729,7 @@ void MainWindow::createActions()
     m_toolsMenu->addAction(m_configureToolsAction);
     m_toolsMenu->addSeparator();
     m_toolsMenu->addAction(m_diffAction);
+    m_toolsMenu->addAction(m_runJavaAction);
     m_toolsMenu->addSeparator();
     auto *lspPrefsAction = new QAction(tr("&LSP Servers..."), this);
     connect(lspPrefsAction, &QAction::triggered, this, &MainWindow::openLSPPreferences);
@@ -1159,6 +1180,8 @@ void MainWindow::updateActions()
     m_saveAsAction->setEnabled(hasDocument);
     m_saveAllAction->setEnabled(hasDocument);
     m_markCleanAction->setEnabled(hasDocument);
+    m_runJavaAction->setEnabled(hasDocument && document
+                                && JavaRunner::isJavaFile(document->filePath()));
     m_closeAction->setEnabled(hasDocument);
     m_findAction->setEnabled(hasDocument);
     m_findNextAction->setEnabled(hasDocument);
@@ -2967,13 +2990,83 @@ void MainWindow::printPreview()
     if (!document)
         return;
 
-    QPrinter printer(QPrinter::HighResolution);
-    printer.setDocName(document->displayName());
-    QPrintPreviewDialog dialog(&printer, this);
-    dialog.setWindowTitle(tr("Print Preview"));
-    connect(&dialog, &QPrintPreviewDialog::paintRequested, document->editor(),
-            [document](QPrinter *printer) { document->editor()->print(printer); });
+    PrintPreviewDialog dialog(this);
+    dialog.setContent(document->editor()->toPlainText(), document->filePath(),
+                      document->displayName());
     dialog.exec();
+}
+
+void MainWindow::runJava()
+{
+    Document *document = currentDocument();
+    if (!document)
+        return;
+
+    const QString path = document->filePath();
+    if (path.isEmpty() || !JavaRunner::isJavaFile(path)) {
+        QMessageBox::information(this, tr("Java"),
+                                 tr("Save the file with a .java extension first."));
+        return;
+    }
+    if (document->isLargeFile()) {
+        QMessageBox::information(this, tr("Java"),
+                                 tr("This file is open in read-only large-file mode."));
+        return;
+    }
+    if (document->isModified() && !maybeSave(document))
+        return;
+
+    if (!m_javaRunner) {
+        m_javaRunner = new JavaRunner(this);
+        connect(m_javaRunner, &JavaRunner::outputReady, this,
+                [this](const QString &text, bool isError) {
+                    Q_UNUSED(isError);
+                    appendJavaOutput(text);
+                });
+        connect(m_javaRunner, &JavaRunner::finished, this,
+                [this](bool success, const QString &summary) {
+                    Q_UNUSED(success);
+                    if (!m_javaOutputBuffer.isEmpty())
+                        appendJavaOutput(m_javaOutputBuffer + QLatin1Char('\n'));
+                    m_javaOutputBuffer.clear();
+                    appendOutput(summary + QLatin1Char('\n'));
+                    statusBar()->showMessage(summary, 6000);
+                });
+    }
+
+    const JavaEnvironment environment = JavaRunner::detect();
+    if (!environment.available) {
+        QMessageBox::warning(this, tr("Java"),
+                             tr("No Java JDK found: %1").arg(environment.error));
+        return;
+    }
+
+    m_javaOutputBuffer.clear();
+    m_outputView->clear();
+    m_outputDock->show();
+    appendOutput(tr("Compiling %1 with Java %2...\n")
+                     .arg(document->displayName(),
+                          environment.version.isEmpty() ? tr("(unknown version)")
+                                                        : environment.version));
+    m_javaRunner->compileAndRun(path);
+}
+
+void MainWindow::appendJavaOutput(const QString &text)
+{
+    m_javaOutputBuffer += text;
+
+    int newline = -1;
+    while ((newline = m_javaOutputBuffer.indexOf(QLatin1Char('\n'))) >= 0) {
+        const QString line = m_javaOutputBuffer.left(newline);
+        m_javaOutputBuffer.remove(0, newline + 1);
+
+        Document *document = currentDocument();
+        const QString workingDirectory = document
+            ? QFileInfo(document->filePath()).absolutePath() : QString();
+        appendOutputWithErrorParsing(
+            line, QStringLiteral(R"(^(.+?\.java):(\d+):\s*(.*)$)"),
+            QStringLiteral("1"), QStringLiteral("2"), QString(), workingDirectory);
+    }
 }
 
 void MainWindow::updateRecentWorkspaces(const QString &path)
