@@ -6,25 +6,37 @@ on:
       - 'v*'
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-22.04
-    container:
-      image: ubuntu:22.04
-      options: --user root
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install dependencies
+      - name: Resolve version
+        id: version
         run: |
-          apt-get update
-          apt-get install -y --no-install-recommends \
+          VERSION=$(sed -n 's/^ *VERSION \([0-9][0-9.]*\)$/\1/p' CMakeLists.txt | head -1)
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Papiro $VERSION"
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: '6.8.3'
+          cache: true
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
             cmake ninja-build g++ \
-            qt6-base-dev qt6-tools-dev qt6-translations-l10n \
-            libhunspell-dev libgl1-mesa-dev libxkbcommon-dev \
-            wget ca-certificates
+            libhunspell-dev libgl1-mesa-dev libxkbcommon-dev libxcb-cursor0 \
+            libfuse2 patchelf file rpm wget ca-certificates
 
       - name: Configure
         run: cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
@@ -33,6 +45,8 @@ jobs:
         run: cmake --build build --config Release
 
       - name: Test
+        env:
+          QT_QPA_PLATFORM: offscreen
         run: cd build && ctest --output-on-failure
 
       - name: Install to AppDir
@@ -45,6 +59,9 @@ jobs:
           chmod +x linuxdeploy linuxdeploy-plugin-qt
 
       - name: Build AppImage
+        env:
+          APPIMAGE_EXTRACT_AND_RUN: '1'
+          QMAKE: ${{ env.QT_ROOT_DIR }}/bin/qmake
         run: |
           ./linuxdeploy --appdir AppDir \
             --plugin qt \
@@ -52,26 +69,25 @@ jobs:
             --desktop-file resources/papiro.desktop \
             --icon-file resources/icons/papiro.png \
             --executable AppDir/usr/bin/Papiro
+          mkdir -p dist
+          mv Papiro-x86_64.AppImage "dist/Papiro-${{ steps.version.outputs.version }}-x86_64.AppImage"
 
       - name: Build DEB and RPM
         run: |
-          cd build && cpack -G DEB -G RPM
+          cd build && cpack -G "DEB;RPM" && cd ..
+          mkdir -p dist
+          cp build/*.deb "dist/papiro_${{ steps.version.outputs.version }}_amd64.deb"
+          cp build/*.rpm dist/
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: linux-artifacts
-          path: |
-            *.AppImage
-            build/*.deb
-            build/*.rpm
+          path: dist/*
 
       - name: Create Release
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         with:
-          files: |
-            *.AppImage
-            build/*.deb
-            build/*.rpm
+          files: dist/*
           generate_release_notes: true

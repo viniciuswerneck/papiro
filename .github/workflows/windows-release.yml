@@ -6,6 +6,9 @@ on:
       - 'v*'
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: windows-2022
@@ -15,10 +18,17 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Resolve version
+        id: version
+        run: |
+          $version = (Select-String -Path CMakeLists.txt -Pattern '^\s*VERSION\s+([0-9][0-9.]*)\s*$').Matches[0].Groups[1].Value
+          "version=$version" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+          Write-Host "Papiro $version"
+
       - name: Install Qt 6.8.3 MSVC
-        uses: jurplel/install-qt-action@v3
+        uses: jurplel/install-qt-action@v4
         with:
-          target: desktop
+          version: '6.8.3'
           arch: win64_msvc2022_64
           cache: true
 
@@ -33,58 +43,64 @@ jobs:
           & $qtifwInstaller --script $qtifwScript --verbose
           Remove-Item $qtifwInstaller
 
-          $env:PATH += ";$qtifwDir\bin"
-          echo "$qtifwDir\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          "$qtifwDir\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
       - name: Configure
-        run: |
-          $qt = (Get-ChildItem "C:\Qt\6.8.3\msvc2022_64" -Directory).FullName
-          cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="$qt"
+        run: cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="$env:QT_ROOT_DIR"
 
       - name: Build
         run: cmake --build build --config Release
 
       - name: Test
-        run: cd build; ctest --output-on-failure -C Release
+        env:
+          QT_QPA_PLATFORM: offscreen
+        run: |
+          cd build
+          ctest --output-on-failure
+
+      - name: Install to staging directory
+        run: cmake --install build --prefix stage
 
       - name: Deploy Qt dependencies
         run: |
-          $qt = (Get-ChildItem "C:\Qt\6.8.3\msvc2022_64" -Directory).FullName
-          $windeployqt = Join-Path $qt "bin\windeployqt.exe"
-          & $windeployqt --release --no-translations --no-openssl --no-angle --no-compiler-runtime "build\Release\Papiro.exe"
-
-      - name: Copy translations, syntax, and icon
-        run: |
-          Copy-Item -Path "resources\translations\*" -Destination "build\Release\translations\" -Force -Recurse -ErrorAction SilentlyContinue
-          Copy-Item -Path "resources\syntax\*" -Destination "build\Release\syntax\" -Force -Recurse -ErrorAction SilentlyContinue
-          Copy-Item -Path "resources\icons\papiro.png" -Destination "build\Release\" -Force -ErrorAction SilentlyContinue
-
-      - name: Build QtIFW installer
-        run: |
-          $qtifwDir = "C:\Qt\QtIFW-4.6"
-          $binarycreator = Join-Path $qtifwDir "bin\binarycreator.exe"
-          $config = "installer\config\config.xml"
-          $packages = "installer\packages"
-          $out = "Papiro-Setup.exe"
-          & $binarycreator --offline-only -c $config -p $packages $out
+          & "$env:QT_ROOT_DIR\bin\windeployqt.exe" --release --no-translations --no-openssl --no-angle --no-compiler-runtime --no-opengl-sw "stage\bin\Papiro.exe"
 
       - name: Build Portable ZIP
         run: |
-          Compress-Archive -Path "build\Release\*" -DestinationPath "Papiro-Portable.zip" -Force
+          New-Item -ItemType Directory -Path dist -Force | Out-Null
+          Compress-Archive -Path "stage\*" -DestinationPath "dist\Papiro-${{ steps.version.outputs.version }}-windows-x64-portable.zip" -Force
+
+      - name: Build QtIFW installer
+        run: |
+          $version = "${{ steps.version.outputs.version }}"
+          $config = "packaging/windows/qtifw/config/config.xml"
+          $packages = "packaging/windows/qtifw/packages"
+          $dataDir = Join-Path $packages "com.papiro.app/data"
+
+          if (Test-Path $dataDir) { Remove-Item -Recurse -Force $dataDir }
+          New-Item -ItemType Directory -Path $dataDir -Force | Out-Null
+          Copy-Item -Path "stage\*" -Destination $dataDir -Recurse -Force
+
+          Get-ChildItem -Path $packages -Filter "package.xml" -Recurse | ForEach-Object {
+            (Get-Content $_.FullName -Raw) -replace '<Version>[^<]*</Version>', "<Version>$version</Version>" | Set-Content $_.FullName -NoNewline
+          }
+          (Get-Content $config -Raw) -replace '<Version>[^<]*</Version>', "<Version>$version</Version>" | Set-Content $config -NoNewline
+
+          & "C:\Qt\QtIFW-4.6\bin\binarycreator.exe" --offline-only -c $config -p $packages "dist\Papiro-$version-windows-x64.exe"
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: windows-artifacts
           path: |
-            Papiro-Setup.exe
-            Papiro-Portable.zip
+            dist/*.exe
+            dist/*.zip
 
       - name: Create Release
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            Papiro-Setup.exe
-            Papiro-Portable.zip
+            dist/Papiro-*-windows-x64.exe
+            dist/Papiro-*-windows-x64-portable.zip
           generate_release_notes: true
