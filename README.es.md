@@ -1,5 +1,9 @@
 # Papiro
 
+[![Languages](https://img.shields.io/badge/lang-EN%20%7C%20PT%20%7C%20ES-blue.svg)]()
+
+[🇺🇸 English](README.md) • [🇧🇷 Português](README.pt.md) • [🇪🇸 Español](README.es.md)
+
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![GitHub release](https://img.shields.io/github/v/release/viniciuswerneck/papiro)](https://github.com/viniciuswerneck/papiro/releases)
 [![GitHub Actions](https://github.com/viniciuswerneck/papiro/actions/workflows/linux-release.yml/badge.svg)](https://github.com/viniciuswerneck/papiro/actions/workflows/linux-release.yml)
