@@ -17,22 +17,19 @@
 
 #### AppImage (recommended, universal)
 ```bash
-wget https://github.com/viniciuswerneck/papiro/releases/latest/download/Papiro-0.1.0-x86_64.AppImage
+wget https://github.com/viniciuswerneck/papiro/releases/latest/download/Papiro-0.3.0-x86_64.AppImage
 chmod +x Papiro-*.AppImage
 ./Papiro-*.AppImage
 ```
 
 #### Debian/Ubuntu (.deb)
 ```bash
-wget https://github.com/viniciuswerneck/papiro/releases/latest/download/papiro_0.1.0_amd64.deb
+wget https://github.com/viniciuswerneck/papiro/releases/latest/download/papiro_0.3.0_amd64.deb
 sudo apt install ./papiro_*.deb
 ```
 
-#### Fedora/RHEL (.rpm)
-```bash
-wget https://github.com/viniciuswerneck/papiro/releases/latest/download/papiro-0.1.0-1.x86_64.rpm
-sudo dnf install ./papiro-*.rpm
-```
+#### Fedora/RHEL
+No RPM is published yet — use the AppImage above or [build from source](#-build-from-source).
 
 #### Arch Linux (AUR)
 ```bash
@@ -42,10 +39,10 @@ yay -S papiro  # or paru -S papiro
 ### Windows
 
 #### Installer (QtIFW)
-Download `Papiro-0.1.0-windows-x64.exe` from [Releases](https://github.com/viniciuswerneck/papiro/releases), run it.
+Download `Papiro-0.3.0-windows-x64.exe` from [Releases](https://github.com/viniciuswerneck/papiro/releases), run it.
 
 #### Portable ZIP
-Download `Papiro-0.1.0-windows-x64-portable.zip`, extract anywhere, run `Papiro.exe`.
+Download `Papiro-0.3.0-windows-x64-portable.zip`, extract anywhere, run `Papiro.exe`.
 
 ### Build from Source
 ```bash

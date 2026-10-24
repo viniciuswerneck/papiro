@@ -21,6 +21,12 @@
   <url type="homepage">https://github.com/viniciuswerneck/papiro</url>
   <url type="bugtracker">https://github.com/viniciuswerneck/papiro/issues</url>
   <releases>
+    <release version="0.3.0" date="2026-10-24">
+      <description>Print preview, Java/JDK integration, real diff hunks, virtual-space cursor and TextPad feature parity.</description>
+    </release>
+    <release version="0.2.0" date="2026-10-23">
+      <description>LSP integration with completion and hover, Git diff viewer and inline blame.</description>
+    </release>
     <release version="0.1.0" date="2026-10-23">
       <description>Initial public release</description>
     </release>

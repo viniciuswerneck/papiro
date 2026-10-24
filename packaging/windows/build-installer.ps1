@@ -1,6 +1,6 @@
 #!/usr/bin/env pwsh
 param(
-    [string]$Version = "0.1.0",
+    [string]$Version = "0.3.0",
     [string]$QtDir = "C:/Qt/6.8.3/msvc2022_64",
     [string]$QtIFWDir = "C:/Qt/QtIFW-4.6.0",
     [string]$BuildDir = "build",
