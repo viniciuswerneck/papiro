@@ -9,6 +9,7 @@
 
 class QComboBox;
 class QLabel;
+class QLineEdit;
 class QPlainTextEdit;
 class QSplitter;
 class QToolButton;
@@ -65,6 +66,9 @@ private slots:
     void onSwapFiles();
     void onCopy();
     void showContextMenu(const QPoint& pos);
+    void onBrowseOldFile();
+    void onBrowseNewFile();
+    void onFileChanged();
 
 private:
     void setupUI();
@@ -98,6 +102,12 @@ private:
     QPushButton* m_swapButton = nullptr;
     QWidget* m_toolbar = nullptr;
     QLabel* m_identicalLabel = nullptr;
+
+    // File selectors
+    QLineEdit* m_oldFileEdit = nullptr;
+    QLineEdit* m_newFileEdit = nullptr;
+    QToolButton* m_browseOldButton = nullptr;
+    QToolButton* m_browseNewButton = nullptr;
 
     // Side-by-side mode
     QSplitter* m_splitter = nullptr;

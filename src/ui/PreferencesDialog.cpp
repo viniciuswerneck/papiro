@@ -9,6 +9,7 @@
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QPushButton>
+#include <QSpinBox>
 #include <QTabWidget>
 #include <QVBoxLayout>
 
@@ -51,6 +52,12 @@ PreferencesDialog::PreferencesDialog(const Preferences &current, QWidget *parent
     m_spellCheck = new QCheckBox(tr("Enable &spell checking"), this);
     m_spellCheck->setObjectName(QStringLiteral("PreferencesSpellCheck"));
     m_spellCheck->setChecked(current.spellCheck);
+    m_largeFileThreshold = new QSpinBox(this);
+    m_largeFileThreshold->setObjectName(QStringLiteral("PreferencesLargeFileThreshold"));
+    m_largeFileThreshold->setRange(1, 1024);
+    m_largeFileThreshold->setValue(current.largeFileThresholdMB);
+    m_largeFileThreshold->setSuffix(tr(" MB"));
+    m_largeFileThreshold->setToolTip(tr("Files larger than this open in read-only preview mode"));
 
     auto *editorForm = new QFormLayout;
     editorForm->addRow(tr("Editor font:"), fontRow);
@@ -59,6 +66,7 @@ PreferencesDialog::PreferencesDialog(const Preferences &current, QWidget *parent
     editorForm->addRow(QString(), m_whitespaceVisible);
     editorForm->addRow(QString(), m_cursorFreePositioning);
     editorForm->addRow(QString(), m_spellCheck);
+    editorForm->addRow(tr("Large file threshold:"), m_largeFileThreshold);
 
     auto *editorLayout = new QVBoxLayout(editorPage);
     editorLayout->addLayout(editorForm);
@@ -148,6 +156,7 @@ Preferences PreferencesDialog::preferences() const
     result.whitespaceVisible = m_whitespaceVisible->isChecked();
     result.cursorFreePositioning = m_cursorFreePositioning->isChecked();
     result.spellCheck = m_spellCheck->isChecked();
+    result.largeFileThresholdMB = m_largeFileThreshold->value();
     result.searchMatchCase = m_matchCase->isChecked();
     result.searchWholeWord = m_wholeWord->isChecked();
     result.searchRegex = m_regex->isChecked();

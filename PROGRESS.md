@@ -210,9 +210,29 @@
 
 ---
 
-## 🚧 Em andamento
+## 🚧 Em andamento (Paridade com TextPad — do COMPARISON_PAPIRO_VS_TEXTPAD.md)
 
-- [x] **Atalhos personalizados de macros** — combinações além dos 9 slots fixos
+### 🔴 Alta prioridade
+- [x] **Suporte a arquivos grandes (GBs)** — memory mapping / lazy loading / virtual scroll
+- [x] **Whitespace display** — mostrar tabs (→), espaços (·), fim de linha (¶)
+
+### 🟡 Média prioridade
+- [x] **Split View / Clone View** — 2 views do mesmo arquivo (horizontal/vertical)
+- [x] **Ordenação de linhas (Sort)** — até 3 chaves (colunas)
+- [x] **File Diff Tool** — comparação nativa de 2 arquivos (side-by-side/unified)
+- [x] **Multiline Regex Search/Replace** — regex que atravessa linhas
+- [x] **External tools com error parsing** — regex "file:line:col: msg" → clicar pula pro arquivo
+- [x] **Mark Clean command** — marcar buffer como "limpo" (Ctrl+Shift+M)
+
+### 🟢 Baixa prioridade
+- [x] **Print Preview avançado** — headers/footers customizáveis (${filename}, ${date}, ${page})
+- [x] **Drag & Drop entre documentos** — arrastar texto entre abas (via tab bar)
+- [x] **Cursor livre (além do fim da linha)** — posicionar em área vazia
+- [x] **Integração Java JDK** — detecta JDK, compila/executa .java nativamente
+- [x] **Line joining/splitting inteligente** — Join/Split lines preservando parágrafos
+- [ ] **WildEdit (ferramenta separada)** — batch edit em hierarquia de arquivos
+
+> **Não aplicável / já tem:** Clip Libraries built-in (Papiro tem), WildEdit é app separado.
 
 ---
 
@@ -257,10 +277,11 @@ $HOME/Qt/6.8.3/gcc_64/bin/lupdate -no-obsolete src \
 # preencher <translation> e rebuildar (lrelease roda no build)
 ```
 
-## 📌 Estado ao encerrar (23/10/2026)
+## 📌 Estado ao encerrar (24/10/2026)
 
 - Build Release atualizado e funcionando (`build/Papiro`)
 - Testes: `core`, `editor` e `mainwindow` passando (100%)
+- **Suporte a arquivos grandes (GBs) IMPLEMENTADO**: memory mapping + lazy loading + virtual scroll + preferência configurável (1-1024 MB)
 - App em execução na sessão Wayland (último PID conhecido: 709893)
 - Dependências locais:
   - Qt 6.8.3: `~/Qt/6.8.3/gcc_64`
@@ -278,11 +299,19 @@ $HOME/Qt/6.8.3/gcc_64/bin/lupdate -no-obsolete src \
 1. Recompilar: comando em **Build** acima (já configurado, basta `cmake --build build`)
 2. Rodar: `cd build && setsid nohup ./Papiro > /tmp/papiro_run.log 2>&1 &`
 3. Verificar: `ctest --test-dir build --output-on-failure`
-4. Próximos passos sugeridos:
-   - [ ] **Ícones reais** — gerar PNG/ICO do SVG placeholder
-   - [ ] **Testar pacotes** — AppImage, DEB/RPM localmente
-   - [ ] **LSP / Language Server** — suporte a clangd, pyright, etc.
-   - [ ] **Git integration** — status branch, diff, blame, commit UI
+4. Próximos passos (Paridade TextPad — ordem de prioridade):
+   - [ ] **Split/Clone View** — 2 views do mesmo arquivo
+   - [ ] **Sort Lines** (até 3 chaves)
+   - [ ] **Multiline Regex** option no Find/Replace
+   - [ ] **File Diff Tool** (reusar GitDiffView)
+   - [ ] **External tool error parsing** (regex file:line:col)
+   - [ ] **Mark Clean** command (Ctrl+Shift+M)
+   - [ ] **Cursor livre** (além do fim da linha)
+   - [ ] **Print Preview avançado** (headers/footers)
+   - [ ] **Drag & Drop texto entre abas**
+   - [ ] **Java JDK integration** (detecta, compila, executa)
+   - [ ] **Join/Split lines inteligente** (Ctrl+J)
+   - [ ] **WildEdit** (ferramenta separada batch edit)
 
 ## 🔍 Verificações rápidas
 

@@ -9,6 +9,7 @@ class QCheckBox;
 class QComboBox;
 class QLabel;
 class QPushButton;
+class QSpinBox;
 
 namespace papiro {
 
@@ -26,6 +27,7 @@ struct Preferences {
     bool searchWholeWord = false;
     bool searchRegex = false;
     bool searchWrap = true;
+    int largeFileThresholdMB = 16; // MB, files above this open in read-only preview mode
 };
 
 /*! Single dialog for editor font, theme, session restoration and search defaults. */
@@ -55,6 +57,7 @@ private:
     QCheckBox *m_wholeWord = nullptr;
     QCheckBox *m_regex = nullptr;
     QCheckBox *m_wrap = nullptr;
+    QSpinBox *m_largeFileThreshold = nullptr;
 };
 
 } // namespace papiro

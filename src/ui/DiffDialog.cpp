@@ -10,6 +10,7 @@
 #include <QDebug>
 #include <QDir>
 #include <QFile>
+#include <QFileDialog>
 #include <QFileInfo>
 #include <QHBoxLayout>
 #include <QKeySequence>
@@ -228,6 +229,31 @@ void DiffDialog::setupUI()
     auto *toolbarLayout = new QHBoxLayout(m_toolbar);
     toolbarLayout->setContentsMargins(4, 4, 4, 4);
 
+    // File selectors
+    m_oldFileEdit = new QLineEdit(this);
+    m_oldFileEdit->setPlaceholderText(tr("Old file"));
+    m_oldFileEdit->setMinimumWidth(200);
+    toolbarLayout->addWidget(new QLabel(tr("Old:"), this));
+    toolbarLayout->addWidget(m_oldFileEdit);
+
+    m_browseOldButton = new QToolButton(this);
+    m_browseOldButton->setText(tr("..."));
+    m_browseOldButton->setToolTip(tr("Browse for old file"));
+    toolbarLayout->addWidget(m_browseOldButton);
+
+    m_newFileEdit = new QLineEdit(this);
+    m_newFileEdit->setPlaceholderText(tr("New file"));
+    m_newFileEdit->setMinimumWidth(200);
+    toolbarLayout->addWidget(new QLabel(tr("New:"), this));
+    toolbarLayout->addWidget(m_newFileEdit);
+
+    m_browseNewButton = new QToolButton(this);
+    m_browseNewButton->setText(tr("..."));
+    m_browseNewButton->setToolTip(tr("Browse for new file"));
+    toolbarLayout->addWidget(m_browseNewButton);
+
+    toolbarLayout->addStretch();
+
     m_modeCombo = new QComboBox(this);
     m_modeCombo->addItem(tr("Side by Side"), 0);
     m_modeCombo->addItem(tr("Unified"), 1);
@@ -376,6 +402,12 @@ void DiffDialog::setupConnections()
     connect(m_nextButton, &QToolButton::clicked, this, &DiffDialog::onNextChange);
     connect(m_prevButton, &QToolButton::clicked, this, &DiffDialog::onPreviousChange);
     connect(m_swapButton, &QPushButton::clicked, this, &DiffDialog::onSwapFiles);
+
+    // File selectors
+    connect(m_browseOldButton, &QToolButton::clicked, this, &DiffDialog::onBrowseOldFile);
+    connect(m_browseNewButton, &QToolButton::clicked, this, &DiffDialog::onBrowseNewFile);
+    connect(m_oldFileEdit, &QLineEdit::returnPressed, this, &DiffDialog::onFileChanged);
+    connect(m_newFileEdit, &QLineEdit::returnPressed, this, &DiffDialog::onFileChanged);
 
     // Sync scrolling
     connect(m_oldEditor->verticalScrollBar(), &QScrollBar::valueChanged, [this](int value) {
@@ -832,6 +864,37 @@ void DiffDialog::navigateToChange(int index)
     } else {
         selectRange(m_unifiedEditor, change.blockNumber, change.lineCount);
         selectRange(m_unifiedLineNumbers, change.blockNumber, change.lineCount);
+    }
+}
+
+void DiffDialog::onBrowseOldFile()
+{
+    QString fileName = QFileDialog::getOpenFileName(this, tr("Open Old File"), QString(),
+                                                    tr("All Files (*)"));
+    if (!fileName.isEmpty()) {
+        m_oldFileEdit->setText(fileName);
+        onFileChanged();
+    }
+}
+
+void DiffDialog::onBrowseNewFile()
+{
+    QString fileName = QFileDialog::getOpenFileName(this, tr("Open New File"), QString(),
+                                                    tr("All Files (*)"));
+    if (!fileName.isEmpty()) {
+        m_newFileEdit->setText(fileName);
+        onFileChanged();
+    }
+}
+
+void DiffDialog::onFileChanged()
+{
+    const QString oldPath = m_oldFileEdit->text();
+    const QString newPath = m_newFileEdit->text();
+
+    if (!oldPath.isEmpty() && !newPath.isEmpty() &&
+        QFile::exists(oldPath) && QFile::exists(newPath)) {
+        setFiles(oldPath, newPath);
     }
 }
 

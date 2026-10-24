@@ -61,6 +61,7 @@ set(PAPIRO_APP_SOURCES
     src/app/Document.cpp
     src/editor/Editor.cpp
     src/editor/SyntaxHighlighter.cpp
+    src/ui/SortLinesDialog.cpp
     src/ui/SplitView.cpp
     src/ui/DiffDialog.cpp
     src/ui/ClipLibraryWidget.cpp

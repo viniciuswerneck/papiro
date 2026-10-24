@@ -19,6 +19,10 @@ QJsonObject toJson(const ExternalTool &tool)
     object.insert(QStringLiteral("arguments"), tool.arguments);
     object.insert(QStringLiteral("workingDirectory"), tool.workingDirectory);
     object.insert(QStringLiteral("saveBeforeRun"), tool.saveBeforeRun);
+    object.insert(QStringLiteral("errorPattern"), tool.errorPattern);
+    object.insert(QStringLiteral("errorFilePattern"), tool.errorFilePattern);
+    object.insert(QStringLiteral("errorLinePattern"), tool.errorLinePattern);
+    object.insert(QStringLiteral("errorColumnPattern"), tool.errorColumnPattern);
     return object;
 }
 
@@ -30,6 +34,10 @@ ExternalTool fromJson(const QJsonObject &object)
     tool.arguments = object.value(QStringLiteral("arguments")).toString();
     tool.workingDirectory = object.value(QStringLiteral("workingDirectory")).toString();
     tool.saveBeforeRun = object.value(QStringLiteral("saveBeforeRun")).toBool(true);
+    tool.errorPattern = object.value(QStringLiteral("errorPattern")).toString();
+    tool.errorFilePattern = object.value(QStringLiteral("errorFilePattern")).toString();
+    tool.errorLinePattern = object.value(QStringLiteral("errorLinePattern")).toString();
+    tool.errorColumnPattern = object.value(QStringLiteral("errorColumnPattern")).toString();
     return tool;
 }
 

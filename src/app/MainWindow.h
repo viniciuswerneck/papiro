@@ -89,8 +89,11 @@ private slots:
     void foldAll();
     void unfoldAll();
     void sortLines();
-    void splitView();
+    void splitView(Qt::Orientation orientation = Qt::Horizontal);
+    void splitVertical();
+    void splitHorizontal();
     void unsplitView();
+    void cloneView();
     void diffFiles();
     void openRecentFile();
     void clearRecentFiles();
@@ -226,6 +229,10 @@ private:
     QAction *m_foldAllAction = nullptr;
     QAction *m_unfoldAllAction = nullptr;
     QAction *m_splitViewAction = nullptr;
+    QAction *m_splitVerticalAction = nullptr;
+    QAction *m_splitHorizontalAction = nullptr;
+    QAction *m_unsplitViewAction = nullptr;
+    QAction *m_cloneViewAction = nullptr;
     QAction *m_diffAction = nullptr;
     // Macro actions
     QAction *m_recordMacroAction = nullptr;
@@ -273,6 +280,7 @@ private:
     bool m_searchRegex = false;
     bool m_searchMultiline = false;
     bool m_searchWrap = true;
+    int m_largeFileThresholdMB = 16;
 
     MacroManager *m_macroManager = nullptr;
     ClipLibrary *m_clipLibrary = nullptr;

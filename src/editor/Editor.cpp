@@ -1709,6 +1709,10 @@ void Editor::updateLineNumberArea(const QRect &rect, int dy)
     if (dy != 0 && m_blameView && m_blameView->isBlameVisible()) {
         m_blameView->setScrollValue(verticalScrollBar()->value());
     }
+
+    // Emit scroll position for large file auto-loading
+    QScrollBar *vsb = verticalScrollBar();
+    emit scrollPositionChanged(vsb->value(), vsb->maximum());
 }
 
 void Editor::highlightCurrentLine()

@@ -23,6 +23,7 @@
 #include "ui/Theme.h"
 #include "ui/ToolsDialog.h"
 #include "ui/Theme.h"
+#include "ui/SortLinesDialog.h"
 
 #include <QAction>
 #include <QActionGroup>
@@ -377,11 +378,24 @@ void MainWindow::createActions()
     m_unfoldAllAction = makeAction(tr("&Unfold All"));
     connect(m_unfoldAllAction, &QAction::triggered, this, &MainWindow::unfoldAll);
 
+    m_splitVerticalAction = makeAction(tr("Split &Vertical"), QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_V));
+    connect(m_splitVerticalAction, &QAction::triggered, this, &MainWindow::splitVertical);
+
+    m_splitHorizontalAction = makeAction(tr("Split &Horizontal"), QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_H));
+    connect(m_splitHorizontalAction, &QAction::triggered, this, &MainWindow::splitHorizontal);
+
+    m_unsplitViewAction = makeAction(tr("&Unsplit"), QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_U));
+    connect(m_unsplitViewAction, &QAction::triggered, this, &MainWindow::unsplitView);
+
+    m_cloneViewAction = makeAction(tr("Clone &View"), QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_C));
+    connect(m_cloneViewAction, &QAction::triggered, this, &MainWindow::cloneView);
+
+    // Legacy action for backwards compatibility (used in toolbar/menu)
     m_splitViewAction = makeAction(tr("Split View"));
     m_splitViewAction->setCheckable(true);
     connect(m_splitViewAction, &QAction::toggled, this, [this](bool checked) {
         if (checked)
-            splitView();
+            splitView(Qt::Horizontal);
         else
             unsplitView();
     });
@@ -596,7 +610,6 @@ void MainWindow::createActions()
     fileMenu->addAction(m_saveAction);
     fileMenu->addAction(m_saveAsAction);
     fileMenu->addAction(m_saveAllAction);
-    fileMenu->addAction(m_markCleanAction);
     fileMenu->addSeparator();
     fileMenu->addAction(m_printAction);
     fileMenu->addAction(m_printPreviewAction);
@@ -685,6 +698,9 @@ void MainWindow::createActions()
     foldingMenu->addAction(m_toggleFoldAction);
     foldingMenu->addAction(m_foldAllAction);
     foldingMenu->addAction(m_unfoldAllAction);
+
+    documentMenu->addSeparator();
+    documentMenu->addAction(m_markCleanAction);
 
     // View
     auto *viewMenu = menuBar()->addMenu(tr("&View"));
@@ -862,6 +878,18 @@ Document *MainWindow::addDocument()
             updateActions();
     });
 
+    // Large file: auto-load more content when scrolling near end
+    connect(editor, &Editor::scrollPositionChanged, this, [this, document](int value, int max) {
+        if (document != currentDocument())
+            return;
+        if (!document->isLargeFile() || document->truncatedBytes() <= 0)
+            return;
+        // Load more when within 10% of the end
+        if (value >= max - max / 10) {
+            document->loadMoreLargeFileContent(1024 * 1024); // 1 MB chunks
+        }
+    });
+
     return document;
 }
 
@@ -908,7 +936,7 @@ void MainWindow::openFile(const QString &path)
         document = addDocument();
 
     QString error;
-    if (!document->loadFile(absolute, &error)) {
+    if (!document->loadFile(absolute, qint64(m_largeFileThresholdMB) * 1024 * 1024, &error)) {
         QMessageBox::warning(this, tr("Open File"), error);
         if (!reuse) {
             const int index = m_tabs->indexOf(document);
@@ -1212,6 +1240,7 @@ void MainWindow::updateDocumentMenuState()
 
     m_encodingGroup->setEnabled(document != nullptr);
     m_eolGroup->setEnabled(document != nullptr);
+    m_markCleanAction->setEnabled(document && document->isModified());
 }
 
 // ---------------------------------------------------------------------------
@@ -1233,8 +1262,10 @@ QRegularExpression MainWindow::buildRegex(const FindRequest &request, QString *e
     QRegularExpression::PatternOptions options = QRegularExpression::UseUnicodePropertiesOption;
     if (!request.matchCase)
         options |= QRegularExpression::CaseInsensitiveOption;
-    if (request.multiline)
+    if (request.multiline) {
         options |= QRegularExpression::MultilineOption;
+        options |= QRegularExpression::DotMatchesEverythingOption;
+    }
 
     QRegularExpression expression(pattern, options);
     if (error)
@@ -1976,6 +2007,7 @@ void MainWindow::openPreferences()
     current.searchWholeWord = m_searchWholeWord;
     current.searchRegex = m_searchRegex;
     current.searchWrap = m_searchWrap;
+    current.largeFileThresholdMB = m_largeFileThresholdMB;
 
     PreferencesDialog dialog(current, this);
     if (dialog.exec() != QDialog::Accepted)
@@ -2003,6 +2035,8 @@ void MainWindow::applyPreferences(const Preferences &preferences)
         m_cursorFreePositioningAction->setChecked(preferences.cursorFreePositioning);
     if (preferences.restoreSession != m_restoreSessionAction->isChecked())
         m_restoreSessionAction->setChecked(preferences.restoreSession);
+    if (preferences.largeFileThresholdMB != m_largeFileThresholdMB)
+        m_largeFileThresholdMB = preferences.largeFileThresholdMB;
 
     const QString themeKey = Theme::key(preferences.theme);
     if (themeKey != Theme::key(Theme::mode())) {
@@ -2094,7 +2128,7 @@ void MainWindow::zoomReset()
         document->editor()->setBaseFont(m_editorFont);
 }
 
-void MainWindow::splitView()
+void MainWindow::splitView(Qt::Orientation orientation)
 {
     Document *document = currentDocument();
     if (!document)
@@ -2108,6 +2142,12 @@ void MainWindow::splitView()
     // Create split view with the current editor as primary
     auto *splitView = new SplitView(editor, document);
     splitView->setObjectName(QStringLiteral("SplitView"));
+
+    // Set orientation
+    SplitView::Orientation svOrientation = (orientation == Qt::Vertical)
+        ? SplitView::Orientation::Vertical
+        : SplitView::Orientation::Horizontal;
+    splitView->setSplitOrientation(svOrientation);
 
     // Replace the editor in the document's layout
     QLayout *layout = document->layout();
@@ -2190,6 +2230,34 @@ void MainWindow::unsplitView()
     updateStatus();
 }
 
+void MainWindow::splitVertical()
+{
+    splitView(Qt::Vertical);
+}
+
+void MainWindow::splitHorizontal()
+{
+    splitView(Qt::Horizontal);
+}
+
+void MainWindow::cloneView()
+{
+    Document *document = currentDocument();
+    if (!document)
+        return;
+
+    // Create a new tab with the same file
+    QString path = document->filePath();
+    if (path.isEmpty()) {
+        // For unsaved documents, we can't easily clone - just open a new empty tab
+        newDocument();
+        return;
+    }
+
+    // Open the same file in a new tab (this will create a new Document with same file)
+    openFile(path);
+}
+
 void MainWindow::diffFiles()
 {
     QString file1 = QFileDialog::getOpenFileName(this, tr("Select First File"));
@@ -2226,8 +2294,14 @@ void MainWindow::unfoldAll()
 
 void MainWindow::sortLines()
 {
-    if (auto *editor = currentEditor())
-        editor->sortLines();
+    if (!currentEditor())
+        return;
+
+    SortLinesDialog dialog(this);
+    if (dialog.exec() != QDialog::Accepted)
+        return;
+
+    currentEditor()->sortLines(dialog.keyCount(), dialog.ascending(), dialog.caseSensitivity());
 }
 
 void MainWindow::setEncoding(TextEncoding encoding)
@@ -2334,6 +2408,7 @@ void MainWindow::applySettings()
     m_whitespaceVisible = settings.value(QStringLiteral("whitespaceVisible"), false).toBool();
     m_cursorFreePositioning = settings.value(QStringLiteral("cursorFreePositioning"), false).toBool();
     m_spellCheck = settings.value(QStringLiteral("spellCheck"), true).toBool();
+    m_largeFileThresholdMB = settings.value(QStringLiteral("largeFileThresholdMB"), 16).toInt();
 
     const QString defaultFamily = QFontDatabase::systemFont(QFontDatabase::FixedFont).family();
     const QString family = settings.value(QStringLiteral("fontFamily"), defaultFamily).toString();
@@ -2376,6 +2451,7 @@ void MainWindow::saveSettings()
     settings.setValue(QStringLiteral("whitespaceVisible"), m_whitespaceVisible);
     settings.setValue(QStringLiteral("cursorFreePositioning"), m_cursorFreePositioning);
     settings.setValue(QStringLiteral("spellCheck"), m_spellCheck);
+    settings.setValue(QStringLiteral("largeFileThresholdMB"), m_largeFileThresholdMB);
     settings.setValue(QStringLiteral("fontFamily"), m_editorFont.family());
     settings.setValue(QStringLiteral("fontSize"), m_editorFont.pointSize());
     settings.endGroup();

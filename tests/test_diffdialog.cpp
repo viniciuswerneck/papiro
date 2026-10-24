@@ -249,9 +249,14 @@ void TestDiffDialog::setTextsPopulatesChangesAndNavigates()
     // Both changes belong to one merged hunk but remain separate blocks.
     QCOMPARE(dialog.changeCount(), 2);
 
-    const QList<QToolButton *> buttons = dialog.findChildren<QToolButton *>();
-    QCOMPARE(buttons.size(), 2);
-    for (QToolButton *button : buttons)
+    const QList<QToolButton *> allButtons = dialog.findChildren<QToolButton *>();
+    QList<QToolButton *> navButtons;
+    for (QToolButton *b : allButtons) {
+        if (b->text() == "Prev" || b->text() == "Next")
+            navButtons.append(b);
+    }
+    QCOMPARE(navButtons.size(), 2);
+    for (QToolButton *button : navButtons)
         QVERIFY(button->isEnabled());
 
     QPlainTextEdit *sideEditor = nullptr;

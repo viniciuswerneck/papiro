@@ -119,8 +119,9 @@ signals:
     void findRequested();
     void gotoLineRequested();
     void blockSelectionChanged();
+    void scrollPositionChanged(int value, int max);
 
-// LSP signals
+    // LSP signals
     void lspDefinitionRequested(const LSP::TextDocumentPositionParams& params);
     void lspReferencesRequested(const LSP::ReferenceParams& params);
     void lspRenameRequested(const LSP::RenameParams& params);

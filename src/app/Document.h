@@ -22,7 +22,11 @@ public:
     Editor *editor() const { return m_editor; }
 
     bool loadFile(const QString &path, QString *error = nullptr);
+    bool loadFile(const QString &path, qint64 largeFileThresholdBytes, QString *error = nullptr);
     bool saveFile(const QString &path, QString *error = nullptr);
+
+    /*! Set the large file threshold in bytes. */
+    void setLargeFileThreshold(qint64 bytes) { m_largeFileThreshold = bytes; }
 
     QString filePath() const { return m_path; }
     QString displayName() const;
@@ -36,6 +40,13 @@ public:
     qint64 largeFileSize() const { return m_largeFileSize; }
     /*! Bytes not loaded into the editor (0 when the whole file fit). */
     qint64 truncatedBytes() const { return m_truncatedBytes; }
+
+    /*! Load additional content from large file (for virtual scrolling). */
+    void loadMoreLargeFileContent(qint64 maxBytes = 1024 * 1024);
+    /*! Jump to a byte offset in the large file (reads surrounding window). */
+    bool seekLargeFile(qint64 offset, QString *error = nullptr);
+    /*! Load a specific chunk from the large file. */
+    qint64 loadLargeFileChunk(qint64 offset, qint64 maxBytes, QString *error = nullptr);
 
     TextEncoding encoding() const { return m_encoding; }
     void setEncoding(TextEncoding encoding);
@@ -60,6 +71,7 @@ private:
     bool m_largeFile = false;
     qint64 m_largeFileSize = 0;
     qint64 m_truncatedBytes = 0;
+    qint64 m_largeFileThreshold;
 };
 
 } // namespace papiro
