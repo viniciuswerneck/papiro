@@ -31,6 +31,14 @@ private slots:
     void autoIndentInsideBlock();
     void gotoLineAndColumn();
     void duplicateAndDeleteLine();
+    void virtualColumnSurvivesShortLines();
+    void virtualShiftSelectionExtends();
+    void typingPastEndPadsWithSpaces();
+    void virtualSpaceDisabledUsesDefaultBehavior();
+    void joinLinesBasicAndUndo();
+    void joinLinesSelectionAndIndent();
+    void splitLinesAtCursor();
+    void splitLinesSelection();
     void blockCommentSpansLines();
     void multilineStringsRespectDefinition();
     void rehighlightPreservesFoldBit();
@@ -157,6 +165,214 @@ void TestEditor::duplicateAndDeleteLine()
     editor.gotoLine(2);
     editor.deleteCurrentLine();
     QCOMPARE(editor.toPlainText(), QStringLiteral("one\ntwo\nthree"));
+}
+
+void TestEditor::virtualColumnSurvivesShortLines()
+{
+    Editor editor;
+    editor.resize(400, 300);
+    editor.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&editor));
+
+    editor.setPlainText(QStringLiteral("long line\nab\nlonger line"));
+    editor.setCursorFreePositioning(true);
+    QVERIFY(editor.cursorFreePositioning());
+
+    QTextCursor cursor(editor.document());
+    cursor.setPosition(editor.document()->findBlockByNumber(0).position() + 9);
+    editor.setTextCursor(cursor);
+    QCOMPARE(editor.textCursor().positionInBlock(), 9);
+
+    QTest::keyClick(&editor, Qt::Key_Right);
+    QCOMPARE(editor.currentLine(), 1);
+    QCOMPARE(editor.textCursor().positionInBlock(), 9);
+    QCOMPARE(editor.virtualCursorColumn(), 10);
+
+    QTest::keyClick(&editor, Qt::Key_Down);
+    QCOMPARE(editor.currentLine(), 2);
+    QCOMPARE(editor.textCursor().positionInBlock(), 2);
+    QCOMPARE(editor.virtualCursorColumn(), 10);
+
+    QTest::keyClick(&editor, Qt::Key_Up);
+    QCOMPARE(editor.currentLine(), 1);
+    QCOMPARE(editor.textCursor().positionInBlock(), 9);
+    QCOMPARE(editor.virtualCursorColumn(), 10);
+
+    QTest::keyClick(&editor, Qt::Key_Down);
+    QTest::keyClick(&editor, Qt::Key_Down);
+    QCOMPARE(editor.currentLine(), 3);
+    QCOMPARE(editor.textCursor().positionInBlock(), 10);
+    QCOMPARE(editor.virtualCursorColumn(), 10);
+
+    QTest::keyClick(&editor, Qt::Key_Left);
+    QCOMPARE(editor.textCursor().positionInBlock(), 10);
+    QCOMPARE(editor.virtualCursorColumn(), 9);
+    QTest::keyClick(&editor, Qt::Key_Left);
+    QCOMPARE(editor.textCursor().positionInBlock(), 10);
+    QCOMPARE(editor.virtualCursorColumn(), -1);
+}
+
+void TestEditor::virtualShiftSelectionExtends()
+{
+    Editor editor;
+    editor.resize(400, 300);
+    editor.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&editor));
+
+    editor.setPlainText(QStringLiteral("hello\nworld"));
+    editor.setCursorFreePositioning(true);
+
+    QTextCursor cursor(editor.document());
+    cursor.setPosition(2);
+    editor.setTextCursor(cursor);
+
+    QTest::keyClick(&editor, Qt::Key_Right, Qt::ShiftModifier);
+    QCOMPARE(editor.textCursor().selectedText(), QStringLiteral("l"));
+    QTest::keyClick(&editor, Qt::Key_Right, Qt::ShiftModifier);
+    QCOMPARE(editor.textCursor().selectedText(), QStringLiteral("ll"));
+    QCOMPARE(editor.virtualCursorColumn(), -1);
+
+    // At the end of a line, Shift+Right extends the selection like usual.
+    cursor = editor.textCursor();
+    cursor.setPosition(editor.document()->findBlockByNumber(0).position() + 5);
+    editor.setTextCursor(cursor);
+    QTest::keyClick(&editor, Qt::Key_Right, Qt::ShiftModifier);
+    QCOMPARE(editor.currentLine(), 2);
+    QVERIFY(editor.textCursor().hasSelection());
+    QCOMPARE(editor.textCursor().selectedText(),
+             QString(QChar::ParagraphSeparator));
+}
+
+void TestEditor::typingPastEndPadsWithSpaces()
+{
+    Editor editor;
+    editor.resize(400, 300);
+    editor.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&editor));
+
+    editor.setPlainText(QStringLiteral("ab\ncd"));
+    editor.setCursorFreePositioning(true);
+
+    QTextCursor cursor(editor.document());
+    cursor.setPosition(editor.document()->findBlockByNumber(0).position() + 2);
+    editor.setTextCursor(cursor);
+
+    QTest::keyClick(&editor, Qt::Key_Right);
+    QTest::keyClick(&editor, Qt::Key_Right);
+    QCOMPARE(editor.virtualCursorColumn(), 4);
+
+    QTest::keyClicks(&editor, QStringLiteral("x"));
+    QCOMPARE(editor.toPlainText(), QStringLiteral("ab  x\ncd"));
+    QCOMPARE(editor.textCursor().positionInBlock(), 5);
+    QCOMPARE(editor.virtualCursorColumn(), -1);
+
+    // Padding spaces and the character form a single undo step.
+    editor.undo();
+    QCOMPARE(editor.toPlainText(), QStringLiteral("ab\ncd"));
+}
+
+void TestEditor::virtualSpaceDisabledUsesDefaultBehavior()
+{
+    Editor editor;
+    editor.resize(400, 300);
+    editor.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&editor));
+
+    editor.setPlainText(QStringLiteral("ab\ncd"));
+    QVERIFY(!editor.cursorFreePositioning());
+    editor.moveCursor(QTextCursor::EndOfBlock);
+    QCOMPARE(editor.currentLine(), 1);
+    QCOMPARE(editor.textCursor().positionInBlock(), 2);
+
+    QTest::keyClick(&editor, Qt::Key_Right);
+    QCOMPARE(editor.currentLine(), 2);
+    QCOMPARE(editor.textCursor().positionInBlock(), 0);
+    QCOMPARE(editor.virtualCursorColumn(), -1);
+}
+
+void TestEditor::joinLinesBasicAndUndo()
+{
+    Editor editor;
+    editor.setPlainText(QStringLiteral("one\ntwo\nthree"));
+    editor.gotoLine(1);
+
+    editor.joinLines();
+    QCOMPARE(editor.toPlainText(), QStringLiteral("one two\nthree"));
+    QCOMPARE(editor.currentLine(), 1);
+    QCOMPARE(editor.textCursor().position(), 7);
+
+    editor.undo();
+    QCOMPARE(editor.toPlainText(), QStringLiteral("one\ntwo\nthree"));
+}
+
+void TestEditor::joinLinesSelectionAndIndent()
+{
+    Editor editor;
+    editor.setPlainText(QStringLiteral("    first\n        second\n    third\nfourth"));
+
+    QTextDocument *doc = editor.document();
+    QTextCursor cursor(doc);
+    cursor.setPosition(doc->findBlockByNumber(0).position());
+    const QTextBlock third = doc->findBlockByNumber(2);
+    cursor.setPosition(third.position() + third.length() - 1,
+                       QTextCursor::KeepAnchor);
+    editor.setTextCursor(cursor);
+
+    editor.joinLines();
+    QCOMPARE(editor.toPlainText(), QStringLiteral("    first second third\nfourth"));
+    QCOMPARE(editor.textCursor().position(), 22);
+
+    editor.undo();
+    QCOMPARE(editor.toPlainText(),
+             QStringLiteral("    first\n        second\n    third\nfourth"));
+}
+
+void TestEditor::splitLinesAtCursor()
+{
+    Editor editor;
+    editor.setPlainText(QStringLiteral("abcdef"));
+
+    QTextCursor cursor(editor.document());
+    cursor.setPosition(3);
+    editor.setTextCursor(cursor);
+
+    editor.splitLines();
+    QCOMPARE(editor.toPlainText(), QStringLiteral("abc\ndef"));
+    QCOMPARE(editor.currentLine(), 2);
+    QCOMPARE(editor.textCursor().positionInBlock(), 0);
+
+    editor.undo();
+    QCOMPARE(editor.toPlainText(), QStringLiteral("abcdef"));
+
+    // Splitting at the beginning or end of a line is a no-op.
+    cursor = editor.textCursor();
+    cursor.setPosition(0);
+    editor.setTextCursor(cursor);
+    editor.splitLines();
+    QCOMPARE(editor.toPlainText(), QStringLiteral("abcdef"));
+
+    editor.moveCursor(QTextCursor::EndOfBlock);
+    editor.splitLines();
+    QCOMPARE(editor.toPlainText(), QStringLiteral("abcdef"));
+}
+
+void TestEditor::splitLinesSelection()
+{
+    Editor editor;
+    editor.setPlainText(QStringLiteral("abcdef\n12\nghijkl"));
+
+    QTextDocument *doc = editor.document();
+    QTextCursor cursor(doc);
+    cursor.setPosition(doc->findBlockByNumber(0).position());
+    const QTextBlock third = doc->findBlockByNumber(2);
+    cursor.setPosition(third.position() + 2, QTextCursor::KeepAnchor);
+    editor.setTextCursor(cursor);
+    QCOMPARE(editor.textCursor().positionInBlock(), 2);
+
+    editor.splitLines();
+    QCOMPARE(editor.toPlainText(), QStringLiteral("ab\ncdef\n12\ngh\nijkl"));
+    QCOMPARE(editor.currentLine(), 5);
+    QCOMPARE(editor.textCursor().positionInBlock(), 0);
 }
 
 namespace {

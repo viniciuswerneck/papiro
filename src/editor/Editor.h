@@ -55,6 +55,8 @@ public:
 
     void setCursorFreePositioning(bool enabled);
     bool cursorFreePositioning() const { return m_cursorFreePositioning; }
+    /*! Desired virtual cursor column (-1 when inactive). */
+    int virtualCursorColumn() const { return m_virtualCursorColumn; }
 
     void setBaseFont(const QFont &font);
 
@@ -66,6 +68,11 @@ public:
     int currentColumn() const;
     void duplicateCurrentLine();
     void deleteCurrentLine();
+
+    /*! Joins the lines touched by the selection (or the current and next line). */
+    void joinLines();
+    /*! Splits the current line (or every selected line) at the cursor column. */
+    void splitLines();
 
     /*! Sort selected lines (or all lines if no selection). */
     void sortLines(int keyCount = 1, bool ascending = true, Qt::CaseSensitivity caseSensitivity = Qt::CaseSensitive);
@@ -235,6 +242,7 @@ private:
     bool m_lineNumbersVisible = true;
     bool m_whitespaceVisible = false;
     bool m_cursorFreePositioning = false;
+    int m_virtualCursorColumn = -1;
     bool m_blockSelection = false;
     bool m_blockSelecting = false;
     bool m_blockSelectMode = false;

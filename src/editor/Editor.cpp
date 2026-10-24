@@ -80,6 +80,7 @@ Editor::Editor(QWidget *parent)
     connect(this, &QPlainTextEdit::cursorPositionChanged, this, &Editor::highlightCurrentLine);
     connect(document(), &QTextDocument::contentsChanged, this, [this] {
         m_foldCacheDirty = true;
+        m_virtualCursorColumn = -1;
         if (m_blockSelection)
             clearBlockSelection();
         if (m_foldsActive)
@@ -194,7 +195,9 @@ void Editor::setCursorFreePositioning(bool enabled)
     if (m_cursorFreePositioning == enabled)
         return;
     m_cursorFreePositioning = enabled;
+    m_virtualCursorColumn = -1;
     setCursorWidth(enabled ? 2 : 1); // Wider cursor for visibility in virtual space
+    viewport()->update();
 }
 
 void Editor::setBaseFont(const QFont &font)
@@ -263,6 +266,154 @@ void Editor::deleteCurrentLine()
     cursor.endEditBlock();
     setTextCursor(cursor);
     recordMacroCommand("deleteLine");
+}
+
+void Editor::joinLines()
+{
+    if (m_blockSelection)
+        return;
+
+    QTextCursor cursor = textCursor();
+    QTextDocument *doc = document();
+    const int blockCount = doc->blockCount();
+
+    int startBlockNumber = 0;
+    int endBlockNumber = 0;
+
+    if (cursor.hasSelection()) {
+        const int startPos = qMin(cursor.selectionStart(), cursor.selectionEnd());
+        const int endPos = qMax(cursor.selectionStart(), cursor.selectionEnd());
+        QTextBlock startBlock = doc->findBlock(startPos);
+        QTextBlock endBlock = doc->findBlock(endPos);
+        if (endBlock.blockNumber() > startBlock.blockNumber()
+            && endPos == endBlock.position()) {
+            // A selection ending at the start of a line does not touch that line.
+            endBlock = endBlock.previous();
+        }
+        startBlockNumber = startBlock.blockNumber();
+        endBlockNumber = endBlock.blockNumber();
+    } else {
+        startBlockNumber = cursor.blockNumber();
+        endBlockNumber = startBlockNumber + 1;
+    }
+
+    if (endBlockNumber >= blockCount || startBlockNumber == endBlockNumber)
+        return;
+
+    const QTextBlock firstBlock = doc->findBlockByNumber(startBlockNumber);
+    const QTextBlock lastBlock = doc->findBlockByNumber(endBlockNumber);
+    if (!firstBlock.isValid() || !lastBlock.isValid())
+        return;
+
+    QString joined = firstBlock.text();
+    for (int number = startBlockNumber + 1; number <= endBlockNumber; ++number) {
+        QString continuation = doc->findBlockByNumber(number).text();
+        int firstNonSpace = 0;
+        while (firstNonSpace < continuation.size()
+               && continuation.at(firstNonSpace).isSpace()) {
+            ++firstNonSpace;
+        }
+        continuation = continuation.mid(firstNonSpace);
+
+        if (!joined.isEmpty() && !continuation.isEmpty()
+            && !joined.back().isSpace() && !continuation.front().isSpace()) {
+            joined += QLatin1Char(' ');
+        }
+        joined += continuation;
+    }
+
+    const int startPos = firstBlock.position();
+    const int endPos = lastBlock.position() + lastBlock.length() - 1;
+
+    cursor.beginEditBlock();
+    cursor.setPosition(startPos);
+    cursor.setPosition(endPos, QTextCursor::KeepAnchor);
+    cursor.insertText(joined);
+    cursor.endEditBlock();
+
+    m_virtualCursorColumn = -1;
+    setTextCursor(cursor);
+    ensureCursorVisible();
+}
+
+void Editor::splitLines()
+{
+    if (m_blockSelection)
+        return;
+
+    QTextCursor cursor = textCursor();
+    QTextDocument *doc = document();
+    const int column = cursor.positionInBlock();
+
+    int startBlockNumber = 0;
+    int endBlockNumber = 0;
+
+    if (cursor.hasSelection()) {
+        const int startPos = qMin(cursor.selectionStart(), cursor.selectionEnd());
+        const int endPos = qMax(cursor.selectionStart(), cursor.selectionEnd());
+        QTextBlock startBlock = doc->findBlock(startPos);
+        QTextBlock endBlock = doc->findBlock(endPos);
+        if (endBlock.blockNumber() > startBlock.blockNumber()
+            && endPos == endBlock.position()) {
+            endBlock = endBlock.previous();
+        }
+        startBlockNumber = startBlock.blockNumber();
+        endBlockNumber = endBlock.blockNumber();
+    } else {
+        startBlockNumber = cursor.blockNumber();
+        endBlockNumber = startBlockNumber;
+    }
+
+    QVector<int> blocksToSplit;
+    for (int number = startBlockNumber; number <= endBlockNumber; ++number) {
+        const QTextBlock block = doc->findBlockByNumber(number);
+        if (!block.isValid())
+            continue;
+        if (column > 0 && column < block.text().size())
+            blocksToSplit.append(number);
+    }
+
+    if (blocksToSplit.isEmpty())
+        return;
+
+    const int activeBlockNumber = cursor.blockNumber();
+    int splitsBeforeActive = 0;
+    bool activeBlockSplit = false;
+    for (int number : blocksToSplit) {
+        if (number < activeBlockNumber)
+            ++splitsBeforeActive;
+        else if (number == activeBlockNumber)
+            activeBlockSplit = true;
+    }
+
+    cursor.beginEditBlock();
+    for (int index = blocksToSplit.size() - 1; index >= 0; --index) {
+        const QTextBlock block = doc->findBlockByNumber(blocksToSplit.at(index));
+        if (!block.isValid())
+            continue;
+        QTextCursor insertCursor(block);
+        insertCursor.setPosition(block.position() + column);
+        insertCursor.insertText(QStringLiteral("\n"));
+    }
+    cursor.endEditBlock();
+
+    const int targetBlockNumber =
+        activeBlockNumber + splitsBeforeActive + (activeBlockSplit ? 1 : 0);
+    const QTextBlock targetBlock = doc->findBlockByNumber(targetBlockNumber);
+    QTextCursor result(doc);
+    if (targetBlock.isValid()) {
+        int targetPosition = targetBlock.position();
+        if (!activeBlockSplit) {
+            targetPosition += qMin(column, qMax(0, targetBlock.length() - 1));
+        }
+        result.setPosition(targetPosition);
+    } else {
+        result.setPosition(doc->characterCount() - 1);
+    }
+
+    m_virtualCursorColumn = -1;
+    setTextCursor(result);
+    ensureCursorVisible();
 }
 
 void Editor::sortLines(int keyCount, bool ascending, Qt::CaseSensitivity caseSensitivity)
@@ -618,6 +769,13 @@ void Editor::keyPressEvent(QKeyEvent *event)
         clearBlockSelection();
     }
 
+    // Handle cursor free positioning (virtual space) before text insertion so
+    // that typing past the end of a line can pad with spaces first.
+    if (m_cursorFreePositioning && !isReadOnly()) {
+        if (handleVirtualSpaceNavigation(event))
+            return;
+    }
+
     const Qt::KeyboardModifiers blockingModifiers =
         Qt::ControlModifier | Qt::AltModifier | Qt::MetaModifier;
     if (!isReadOnly() && !(event->modifiers() & blockingModifiers)) {
@@ -630,12 +788,6 @@ void Editor::keyPressEvent(QKeyEvent *event)
         } else if (handleAutoClose(event)) {
             return;
         }
-    }
-
-    // Handle cursor free positioning (virtual space)
-    if (m_cursorFreePositioning && !isReadOnly()) {
-        if (handleVirtualSpaceNavigation(event))
-            return;
     }
 
     QPlainTextEdit::keyPressEvent(event);
@@ -767,69 +919,148 @@ bool Editor::handleAutoClose(QKeyEvent *event)
 
 bool Editor::handleVirtualSpaceNavigation(QKeyEvent *event)
 {
+    const Qt::KeyboardModifiers blockingModifiers =
+        Qt::ControlModifier | Qt::AltModifier | Qt::MetaModifier;
+    if (event->modifiers() & blockingModifiers)
+        return false;
+
     QTextCursor cursor = textCursor();
-    const int currentPos = cursor.position();
-    const QTextBlock currentBlock = cursor.block();
-    const int blockLength = currentBlock.length(); // includes paragraph separator
+    const QTextBlock block = cursor.block();
+    if (!block.isValid())
+        return false;
+
+    const int lineLength = block.text().size();
     const int posInBlock = cursor.positionInBlock();
-    const bool atEndOfBlock = posInBlock >= blockLength - 1; // -1 for paragraph separator
+    const bool atEndOfLine = posInBlock >= lineLength;
+
+    // Shift+arrows use the editor's normal selection handling. Never consume
+    // those events: doing so would destroy or ignore the selection.
+    if (event->modifiers() & Qt::ShiftModifier) {
+        switch (event->key()) {
+        case Qt::Key_Left:
+        case Qt::Key_Right:
+        case Qt::Key_Up:
+        case Qt::Key_Down:
+        case Qt::Key_Home:
+        case Qt::Key_End:
+            m_virtualCursorColumn = -1;
+            viewport()->update();
+            break;
+        default:
+            break;
+        }
+        return false;
+    }
+
+    const auto resetVirtualColumn = [this]() {
+        if (m_virtualCursorColumn != -1) {
+            m_virtualCursorColumn = -1;
+            viewport()->update();
+        }
+    };
 
     switch (event->key()) {
     case Qt::Key_Right:
-        if (atEndOfBlock && currentBlock.next().isValid()) {
-            // Move to next line, same virtual column
-            cursor.movePosition(QTextCursor::NextBlock);
-            cursor.movePosition(QTextCursor::StartOfBlock);
-            setTextCursor(cursor);
-            return true;
+        if (cursor.hasSelection() || !atEndOfLine) {
+            resetVirtualColumn();
+            return false;
         }
-        break;
+        if (m_virtualCursorColumn < lineLength)
+            m_virtualCursorColumn = lineLength;
+        ++m_virtualCursorColumn;
+        viewport()->update();
+        event->accept();
+        return true;
 
     case Qt::Key_Left:
-        if (posInBlock == 0 && currentBlock.previous().isValid()) {
-            // Move to previous line, end of line
-            cursor.movePosition(QTextCursor::PreviousBlock);
-            cursor.movePosition(QTextCursor::EndOfBlock);
-            setTextCursor(cursor);
+        if (!cursor.hasSelection() && m_virtualCursorColumn > lineLength) {
+            --m_virtualCursorColumn;
+            if (m_virtualCursorColumn <= lineLength)
+                m_virtualCursorColumn = -1;
+            viewport()->update();
+            event->accept();
             return true;
         }
-        break;
+        resetVirtualColumn();
+        return false;
 
     case Qt::Key_Up:
     case Qt::Key_Down: {
         const bool up = event->key() == Qt::Key_Up;
-        const QTextBlock targetBlock = up ? currentBlock.previous() : currentBlock.next();
-        if (targetBlock.isValid()) {
-            const int targetBlockLength = targetBlock.length() - 1; // -1 for paragraph separator
-            const int targetPos = qMin(posInBlock, targetBlockLength);
-            cursor.movePosition(up ? QTextCursor::PreviousBlock : QTextCursor::NextBlock);
-            cursor.movePosition(QTextCursor::StartOfBlock);
-            cursor.movePosition(QTextCursor::Right, QTextCursor::MoveAnchor, targetPos);
-            setTextCursor(cursor);
-            return true;
+        const QTextBlock targetBlock = up ? block.previous() : block.next();
+        if (!targetBlock.isValid()) {
+            resetVirtualColumn();
+            return false;
         }
-        break;
+
+        const int desiredColumn =
+            m_virtualCursorColumn >= 0 ? m_virtualCursorColumn : posInBlock;
+        const int targetLength = targetBlock.text().size();
+        const int targetPosition = qMin(desiredColumn, targetLength);
+
+        cursor.setPosition(targetBlock.position() + targetPosition);
+        setTextCursor(cursor);
+        m_virtualCursorColumn = desiredColumn;
+        ensureCursorVisible();
+        viewport()->update();
+        event->accept();
+        return true;
     }
 
     case Qt::Key_Home:
-        if (posInBlock > 0) {
-            cursor.movePosition(QTextCursor::StartOfBlock);
-            setTextCursor(cursor);
-            return true;
-        }
-        break;
-
     case Qt::Key_End:
-        if (!atEndOfBlock) {
-            cursor.movePosition(QTextCursor::EndOfBlock);
-            setTextCursor(cursor);
+        resetVirtualColumn();
+        return false;
+
+    case Qt::Key_Backspace:
+        if (!cursor.hasSelection() && m_virtualCursorColumn > lineLength) {
+            --m_virtualCursorColumn;
+            if (m_virtualCursorColumn <= lineLength)
+                m_virtualCursorColumn = -1;
+            viewport()->update();
+            event->accept();
             return true;
         }
-        break;
+        resetVirtualColumn();
+        return false;
+
+    case Qt::Key_Delete:
+        if (!cursor.hasSelection() && m_virtualCursorColumn > lineLength) {
+            // Nothing to delete in the virtual area; do not touch the text.
+            event->accept();
+            return true;
+        }
+        resetVirtualColumn();
+        return false;
 
     default:
         break;
     }
+
+    if (!cursor.hasSelection() && m_virtualCursorColumn > lineLength) {
+        const QString text = event->text();
+        bool printable = !text.isEmpty();
+        for (const QChar ch : text) {
+            if (!ch.isPrint()) {
+                printable = false;
+                break;
+            }
+        }
+        if (printable) {
+            const int padding = m_virtualCursorColumn - lineLength;
+            cursor.beginEditBlock();
+            cursor.insertText(QString(padding, QLatin1Char(' ')) + text);
+            cursor.endEditBlock();
+            setTextCursor(cursor);
+            m_virtualCursorColumn = -1;
+            ensureCursorVisible();
+            viewport()->update();
+            event->accept();
+            return true;
+        }
+    }
+
+    resetVirtualColumn();
     return false;
 }
 
@@ -1294,6 +1525,11 @@ void Editor::mousePressEvent(QMouseEvent *event)
     // Stop hover timer on any mouse press
     m_hoverTimer.stop();
 
+    if (m_virtualCursorColumn != -1) {
+        m_virtualCursorColumn = -1;
+        viewport()->update();
+    }
+
     if (event->button() == Qt::LeftButton
         && ((event->modifiers() & Qt::AltModifier) || m_blockSelectMode)) {
         setFocus(Qt::MouseFocusReason);
@@ -1418,9 +1654,6 @@ void Editor::paintEvent(QPaintEvent *event)
 {
     QPlainTextEdit::paintEvent(event);
 
-    if (!m_blockSelection && !m_whitespaceVisible)
-        return;
-
     QPainter painter(viewport());
 
     if (m_blockSelection) {
@@ -1432,6 +1665,21 @@ void Editor::paintEvent(QPaintEvent *event)
 
     if (m_whitespaceVisible) {
         drawWhitespace(painter);
+    }
+
+    if (m_cursorFreePositioning && hasFocus() && m_virtualCursorColumn > 0) {
+        const QTextCursor cursor = textCursor();
+        const int lineLength = cursor.block().text().size();
+        if (!cursor.hasSelection() && cursor.positionInBlock() == lineLength
+            && m_virtualCursorColumn > lineLength) {
+            const int extraColumns = m_virtualCursorColumn - lineLength;
+            const QRect caretRect = cursorRect(cursor);
+            const int virtualX = caretRect.x()
+                + fontMetrics().horizontalAdvance(QLatin1Char(' ')) * extraColumns;
+            painter.fillRect(QRect(virtualX, caretRect.top(),
+                                   qMax(1, cursorWidth()), caretRect.height()),
+                             palette().color(QPalette::Text));
+        }
     }
 }
 
