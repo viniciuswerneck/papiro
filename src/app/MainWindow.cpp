@@ -379,7 +379,7 @@ void MainWindow::createActions()
     m_diffAction = makeAction(tr("Compare &Files..."));
     connect(m_diffAction, &QAction::triggered, this, &MainWindow::diffFiles);
 
-    auto *sortLinesAction = makeAction(tr("Sort &Lines"));
+    auto *sortLinesAction = makeAction(tr("Sort &Lines"), QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_S));
     connect(sortLinesAction, &QAction::triggered, this, &MainWindow::sortLines);
 
     m_zoomInAction = makeAction(tr("Zoom &In"), QKeySequence::ZoomIn);
