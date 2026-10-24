@@ -36,6 +36,7 @@ private slots:
     void macroFileRoundTrip();
     void macroTextFormatRoundTrip();
     void macroManagerPersistsSlots();
+    void macroCustomShortcuts();
     void workspaceRoundTrip();
     void clipLibraryBasics();
 };
@@ -287,6 +288,87 @@ void TestCore::macroManagerPersistsSlots()
         QVERIFY(manager.builtinMacro(2));
         QCOMPARE(manager.builtinMacro(2)->name(), QStringLiteral("Second"));
     }
+}
+
+void TestCore::macroCustomShortcuts()
+{
+    MacroManager manager;
+
+    // Create two macros using the recording API (proper way to add user macros)
+    manager.startRecording(QStringLiteral("Macro One"));
+    manager.recordingMacro()->addAction(MacroAction::fromTextInput(QStringLiteral("test1")));
+    Macro *macro1 = manager.stopRecording();
+    QVERIFY(macro1);
+
+    manager.startRecording(QStringLiteral("Macro Two"));
+    manager.recordingMacro()->addAction(MacroAction::fromTextInput(QStringLiteral("test2")));
+    Macro *macro2 = manager.stopRecording();
+    QVERIFY(macro2);
+
+    // Verify macros are in user list
+    QCOMPARE(manager.userMacros().size(), 2);
+    QVERIFY(manager.userMacros().contains(macro1));
+    QVERIFY(manager.userMacros().contains(macro2));
+
+    // Test assigning custom shortcuts
+    QKeySequence shortcut1(Qt::CTRL | Qt::ALT | Qt::Key_F1);
+    QKeySequence shortcut2(Qt::CTRL | Qt::ALT | Qt::Key_F2);
+
+    // Assign shortcut to macro1
+    manager.setShortcutForMacro(macro1, shortcut1);
+    QCOMPARE(manager.shortcutForMacro(macro1), shortcut1);
+    QCOMPARE(manager.allCustomShortcuts().size(), 1);
+    QCOMPARE(manager.allCustomShortcuts().value(macro1), shortcut1);
+
+    // Assign shortcut to macro2
+    manager.setShortcutForMacro(macro2, shortcut2);
+    QCOMPARE(manager.shortcutForMacro(macro2), shortcut2);
+    QCOMPARE(manager.allCustomShortcuts().size(), 2);
+
+    // Test conflict detection - same shortcut should fail
+    manager.setShortcutForMacro(macro1, shortcut2); // Try to assign macro1 the same shortcut
+    QCOMPARE(manager.shortcutForMacro(macro1), shortcut1); // Should remain unchanged
+    QCOMPARE(manager.allCustomShortcuts().size(), 2);
+
+    // Test isShortcutAvailable
+    QVERIFY(!manager.isShortcutAvailable(shortcut1, macro2)); // shortcut1 used by macro1
+    QVERIFY(!manager.isShortcutAvailable(shortcut2, macro1)); // shortcut2 used by macro2
+    QVERIFY(manager.isShortcutAvailable(shortcut1, macro1)); // Available for the owner
+    QVERIFY(manager.isShortcutAvailable(shortcut2, macro2)); // Available for the owner
+
+    // Test shortcutConflictDescription
+    QString conflict1 = manager.shortcutConflictDescription(shortcut1);
+    QVERIFY(conflict1.contains(QStringLiteral("Macro One")));
+
+    // Test removing shortcut
+    manager.removeShortcutForMacro(macro1);
+    QVERIFY(manager.shortcutForMacro(macro1).isEmpty());
+    QCOMPARE(manager.allCustomShortcuts().size(), 1);
+
+    // Test built-in slot conflicts (Ctrl+Shift+1..9)
+    for (int i = 0; i < MacroManager::MaxBuiltinMacros; ++i) {
+        QKeySequence builtin(Qt::ControlModifier | Qt::ShiftModifier, Qt::Key_1 + i);
+        QVERIFY(!manager.isShortcutAvailable(builtin));
+    }
+
+    // Test reserved editor shortcuts
+    QVERIFY(!manager.isShortcutAvailable(QKeySequence(Qt::CTRL | Qt::Key_S))); // Ctrl+S
+    QVERIFY(!manager.isShortcutAvailable(QKeySequence(Qt::CTRL | Qt::Key_Z))); // Ctrl+Z
+    QVERIFY(!manager.isShortcutAvailable(QKeySequence(Qt::CTRL | Qt::Key_C))); // Ctrl+C
+
+    // Test that macros not owned by manager cannot get shortcuts
+    Macro *externalMacro = new Macro(); // Not owned by this manager
+    externalMacro->setName(QStringLiteral("External"));
+    manager.setShortcutForMacro(externalMacro, Qt::CTRL | Qt::ALT | Qt::Key_F3);
+    QVERIFY(manager.shortcutForMacro(externalMacro).isEmpty()); // Should fail
+    delete externalMacro;
+
+    // Test setShortcutForMacro with empty shortcut removes it
+    manager.setShortcutForMacro(macro2, shortcut1); // Should work now
+    QCOMPARE(manager.shortcutForMacro(macro2), shortcut1);
+    manager.setShortcutForMacro(macro2, QKeySequence()); // Remove
+    QVERIFY(manager.shortcutForMacro(macro2).isEmpty());
+    QCOMPARE(manager.allCustomShortcuts().size(), 0);
 }
 
 void TestCore::workspaceRoundTrip()
