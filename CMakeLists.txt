@@ -21,6 +21,7 @@ add_library(papiro_core STATIC
     src/core/Encoding.cpp
     src/core/ExternalTool.cpp
     src/core/GitRepo.cpp
+    src/core/JavaRunner.cpp
     src/core/LSPClient.cpp
     src/core/LSPManager.cpp
     src/core/LSPMessage.cpp
@@ -165,9 +166,14 @@ if(BUILD_TESTING)
                           Qt6::PrintSupport Qt6::Test)
     add_test(NAME mainwindow COMMAND test_mainwindow)
 
+    # Java runner (JDK detection + compile/run) is QtCore-only.
+    qt_add_executable(test_java tests/test_java_runner.cpp)
+    target_link_libraries(test_java PRIVATE papiro_core Qt6::Test)
+    add_test(NAME java COMMAND test_java)
+
     file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/test-config)
 
-    set_tests_properties(core editor PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+    set_tests_properties(core editor java PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
     set_tests_properties(mainwindow PROPERTIES ENVIRONMENT
         "QT_QPA_PLATFORM=offscreen;XDG_CONFIG_HOME=${CMAKE_CURRENT_BINARY_DIR}/test-config")
 endif()
