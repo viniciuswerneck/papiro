@@ -4,8 +4,10 @@
 #include "core/Encoding.h"
 #include "core/Macro.h"
 #include "core/GitRepo.h"
+#include "core/LSPManager.h"
 #include "ui/FindReplaceDialog.h"
 #include "ui/KeyboardShortcutsDialog.h"
+#include "ui/LSPPreferencesDialog.h"
 
 #include <QFont>
 #include <QMainWindow>
@@ -20,8 +22,7 @@ class QDockWidget;
 class QLabel;
 class QMenu;
 class QPlainTextEdit;
-class QTabWidget;
-class QToolBar;
+class QTextBrowser;
 class QTreeWidget;
 class QTreeWidgetItem;
 
@@ -75,6 +76,8 @@ private slots:
     void openPreferences();
     void toggleWordWrap(bool enabled);
     void toggleLineNumbers(bool enabled);
+    void toggleWhitespaceVisible(bool enabled);
+    void toggleCursorFreePositioning(bool enabled);
     void toggleSpellCheck(bool enabled);
     void zoomIn();
     void zoomOut();
@@ -82,8 +85,15 @@ private slots:
     void toggleFold();
     void foldAll();
     void unfoldAll();
+    void sortLines();
+    void splitView();
+    void unsplitView();
+    void diffFiles();
     void openRecentFile();
     void clearRecentFiles();
+    // LSP
+    void openLSPPreferences();
+    void updateLSPStatus();
     // Macro actions
     void startMacroRecording();
     void stopMacroRecording();
@@ -149,6 +159,13 @@ private:
     Editor *currentEditor() const;
     void rebuildToolsMenu();
     void runTool(int index);
+    void appendOutput(const QString &text);
+    void appendOutputWithErrorParsing(const QString &output,
+                                      const QString &errorPattern,
+                                      const QString &filePattern,
+                                      const QString &linePattern,
+                                      const QString &columnPattern,
+                                      const QString &workingDirectory);
     bool loadWorkspace(const QString &path);
     void updateRecentWorkspaces(const QString &path);
     void rebuildWorkspaceMenu();
@@ -191,6 +208,8 @@ private:
     QAction *m_preferencesAction = nullptr;
     QAction *m_wordWrapAction = nullptr;
     QAction *m_lineNumbersAction = nullptr;
+    QAction *m_whitespaceVisibleAction = nullptr;
+    QAction *m_cursorFreePositioningAction = nullptr;
     QAction *m_spellCheckAction = nullptr;
     QAction *m_zoomInAction = nullptr;
     QAction *m_zoomOutAction = nullptr;
@@ -198,6 +217,8 @@ private:
     QAction *m_toggleFoldAction = nullptr;
     QAction *m_foldAllAction = nullptr;
     QAction *m_unfoldAllAction = nullptr;
+    QAction *m_splitViewAction = nullptr;
+    QAction *m_diffAction = nullptr;
     // Macro actions
     QAction *m_recordMacroAction = nullptr;
     QAction *m_stopRecordMacroAction = nullptr;
@@ -236,10 +257,13 @@ private:
     QFont m_editorFont;
     bool m_wordWrap = false;
     bool m_lineNumbers = true;
+    bool m_whitespaceVisible = false;
+    bool m_cursorFreePositioning = false;
     bool m_spellCheck = true;
     bool m_searchMatchCase = false;
     bool m_searchWholeWord = false;
     bool m_searchRegex = false;
+    bool m_searchMultiline = false;
     bool m_searchWrap = true;
 
     MacroManager *m_macroManager = nullptr;
@@ -249,11 +273,13 @@ private:
     FileExplorerWidget *m_fileExplorer = nullptr;
     QDockWidget *m_fileExplorerDock = nullptr;
     ToolManager *m_toolManager = nullptr;
-    QPlainTextEdit *m_outputView = nullptr;
+    QTextBrowser *m_outputView = nullptr;
     QDockWidget *m_outputDock = nullptr;
     QTreeWidget *m_searchResultsView = nullptr;
     QDockWidget *m_searchResultsDock = nullptr;
     SpellChecker *m_spellChecker = nullptr;
+    LSPManager *m_lspManager = nullptr;
+    QLabel *m_lspStatusLabel = nullptr;
 
     QMap<Macro *, QShortcut *> m_customShortcuts;
 

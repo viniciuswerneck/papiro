@@ -35,6 +35,10 @@ private:
     QLineEdit *m_arguments = nullptr;
     QLineEdit *m_workingDirectory = nullptr;
     QCheckBox *m_saveBeforeRun = nullptr;
+    QLineEdit *m_errorPattern = nullptr;
+    QLineEdit *m_errorFilePattern = nullptr;
+    QLineEdit *m_errorLinePattern = nullptr;
+    QLineEdit *m_errorColumnPattern = nullptr;
     bool m_updating = false;
 };
 

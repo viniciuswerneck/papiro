@@ -2,58 +2,76 @@ name: Linux Release
 
 on:
   push:
-    tags: ['v*']
+    tags:
+      - 'v*'
   workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-22.04
+    container:
+      image: ubuntu:22.04
+      options: --user root
+
     steps:
-      - uses: actions/checkout@v4
-      
+      - name: Checkout
+        uses: actions/checkout@v4
+
       - name: Install dependencies
         run: |
-          sudo apt-get update
-          sudo apt-get install -y \
+          apt-get update
+          apt-get install -y --no-install-recommends \
             cmake ninja-build g++ \
-            qt6-base-dev qt6-tools-dev libqt6printsupport6-dev \
-            libhunspell-dev \
-            linuxdeploy linuxdeploy-plugin-qt appimagetool \
-            dpkg rpm lintian
-          
-      - name: Configure CMake
-        run: |
-          cmake -B build -DCMAKE_BUILD_TYPE=Release -GNinja
-      
+            qt6-base-dev qt6-tools-dev qt6-translations-l10n \
+            libhunspell-dev libgl1-mesa-dev libxkbcommon-dev \
+            wget ca-certificates
+
+      - name: Configure
+        run: cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+
       - name: Build
-        run: cmake --build build --config Release -j$(nproc)
-      
-      - name: Run tests
-        run: ctest --test-dir build --output-on-failure
-      
-      - name: Build DEB/RPM via CPack
+        run: cmake --build build --config Release
+
+      - name: Test
+        run: cd build && ctest --output-on-failure
+
+      - name: Install to AppDir
+        run: cmake --install build --prefix AppDir/usr
+
+      - name: Download linuxdeploy and linuxdeploy-plugin-qt
         run: |
-          cd build && cpack -G DEB -G RPM
-      
+          wget -q "https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage" -O linuxdeploy
+          wget -q "https://github.com/linuxdeploy/linuxdeploy-plugin-qt/releases/download/continuous/linuxdeploy-plugin-qt-x86_64.AppImage" -O linuxdeploy-plugin-qt
+          chmod +x linuxdeploy linuxdeploy-plugin-qt
+
       - name: Build AppImage
         run: |
-          chmod +x packaging/linux/build-appimage.sh
-          ./packaging/linux/build-appimage.sh
-      
+          ./linuxdeploy --appdir AppDir \
+            --plugin qt \
+            --output appimage \
+            --desktop-file resources/papiro.desktop \
+            --icon-file resources/icons/papiro.png \
+            --executable AppDir/usr/bin/Papiro
+
+      - name: Build DEB and RPM
+        run: |
+          cd build && cpack -G DEB -G RPM
+
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: linux-packages
+          name: linux-artifacts
           path: |
+            *.AppImage
             build/*.deb
             build/*.rpm
-            build/*.AppImage
-      
+
       - name: Create Release
-        uses: softprops/action-gh-release@v1
-        if: startsWith(github.ref, 'refs/tags/')
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
         with:
           files: |
+            *.AppImage
             build/*.deb
             build/*.rpm
-            build/*.AppImage
+          generate_release_notes: true

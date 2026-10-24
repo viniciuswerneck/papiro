@@ -35,6 +35,9 @@ FindReplaceDialog::FindReplaceDialog(QWidget *parent)
     m_wholeWord->setObjectName(QStringLiteral("FindWholeWordCheck"));
     m_regex = new QCheckBox(tr("Regular &expression"), this);
     m_regex->setObjectName(QStringLiteral("FindRegexCheck"));
+    m_multiline = new QCheckBox(tr("&Multiline"), this);
+    m_multiline->setObjectName(QStringLiteral("FindMultilineCheck"));
+    m_multiline->setToolTip(tr("Allow ^ and $ to match start/end of each line"));
     m_wrap = new QCheckBox(tr("&Wrap around"), this);
     m_wrap->setObjectName(QStringLiteral("FindWrapCheck"));
     m_wrap->setChecked(true);
@@ -56,7 +59,8 @@ FindReplaceDialog::FindReplaceDialog(QWidget *parent)
     optionsLayout->addWidget(m_matchCase, 0, 0);
     optionsLayout->addWidget(m_wholeWord, 0, 1);
     optionsLayout->addWidget(m_regex, 1, 0);
-    optionsLayout->addWidget(m_wrap, 1, 1);
+    optionsLayout->addWidget(m_multiline, 1, 1);
+    optionsLayout->addWidget(m_wrap, 2, 0);
 
     auto *findNext = new QPushButton(tr("Find &Next"), this);
     findNext->setDefault(true);
@@ -130,11 +134,12 @@ QString FindReplaceDialog::searchFolder() const
     return QDir::fromNativeSeparators(m_folder->text().trimmed());
 }
 
-void FindReplaceDialog::setSearchOptions(bool matchCase, bool wholeWord, bool regex, bool wrap)
+void FindReplaceDialog::setSearchOptions(bool matchCase, bool wholeWord, bool regex, bool multiline, bool wrap)
 {
     m_matchCase->setChecked(matchCase);
     m_wholeWord->setChecked(wholeWord);
     m_regex->setChecked(regex);
+    m_multiline->setChecked(multiline);
     m_wrap->setChecked(wrap);
 }
 
@@ -145,6 +150,7 @@ FindRequest FindReplaceDialog::request() const
     result.matchCase = m_matchCase->isChecked();
     result.wholeWord = m_wholeWord->isChecked();
     result.regex = m_regex->isChecked();
+    result.multiline = m_multiline->isChecked();
     result.wrap = m_wrap->isChecked();
     return result;
 }

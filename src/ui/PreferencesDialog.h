@@ -19,6 +19,8 @@ struct Preferences {
     bool restoreSession = true;
     bool wordWrap = false;
     bool lineNumbers = true;
+    bool whitespaceVisible = false;
+    bool cursorFreePositioning = false;
     bool spellCheck = true;
     bool searchMatchCase = false;
     bool searchWholeWord = false;
@@ -46,6 +48,8 @@ private:
     QCheckBox *m_restoreSession = nullptr;
     QCheckBox *m_wordWrap = nullptr;
     QCheckBox *m_lineNumbers = nullptr;
+    QCheckBox *m_whitespaceVisible = nullptr;
+    QCheckBox *m_cursorFreePositioning = nullptr;
     QCheckBox *m_spellCheck = nullptr;
     QCheckBox *m_matchCase = nullptr;
     QCheckBox *m_wholeWord = nullptr;

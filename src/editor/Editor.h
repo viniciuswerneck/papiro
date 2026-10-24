@@ -50,6 +50,12 @@ public:
     void setLineNumbersVisible(bool visible);
     bool lineNumbersVisible() const { return m_lineNumbersVisible; }
 
+    void setWhitespaceVisible(bool visible);
+    bool whitespaceVisible() const { return m_whitespaceVisible; }
+
+    void setCursorFreePositioning(bool enabled);
+    bool cursorFreePositioning() const { return m_cursorFreePositioning; }
+
     void setBaseFont(const QFont &font);
 
     /*! Re-reads the current theme palette/colors. */
@@ -60,6 +66,9 @@ public:
     int currentColumn() const;
     void duplicateCurrentLine();
     void deleteCurrentLine();
+
+    /*! Sort selected lines (or all lines if no selection). */
+    void sortLines(int keyCount = 1, bool ascending = true, Qt::CaseSensitivity caseSensitivity = Qt::CaseSensitive);
 
     // Block (column) selection
     void setBlockSelectionMode(bool enabled);
@@ -122,6 +131,10 @@ public:
     void updateBlameGeometry();
     bool isBlameVisible() const;
 
+    // LSP
+    LSPClient* lspClient() const { return m_lspClient; }
+    const QString& lspLanguageId() const { return m_lspLanguageId; }
+
 public slots:
     void onLSPDefinitionResponse(const QVector<LSP::Location>& locations);
     void onLSPReferencesResponse(const QVector<LSP::Location>& locations);
@@ -158,11 +171,14 @@ private:
     bool handleAutoIndent();
     bool handlePairBackspace();
     bool handleAutoClose(QKeyEvent *event);
+    bool handleVirtualSpaceNavigation(QKeyEvent *event);
     int findMatchingBracket(int position) const;
     void addBracketMatchSelections(QList<QTextEdit::ExtraSelection> &selections);
     void refreshFoldCache();
     void applyFolds();
     void toggleFold(int blockNumber);
+
+    void drawWhitespace(QPainter &painter);
 
     // LSP integration
     void setupLSP();
@@ -176,6 +192,7 @@ private:
     void triggerFindReferences();
     void triggerRename();
     void disableLSP();
+    public:
     void setLSPClient(LSPClient* client, const QString& languageId);
     void applyWorkspaceEdit(const LSP::WorkspaceEdit& edit);
     LSP::TextDocumentPositionParams makePositionParams() const;
@@ -216,6 +233,8 @@ private:
     mutable bool m_foldCacheDirty = true;
     bool m_foldsActive = false;
     bool m_lineNumbersVisible = true;
+    bool m_whitespaceVisible = false;
+    bool m_cursorFreePositioning = false;
     bool m_blockSelection = false;
     bool m_blockSelecting = false;
     bool m_blockSelectMode = false;

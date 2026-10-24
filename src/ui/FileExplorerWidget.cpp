@@ -269,11 +269,13 @@ void FileExplorerWidget::setRootPath(const QString &path)
     m_tree->setRootIndex(m_model->setRootPath(absolute));
     m_tree->setCurrentIndex(m_tree->rootIndex());
     m_tree->expand(m_tree->rootIndex());
-    
+
     // Trigger git status update if we have a repo
     if (m_gitRepo && m_gitRepo->isValid()) {
         onGitRepositoryChanged();
     }
+
+    emit rootPathChanged(absolute);
 }
 
 QString FileExplorerWidget::rootPath() const

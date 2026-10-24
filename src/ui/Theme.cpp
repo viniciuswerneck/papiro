@@ -45,6 +45,7 @@ Colors colors(Mode mode)
         result.completionDeprecatedText = QColor(0x80, 0x80, 0x80);
         result.scrollbarHandle = QColor(0x4E, 0x4E, 0x4E);
         result.scrollbarHandleHover = QColor(0x6E, 0x6E, 0x6E);
+        result.whitespace = QColor(0x3E, 0x3E, 0x42);
     } else {
         result.keyword = QColor(0x00, 0x33, 0xB3);
         result.comment = QColor(0x8A, 0x8A, 0x8A);
@@ -67,6 +68,7 @@ Colors colors(Mode mode)
         result.completionDeprecatedText = QColor(0x9A, 0x9A, 0x9A);
         result.scrollbarHandle = QColor(0xBB, 0xBB, 0xBB);
         result.scrollbarHandleHover = QColor(0x99, 0x99, 0x99);
+        result.whitespace = QColor(0xC0, 0xC0, 0xC0);
     }
     return result;
 }

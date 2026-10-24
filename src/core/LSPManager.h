@@ -100,6 +100,9 @@ public:
     /*! Stop all running clients. */
     void stopAllClients();
 
+    /*! Get default server configurations. */
+    static QMap<QString, LSPServerConfig> defaultServerConfigs();
+
 signals:
     /*! Emitted when a client starts successfully. */
     void clientStarted(LSPClient *client, const QString &languageId);

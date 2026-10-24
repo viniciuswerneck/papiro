@@ -13,6 +13,7 @@ struct FindRequest {
     bool matchCase = false;
     bool wholeWord = false;
     bool regex = false;
+    bool multiline = false;
     bool wrap = true;
 };
 
@@ -26,7 +27,7 @@ public:
     void focusFindField();
     void setSearchFolder(const QString &path);
     QString searchFolder() const;
-    void setSearchOptions(bool matchCase, bool wholeWord, bool regex, bool wrap);
+    void setSearchOptions(bool matchCase, bool wholeWord, bool regex, bool multiline, bool wrap);
 
     FindRequest request() const;
 
@@ -49,6 +50,7 @@ private:
     QCheckBox *m_matchCase = nullptr;
     QCheckBox *m_wholeWord = nullptr;
     QCheckBox *m_regex = nullptr;
+    QCheckBox *m_multiline = nullptr;
     QCheckBox *m_wrap = nullptr;
 };
 

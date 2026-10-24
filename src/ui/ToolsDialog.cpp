@@ -46,12 +46,25 @@ ToolsDialog::ToolsDialog(ToolManager *manager, QWidget *parent)
     m_arguments->setPlaceholderText(tr("Arguments, e.g. -O2 $FILE -o $FILENAME.out"));
     m_workingDirectory->setPlaceholderText(tr("Working directory (empty: folder of the file)"));
 
+    m_errorPattern = new QLineEdit(this);
+    m_errorPattern->setPlaceholderText(tr("Regex pattern, e.g. ([^:]+):(\\d+):(\\d+)"));
+    m_errorFilePattern = new QLineEdit(this);
+    m_errorFilePattern->setPlaceholderText(tr("File capture group (e.g. 1)"));
+    m_errorLinePattern = new QLineEdit(this);
+    m_errorLinePattern->setPlaceholderText(tr("Line capture group (e.g. 2)"));
+    m_errorColumnPattern = new QLineEdit(this);
+    m_errorColumnPattern->setPlaceholderText(tr("Column capture group (e.g. 3)"));
+
     auto *form = new QFormLayout;
     form->addRow(tr("&Name:"), m_name);
     form->addRow(tr("&Command:"), m_command);
     form->addRow(tr("&Arguments:"), m_arguments);
     form->addRow(tr("&Working directory:"), m_workingDirectory);
     form->addRow(QString(), m_saveBeforeRun);
+    form->addRow(tr("Error &pattern:"), m_errorPattern);
+    form->addRow(tr("File &group:"), m_errorFilePattern);
+    form->addRow(tr("Line &group:"), m_errorLinePattern);
+    form->addRow(tr("Column &group:"), m_errorColumnPattern);
 
     auto *hint = new QLabel(
         tr("Variables: <b>$FILE</b> full path, <b>$FILEDIR</b> folder, "
@@ -125,22 +138,38 @@ void ToolsDialog::populateFrom(int index)
         m_arguments->setText(tool.arguments);
         m_workingDirectory->setText(tool.workingDirectory);
         m_saveBeforeRun->setChecked(tool.saveBeforeRun);
+        m_errorPattern->setText(tool.errorPattern);
+        m_errorFilePattern->setText(tool.errorFilePattern);
+        m_errorLinePattern->setText(tool.errorLinePattern);
+        m_errorColumnPattern->setText(tool.errorColumnPattern);
         m_name->setEnabled(true);
         m_command->setEnabled(true);
         m_arguments->setEnabled(true);
         m_workingDirectory->setEnabled(true);
         m_saveBeforeRun->setEnabled(true);
+        m_errorPattern->setEnabled(true);
+        m_errorFilePattern->setEnabled(true);
+        m_errorLinePattern->setEnabled(true);
+        m_errorColumnPattern->setEnabled(true);
     } else {
         m_name->clear();
         m_command->clear();
         m_arguments->clear();
         m_workingDirectory->clear();
         m_saveBeforeRun->setChecked(true);
+        m_errorPattern->clear();
+        m_errorFilePattern->clear();
+        m_errorLinePattern->clear();
+        m_errorColumnPattern->clear();
         m_name->setEnabled(false);
         m_command->setEnabled(false);
         m_arguments->setEnabled(false);
         m_workingDirectory->setEnabled(false);
         m_saveBeforeRun->setEnabled(false);
+        m_errorPattern->setEnabled(false);
+        m_errorFilePattern->setEnabled(false);
+        m_errorLinePattern->setEnabled(false);
+        m_errorColumnPattern->setEnabled(false);
     }
     m_updating = false;
 }
@@ -182,6 +211,10 @@ void ToolsDialog::applyChanges()
     tool.arguments = m_arguments->text();
     tool.workingDirectory = m_workingDirectory->text().trimmed();
     tool.saveBeforeRun = m_saveBeforeRun->isChecked();
+    tool.errorPattern = m_errorPattern->text().trimmed();
+    tool.errorFilePattern = m_errorFilePattern->text().trimmed();
+    tool.errorLinePattern = m_errorLinePattern->text().trimmed();
+    tool.errorColumnPattern = m_errorColumnPattern->text().trimmed();
     m_manager->replaceTool(index, tool);
 
     m_updating = true;

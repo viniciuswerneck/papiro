@@ -353,4 +353,94 @@ QString LSPManager::fileExtension(const QString &filePath) const {
     return info.suffix().toLower();
 }
 
+QMap<QString, LSPServerConfig> LSPManager::defaultServerConfigs() {
+    QMap<QString, LSPServerConfig> defaults;
+
+    // C/C++
+    defaults["cpp"] = {
+        "clangd",
+        "cpp",
+        "clangd",
+        {"--background-index", "--clang-tidy", "--completion-style=detailed", "--header-insertion=never"},
+        {},
+        {},
+        true,
+        ".cpp,.h,.hpp,.cc,.cxx,.c,.m,.mm"
+    };
+
+    // Python
+    defaults["python"] = {
+        "pyright",
+        "python",
+        "pyright-langserver",
+        {"--stdio"},
+        {},
+        {},
+        true,
+        ".py,.pyw,.pyi"
+    };
+
+    // TypeScript/JavaScript
+    defaults["typescript"] = {
+        "typescript-language-server",
+        "typescript",
+        "typescript-language-server",
+        {"--stdio"},
+        {},
+        {},
+        true,
+        ".ts,.tsx,.js,.jsx,.mjs,.cjs"
+    };
+
+    // Rust
+    defaults["rust"] = {
+        "rust-analyzer",
+        "rust",
+        "rust-analyzer",
+        {},
+        {},
+        {},
+        true,
+        ".rs"
+    };
+
+    // Go
+    defaults["go"] = {
+        "gopls",
+        "go",
+        "gopls",
+        {},
+        {},
+        {},
+        true,
+        ".go"
+    };
+
+    // Lua
+    defaults["lua"] = {
+        "lua-language-server",
+        "lua",
+        "lua-language-server",
+        {},
+        {},
+        {},
+        true,
+        ".lua"
+    };
+
+    // JSON
+    defaults["json"] = {
+        "vscode-json-languageserver",
+        "json",
+        "vscode-json-languageserver",
+        {"--stdio"},
+        {},
+        {},
+        true,
+        ".json,.jsonc"
+    };
+
+    return defaults;
+}
+
 } // namespace papiro

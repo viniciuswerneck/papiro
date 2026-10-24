@@ -12,12 +12,15 @@
 #include "ui/ClipLibraryWidget.h"
 #include "ui/FileExplorerWidget.h"
 #include "ui/GitDiffView.h"
+#include "ui/DiffDialog.h"
+#include "ui/SplitView.h"
 #include "ui/MacroManagerDialog.h"
 #include "ui/Theme.h"
 #include "ui/PreferencesDialog.h"
 #include "ui/KeyboardShortcutsDialog.h"
 #include "ui/Theme.h"
 #include "ui/ToolsDialog.h"
+#include "ui/Theme.h"
 
 #include <QAction>
 #include <QActionGroup>
@@ -56,6 +59,7 @@
 #include <QStyle>
 #include <QTabWidget>
 #include <QTextBlock>
+#include <QTextBrowser>
 #include <QTextCursor>
 #include <QTextDocument>
 #include <QToolBar>
@@ -111,6 +115,7 @@ MainWindow::MainWindow(QWidget *parent)
     , m_clipLibrary(new ClipLibrary(this))
     , m_toolManager(new ToolManager(this))
     , m_spellChecker(new SpellChecker(this))
+    , m_lspManager(new LSPManager(this))
 {
     SyntaxRepository::instance().load();
     setAcceptDrops(true);
@@ -125,12 +130,37 @@ MainWindow::MainWindow(QWidget *parent)
         updateStatus();
         updateActions();
         updateDocumentMenuState();
+        updateLSPStatus();
     });
 
     applySettings();
     createActions();
     createStatusBar();
     createDockWidgets();
+
+    // LSP: connect signals
+    connect(m_lspManager, &LSPManager::clientStarted, this, &MainWindow::updateLSPStatus);
+    connect(m_lspManager, &LSPManager::clientStopped, this, &MainWindow::updateLSPStatus);
+    connect(m_lspManager, &LSPManager::clientError, this, &MainWindow::updateLSPStatus);
+    connect(m_lspManager, &LSPManager::diagnosticsReceived, this, [this](const QString &uri, const QVector<LSP::Diagnostic> &diagnostics) {
+        // Forward diagnostics to the appropriate editor
+        for (int i = 0; i < m_tabs->count(); ++i) {
+            auto *document = qobject_cast<Document *>(m_tabs->widget(i));
+            if (document && document->filePath() == QUrl(uri).toLocalFile()) {
+                document->editor()->onLSPDiagnosticsReceived(uri, diagnostics);
+                break;
+            }
+        }
+    });
+
+    // LSP: set workspace folders when opening folders
+    connect(m_fileExplorer, &FileExplorerWidget::rootPathChanged, this, [this](const QString &path) {
+        if (!path.isEmpty()) {
+            QVector<LSP::WorkspaceFolder> folders;
+            folders.append({QUrl::fromLocalFile(path).toString(), QFileInfo(path).fileName()});
+            m_lspManager->setWorkspaceFolders(folders);
+        }
+    });
 
     // Load the spell-check dictionary that matches the interface language.
     QSettings spellSettings;
@@ -319,6 +349,14 @@ void MainWindow::createActions()
     m_spellCheckAction->setCheckable(true);
     connect(m_spellCheckAction, &QAction::toggled, this, &MainWindow::toggleSpellCheck);
 
+    m_whitespaceVisibleAction = makeAction(tr("Show &Whitespace"));
+    m_whitespaceVisibleAction->setCheckable(true);
+    connect(m_whitespaceVisibleAction, &QAction::toggled, this, &MainWindow::toggleWhitespaceVisible);
+
+    m_cursorFreePositioningAction = makeAction(tr("Cursor Free &Positioning"));
+    m_cursorFreePositioningAction->setCheckable(true);
+    connect(m_cursorFreePositioningAction, &QAction::toggled, this, &MainWindow::toggleCursorFreePositioning);
+
     m_toggleFoldAction = makeAction(tr("Toggle &Fold"),
                                     QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_Period));
     connect(m_toggleFoldAction, &QAction::triggered, this, &MainWindow::toggleFold);
@@ -328,6 +366,21 @@ void MainWindow::createActions()
 
     m_unfoldAllAction = makeAction(tr("&Unfold All"));
     connect(m_unfoldAllAction, &QAction::triggered, this, &MainWindow::unfoldAll);
+
+    m_splitViewAction = makeAction(tr("Split View"));
+    m_splitViewAction->setCheckable(true);
+    connect(m_splitViewAction, &QAction::toggled, this, [this](bool checked) {
+        if (checked)
+            splitView();
+        else
+            unsplitView();
+    });
+
+    m_diffAction = makeAction(tr("Compare &Files..."));
+    connect(m_diffAction, &QAction::triggered, this, &MainWindow::diffFiles);
+
+    auto *sortLinesAction = makeAction(tr("Sort &Lines"));
+    connect(sortLinesAction, &QAction::triggered, this, &MainWindow::sortLines);
 
     m_zoomInAction = makeAction(tr("Zoom &In"), QKeySequence::ZoomIn);
     connect(m_zoomInAction, &QAction::triggered, this, &MainWindow::zoomIn);
@@ -536,6 +589,7 @@ void MainWindow::createActions()
     editMenu->addAction(selectAllAction);
     editMenu->addAction(duplicateAction);
     editMenu->addAction(deleteLineAction);
+    editMenu->addAction(sortLinesAction);
     editMenu->addSeparator();
     editMenu->addAction(gotoAction);
     editMenu->addSeparator();
@@ -607,7 +661,11 @@ void MainWindow::createActions()
     auto *viewMenu = menuBar()->addMenu(tr("&View"));
     viewMenu->addAction(m_wordWrapAction);
     viewMenu->addAction(m_lineNumbersAction);
+    viewMenu->addAction(m_whitespaceVisibleAction);
+    viewMenu->addAction(m_cursorFreePositioningAction);
     viewMenu->addAction(m_spellCheckAction);
+    viewMenu->addSeparator();
+    viewMenu->addAction(m_splitViewAction);
     viewMenu->addSeparator();
     viewMenu->addAction(m_zoomInAction);
     viewMenu->addAction(m_zoomOutAction);
@@ -640,6 +698,12 @@ void MainWindow::createActions()
     // Tools
     m_toolsMenu = menuBar()->addMenu(tr("&Tools"));
     m_toolsMenu->addAction(m_configureToolsAction);
+    m_toolsMenu->addSeparator();
+    m_toolsMenu->addAction(m_diffAction);
+    m_toolsMenu->addSeparator();
+    auto *lspPrefsAction = new QAction(tr("&LSP Servers..."), this);
+    connect(lspPrefsAction, &QAction::triggered, this, &MainWindow::openLSPPreferences);
+    m_toolsMenu->addAction(lspPrefsAction);
 
     // Help
     auto *helpMenu = menuBar()->addMenu(tr("&Help"));
@@ -673,19 +737,23 @@ void MainWindow::createStatusBar()
     m_encodingLabel = new QLabel(this);
     m_eolLabel = new QLabel(this);
     m_syntaxLabel = new QLabel(this);
+    m_lspStatusLabel = new QLabel(this);
 
     m_positionLabel->setMinimumWidth(110);
     m_selectionLabel->setMinimumWidth(90);
     m_encodingLabel->setMinimumWidth(90);
     m_eolLabel->setMinimumWidth(50);
     m_syntaxLabel->setMinimumWidth(90);
+    m_lspStatusLabel->setMinimumWidth(120);
 
     statusBar()->addWidget(m_positionLabel);
     statusBar()->addWidget(m_selectionLabel, 1);
     statusBar()->addPermanentWidget(m_syntaxLabel);
     statusBar()->addPermanentWidget(m_eolLabel);
     statusBar()->addPermanentWidget(m_encodingLabel);
+    statusBar()->addPermanentWidget(m_lspStatusLabel);
 
+    updateLSPStatus();
 }
 
 // ---------------------------------------------------------------------------
@@ -706,9 +774,25 @@ Document *MainWindow::addDocument()
     Editor *editor = document->editor();
     editor->setBaseFont(m_editorFont);
     editor->setLineNumbersVisible(m_lineNumbers);
+    editor->setWhitespaceVisible(m_whitespaceVisible);
+    editor->setCursorFreePositioning(m_cursorFreePositioning);
     editor->setLineWrapMode(m_wordWrap ? QPlainTextEdit::WidgetWidth : QPlainTextEdit::NoWrap);
     editor->setMacroManager(m_macroManager);
     editor->setSpellChecker(m_spellCheck ? m_spellChecker : nullptr);
+
+    // LSP: connect editor to language server
+    connect(document, &Document::pathChanged, this, [this, document](const QString &path) {
+        if (!path.isEmpty()) {
+            Editor *ed = document->editor();
+            const QString langId = m_lspManager->languageIdForFile(path);
+            if (!langId.isEmpty()) {
+                LSPClient *client = m_lspManager->getOrCreateClient(langId);
+                if (client) {
+                    ed->setLSPClient(client, langId);
+                }
+            }
+        }
+    });
 
     connect(editor, &Editor::findRequested, this, &MainWindow::showFindReplace);
     connect(editor, &Editor::gotoLineRequested, this, &MainWindow::goToLine);
@@ -913,6 +997,9 @@ void MainWindow::closeTab(int index)
     if (!maybeSave(document))
         return;
 
+    // LSP: release client for this document
+    m_lspManager->releaseClientForDocument(document);
+
     m_tabs->removeTab(index);
     document->deleteLater();
     clearSearchResults();
@@ -1060,6 +1147,8 @@ QRegularExpression MainWindow::buildRegex(const FindRequest &request, QString *e
     QRegularExpression::PatternOptions options = QRegularExpression::UseUnicodePropertiesOption;
     if (!request.matchCase)
         options |= QRegularExpression::CaseInsensitiveOption;
+    if (request.multiline)
+        options |= QRegularExpression::MultilineOption;
 
     QRegularExpression expression(pattern, options);
     if (error)
@@ -1664,7 +1753,7 @@ void MainWindow::showFindReplace()
     if (!m_findDialog) {
         m_findDialog = new FindReplaceDialog(this);
         m_findDialog->setSearchOptions(m_searchMatchCase, m_searchWholeWord, m_searchRegex,
-                                       m_searchWrap);
+                                       m_searchMultiline, m_searchWrap);
         connect(m_findDialog, &FindReplaceDialog::findNextRequested, this,
                 [this](const FindRequest &request, bool backward) {
                     m_lastFind = request;
@@ -1822,6 +1911,10 @@ void MainWindow::applyPreferences(const Preferences &preferences)
         m_lineNumbersAction->setChecked(preferences.lineNumbers);
     if (preferences.spellCheck != m_spellCheck)
         m_spellCheckAction->setChecked(preferences.spellCheck);
+    if (preferences.whitespaceVisible != m_whitespaceVisible)
+        m_whitespaceVisibleAction->setChecked(preferences.whitespaceVisible);
+    if (preferences.cursorFreePositioning != m_cursorFreePositioning)
+        m_cursorFreePositioningAction->setChecked(preferences.cursorFreePositioning);
     if (preferences.restoreSession != m_restoreSessionAction->isChecked())
         m_restoreSessionAction->setChecked(preferences.restoreSession);
 
@@ -1840,7 +1933,7 @@ void MainWindow::applyPreferences(const Preferences &preferences)
     m_searchWrap = preferences.searchWrap;
     if (m_findDialog) {
         m_findDialog->setSearchOptions(m_searchMatchCase, m_searchWholeWord, m_searchRegex,
-                                       m_searchWrap);
+                                       m_searchMultiline, m_searchWrap);
     }
 
     saveSettings();
@@ -1877,6 +1970,26 @@ void MainWindow::toggleSpellCheck(bool enabled)
     }
 }
 
+void MainWindow::toggleWhitespaceVisible(bool enabled)
+{
+    m_whitespaceVisible = enabled;
+    for (int i = 0; i < m_tabs->count(); ++i) {
+        auto *document = qobject_cast<Document *>(m_tabs->widget(i));
+        if (document)
+            document->editor()->setWhitespaceVisible(enabled);
+    }
+}
+
+void MainWindow::toggleCursorFreePositioning(bool enabled)
+{
+    m_cursorFreePositioning = enabled;
+    for (int i = 0; i < m_tabs->count(); ++i) {
+        auto *document = qobject_cast<Document *>(m_tabs->widget(i));
+        if (document)
+            document->editor()->setCursorFreePositioning(enabled);
+    }
+}
+
 void MainWindow::zoomIn()
 {
     if (auto *document = currentDocument())
@@ -1895,6 +2008,118 @@ void MainWindow::zoomReset()
         document->editor()->setBaseFont(m_editorFont);
 }
 
+void MainWindow::splitView()
+{
+    Document *document = currentDocument();
+    if (!document)
+        return;
+
+    Editor *editor = document->editor();
+    // Check if already in split view
+    if (editor->parent() && qobject_cast<SplitView *>(editor->parent()))
+        return;
+
+    // Create split view with the current editor as primary
+    auto *splitView = new SplitView(editor, document);
+    splitView->setObjectName(QStringLiteral("SplitView"));
+
+    // Replace the editor in the document's layout
+    QLayout *layout = document->layout();
+    if (layout) {
+        layout->replaceWidget(editor, splitView);
+    } else {
+        // Document might not have a layout, set one up
+        auto *vLayout = new QVBoxLayout(document);
+        vLayout->setContentsMargins(0, 0, 0, 0);
+        vLayout->addWidget(splitView);
+    }
+
+    // Configure secondary editor
+    Editor *secondaryEditor = splitView->secondaryEditor();
+    secondaryEditor->setMacroManager(m_macroManager);
+    secondaryEditor->setSpellChecker(m_spellCheck ? m_spellChecker : nullptr);
+
+    // Connect signals from secondary editor
+    connect(secondaryEditor, &Editor::findRequested, this, &MainWindow::showFindReplace);
+    connect(secondaryEditor, &Editor::gotoLineRequested, this, &MainWindow::goToLine);
+    connect(secondaryEditor, &Editor::blockSelectionChanged, this, [this, document] {
+        if (document == currentDocument())
+            updateActions();
+    });
+    connect(secondaryEditor, &QPlainTextEdit::cursorPositionChanged, this, [this, document] {
+        if (document == currentDocument())
+            updateStatus();
+    });
+    connect(secondaryEditor, &QPlainTextEdit::copyAvailable, this, [this, document](bool) {
+        if (document == currentDocument())
+            updateActions();
+    });
+    connect(secondaryEditor->document(), &QTextDocument::undoAvailable, this, [this, document](bool) {
+        if (document == currentDocument())
+            updateActions();
+    });
+    connect(secondaryEditor->document(), &QTextDocument::redoAvailable, this, [this, document](bool) {
+        if (document == currentDocument())
+            updateActions();
+    });
+
+    // Apply LSP if active
+    if (!editor->lspLanguageId().isEmpty() && editor->lspClient()) {
+        secondaryEditor->setLSPClient(editor->lspClient(), editor->lspLanguageId());
+    }
+
+    m_splitViewAction->setChecked(true);
+    updateStatus();
+}
+
+void MainWindow::unsplitView()
+{
+    Document *document = currentDocument();
+    if (!document)
+        return;
+
+    Editor *editor = document->editor();
+    SplitView *splitView = editor->parent() ? qobject_cast<SplitView *>(editor->parent()) : nullptr;
+    if (!splitView)
+        return;
+
+    // Get the primary editor (first one in the splitter)
+    Editor *primaryEditor = splitView->primaryEditor();
+    if (!primaryEditor)
+        return;
+
+    // Replace split view with primary editor
+    QLayout *layout = document->layout();
+    if (layout) {
+        layout->replaceWidget(splitView, primaryEditor);
+    }
+
+    // Re-parent primary editor to document
+    primaryEditor->setParent(document);
+
+    // Delete split view (will delete secondary editor too)
+    splitView->deleteLater();
+
+    m_splitViewAction->setChecked(false);
+    updateStatus();
+}
+
+void MainWindow::diffFiles()
+{
+    QString file1 = QFileDialog::getOpenFileName(this, tr("Select First File"));
+    if (file1.isEmpty())
+        return;
+
+    QString file2 = QFileDialog::getOpenFileName(this, tr("Select Second File"));
+    if (file2.isEmpty())
+        return;
+
+    auto *diffDialog = new DiffDialog(this);
+    diffDialog->setAttribute(Qt::WA_DeleteOnClose);
+    diffDialog->setFiles(file1, file2);
+    diffDialog->show();
+}
+
 void MainWindow::toggleFold()
 {
     if (auto *editor = currentEditor())
@@ -1911,6 +2136,12 @@ void MainWindow::unfoldAll()
 {
     if (auto *editor = currentEditor())
         editor->unfoldAll();
+}
+
+void MainWindow::sortLines()
+{
+    if (auto *editor = currentEditor())
+        editor->sortLines();
 }
 
 void MainWindow::setEncoding(TextEncoding encoding)
@@ -2014,6 +2245,8 @@ void MainWindow::applySettings()
     settings.beginGroup(QStringLiteral("editor"));
     m_wordWrap = settings.value(QStringLiteral("wordWrap"), false).toBool();
     m_lineNumbers = settings.value(QStringLiteral("lineNumbers"), true).toBool();
+    m_whitespaceVisible = settings.value(QStringLiteral("whitespaceVisible"), false).toBool();
+    m_cursorFreePositioning = settings.value(QStringLiteral("cursorFreePositioning"), false).toBool();
     m_spellCheck = settings.value(QStringLiteral("spellCheck"), true).toBool();
 
     const QString defaultFamily = QFontDatabase::systemFont(QFontDatabase::FixedFont).family();
@@ -2029,6 +2262,7 @@ void MainWindow::applySettings()
     m_searchMatchCase = settings.value(QStringLiteral("matchCase"), false).toBool();
     m_searchWholeWord = settings.value(QStringLiteral("wholeWord"), false).toBool();
     m_searchRegex = settings.value(QStringLiteral("regex"), false).toBool();
+    m_searchMultiline = settings.value(QStringLiteral("multiline"), false).toBool();
     m_searchWrap = settings.value(QStringLiteral("wrap"), true).toBool();
     settings.endGroup();
 
@@ -2053,6 +2287,8 @@ void MainWindow::saveSettings()
     settings.beginGroup(QStringLiteral("editor"));
     settings.setValue(QStringLiteral("wordWrap"), m_wordWrap);
     settings.setValue(QStringLiteral("lineNumbers"), m_lineNumbers);
+    settings.setValue(QStringLiteral("whitespaceVisible"), m_whitespaceVisible);
+    settings.setValue(QStringLiteral("cursorFreePositioning"), m_cursorFreePositioning);
     settings.setValue(QStringLiteral("spellCheck"), m_spellCheck);
     settings.setValue(QStringLiteral("fontFamily"), m_editorFont.family());
     settings.setValue(QStringLiteral("fontSize"), m_editorFont.pointSize());
@@ -2062,6 +2298,7 @@ void MainWindow::saveSettings()
     settings.setValue(QStringLiteral("matchCase"), m_searchMatchCase);
     settings.setValue(QStringLiteral("wholeWord"), m_searchWholeWord);
     settings.setValue(QStringLiteral("regex"), m_searchRegex);
+    settings.setValue(QStringLiteral("multiline"), m_searchMultiline);
     settings.setValue(QStringLiteral("wrap"), m_searchWrap);
     settings.endGroup();
 
@@ -2381,12 +2618,43 @@ void MainWindow::createDockWidgets()
         m_fileExplorer->setRootPath(explorerRoot);
 
     // Output pane for external tools.
-    m_outputView = new QPlainTextEdit(this);
+    m_outputView = new QTextBrowser(this);
     m_outputView->setReadOnly(true);
-    m_outputView->setMaximumBlockCount(5000);
+    m_outputView->setLineWrapMode(QTextEdit::NoWrap);
+    m_outputView->setOpenLinks(false); // We handle anchorClicked ourselves
     QFont outputFont = QFontDatabase::systemFont(QFontDatabase::FixedFont);
     outputFont.setPointSize(10);
     m_outputView->setFont(outputFont);
+
+    // Limit block count (QTextBrowser doesn't have setMaximumBlockCount)
+    connect(m_outputView->document(), &QTextDocument::blockCountChanged, [this](int count) {
+        if (count > 5000) {
+            QTextCursor cursor(m_outputView->document());
+            cursor.movePosition(QTextCursor::Start);
+            cursor.movePosition(QTextCursor::NextBlock, QTextCursor::KeepAnchor, count - 5000);
+            cursor.removeSelectedText();
+        }
+    });
+
+    // Handle anchor clicks (file:line:col links)
+    connect(m_outputView, &QTextBrowser::anchorClicked, this, [this](const QUrl &url) {
+        if (url.scheme() == "file") {
+            const QString path = url.path();
+            const QStringList parts = path.split(QLatin1Char(':'));
+            if (parts.size() >= 2) {
+                const QString filePath = parts[0];
+                bool ok = false;
+                const int line = parts[1].toInt(&ok);
+                const int column = (parts.size() >= 3 && ok) ? parts[2].toInt(&ok) : 1;
+                if (ok && QFileInfo(filePath).isFile()) {
+                    openFile(filePath);
+                    if (auto *document = currentDocument()) {
+                        document->editor()->gotoLine(line, column);
+                    }
+                }
+            }
+        }
+    });
 
     m_outputDock = new QDockWidget(tr("Output"), this);
     m_outputDock->setObjectName(QStringLiteral("OutputDock"));
@@ -2729,6 +2997,61 @@ void MainWindow::rebuildToolsMenu()
     }
 }
 
+void MainWindow::appendOutput(const QString &text)
+{
+    if (!m_outputView)
+        return;
+    m_outputView->append(text);
+}
+
+void MainWindow::appendOutputWithErrorParsing(const QString &output,
+                                              const QString &errorPattern,
+                                              const QString &filePattern,
+                                              const QString &linePattern,
+                                              const QString &columnPattern,
+                                              const QString &workingDirectory)
+{
+    if (!m_outputView || errorPattern.isEmpty()) {
+        appendOutput(output);
+        return;
+    }
+
+    QRegularExpression regex(errorPattern);
+    if (!regex.isValid()) {
+        appendOutput(output);
+        return;
+    }
+
+    const int fileGroup = filePattern.toInt();
+    const int lineGroup = linePattern.toInt();
+    const int columnGroup = columnPattern.toInt();
+
+    // Split output into lines
+    const QStringList lines = output.split(QLatin1Char('\n'), Qt::KeepEmptyParts);
+    for (const QString &line : lines) {
+        QRegularExpressionMatch match = regex.match(line);
+        if (match.hasMatch() && fileGroup > 0 && fileGroup <= match.lastCapturedIndex()) {
+            const QString filePath = match.captured(fileGroup);
+            const QString lineStr = (lineGroup > 0 && lineGroup <= match.lastCapturedIndex()) ? match.captured(lineGroup) : QString();
+            const QString columnStr = (columnGroup > 0 && columnGroup <= match.lastCapturedIndex()) ? match.captured(columnGroup) : QString();
+
+            // Resolve relative path
+            QString fullPath = filePath;
+            if (!QFileInfo(filePath).isAbsolute() && !workingDirectory.isEmpty()) {
+                fullPath = QDir(workingDirectory).absoluteFilePath(filePath);
+            }
+
+            // Create HTML with anchor link
+            QString html = line.toHtmlEscaped();
+            html = QString("<a href=\"file://%1:%2:%3\" style=\"color: #0066cc; text-decoration: underline;\">%4</a>")
+                       .arg(QUrl::toPercentEncoding(fullPath), lineStr, columnStr, html);
+            m_outputView->append(html);
+        } else {
+            m_outputView->append(line);
+        }
+    }
+}
+
 void MainWindow::runTool(int index)
 {
     if (!m_toolManager)
@@ -2766,7 +3089,7 @@ void MainWindow::runTool(int index)
         workingDirectory = info.absolutePath();
 
     if (m_outputView) {
-        m_outputView->appendPlainText(
+        m_outputView->append(
             QStringLiteral("> %1 %2").arg(program, arguments.join(QLatin1Char(' '))).trimmed());
         if (m_outputDock)
             m_outputDock->show();
@@ -2777,21 +3100,26 @@ void MainWindow::runTool(int index)
     if (!workingDirectory.isEmpty())
         process->setWorkingDirectory(workingDirectory);
 
-    connect(process, &QProcess::readyReadStandardOutput, this, [this, process] {
+    // Store tool info for error parsing
+    const QString toolErrorPattern = tool.errorPattern;
+    const QString toolErrorFilePattern = tool.errorFilePattern;
+    const QString toolErrorLinePattern = tool.errorLinePattern;
+    const QString toolErrorColumnPattern = tool.errorColumnPattern;
+
+    connect(process, &QProcess::readyReadStandardOutput, this, [this, process, toolErrorPattern, toolErrorFilePattern, toolErrorLinePattern, toolErrorColumnPattern, workingDirectory] {
         if (!m_outputView)
             return;
         const QString output = QString::fromLocal8Bit(process->readAllStandardOutput());
         if (!output.isEmpty())
-            m_outputView->appendPlainText(output.trimmed());
+            appendOutputWithErrorParsing(output, toolErrorPattern, toolErrorFilePattern, toolErrorLinePattern, toolErrorColumnPattern, workingDirectory);
     });
     connect(process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished), this,
             [this, process, program](int exitCode, QProcess::ExitStatus status) {
                 if (m_outputView) {
                     if (status == QProcess::NormalExit) {
-                        m_outputView->appendPlainText(
-                            tr("%1 finished with exit code %2.").arg(program).arg(exitCode));
+                        appendOutput(tr("%1 finished with exit code %2.").arg(program).arg(exitCode));
                     } else {
-                        m_outputView->appendPlainText(tr("%1 terminated unexpectedly.").arg(program));
+                        appendOutput(tr("%1 terminated unexpectedly.").arg(program));
                     }
                 }
                 process->deleteLater();
@@ -2799,8 +3127,7 @@ void MainWindow::runTool(int index)
     connect(process, &QProcess::errorOccurred, this,
             [this, process, program](QProcess::ProcessError) {
                 if (m_outputView) {
-                    m_outputView->appendPlainText(
-                        tr("Failed to run %1: %2").arg(program, process->errorString()));
+                    appendOutput(tr("Failed to run %1: %2").arg(program, process->errorString()));
                 }
             });
 
@@ -2842,6 +3169,75 @@ void MainWindow::showKeyboardShortcuts()
 {
     KeyboardShortcutsDialog dialog(this);
     dialog.exec();
+}
+
+void MainWindow::updateLSPStatus()
+{
+    if (!m_lspStatusLabel)
+        return;
+
+    Document *document = currentDocument();
+    if (!document) {
+        m_lspStatusLabel->clear();
+        return;
+    }
+
+    Editor *editor = document->editor();
+    LSPClient *client = editor->lspClient();
+    if (!client) {
+        m_lspStatusLabel->clear();
+        return;
+    }
+
+    QString langId = client->languageId();
+    auto state = client->state();
+    QString text;
+    QString style;
+
+    switch (state) {
+        case LSPClient::State::Stopped:
+            text = tr("LSP: %1 (stopped)").arg(langId);
+            style = "color: gray;";
+            break;
+        case LSPClient::State::Starting:
+        case LSPClient::State::Initializing:
+            text = tr("LSP: %1 (starting...)").arg(langId);
+            style = "color: orange;";
+            break;
+        case LSPClient::State::Ready:
+            text = tr("LSP: %1").arg(langId);
+            style = "color: green;";
+            break;
+        case LSPClient::State::Error:
+            text = tr("LSP: %1 (error)").arg(langId);
+            style = "color: red;";
+            break;
+    }
+
+    m_lspStatusLabel->setText(text);
+    m_lspStatusLabel->setStyleSheet(style);
+}
+
+void MainWindow::openLSPPreferences()
+{
+    LSPPreferencesDialog dialog(m_lspManager->serverConfigs(), this);
+    if (dialog.exec() == QDialog::Accepted) {
+        const QMap<QString, LSPServerConfig> newConfigs = dialog.serverConfigs();
+
+        // Apply new configs
+        for (auto it = newConfigs.constBegin(); it != newConfigs.constEnd(); ++it) {
+            m_lspManager->setServerConfig(it.value());
+        }
+
+        // Remove configs that no longer exist
+        QStringList oldKeys = m_lspManager->serverConfigs().keys();
+        QStringList newKeys = newConfigs.keys();
+        for (const QString &oldKey : oldKeys) {
+            if (!newKeys.contains(oldKey)) {
+                m_lspManager->removeServerConfig(oldKey);
+            }
+        }
+    }
 }
 
 } // namespace papiro

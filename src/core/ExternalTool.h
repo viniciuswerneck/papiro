@@ -14,6 +14,12 @@ struct ExternalTool {
     QString workingDirectory; // empty: directory of the current document
     bool saveBeforeRun = true;
 
+    // Error parsing
+    QString errorPattern;          // Regex pattern to match file:line:col (e.g., "([^:]+):(\\d+):(\\d+)")
+    QString errorFilePattern;      // Capture group index for file path (e.g., "1")
+    QString errorLinePattern;      // Capture group index for line number (e.g., "2")
+    QString errorColumnPattern;    // Capture group index for column (e.g., "3")
+
     bool isValid() const { return !name.trimmed().isEmpty() && !command.trimmed().isEmpty(); }
 };
 

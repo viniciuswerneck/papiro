@@ -35,6 +35,9 @@ struct Colors {
     QColor completionDeprecatedText;
     QColor scrollbarHandle;
     QColor scrollbarHandleHover;
+
+    // Whitespace display
+    QColor whitespace;
 };
 
 Mode mode();

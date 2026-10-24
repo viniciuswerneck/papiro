@@ -1,0 +1,56 @@
+.TH PAPIRO 1 "October 2026" "Papiro 0.1.0" "User Commands"
+.SH NAME
+Papiro \- A focused, cross-platform text editor
+.SH SYNOPSIS
+.B papiro
+[\fIoptions\fR] [\fIfile...\fR]
+.SH DESCRIPTION
+.B Papiro
+is a modern, cross-platform text editor designed for developers and writers who value focus and efficiency. It provides syntax highlighting for 10+ programming languages, multiple cursors and selections, macro recording and playback, a clip library for snippets, spell checking via Hunspell, dark/light themes, and translations for Portuguese, English, and Spanish.
+.SH OPTIONS
+.TP
+.B \-h, \-\-help
+Display help and exit.
+.TP
+.B \-v, \-\-version
+Display version information and exit.
+.TP
+.B \-\-new
+Create a new document.
+.TP
+.BI \-\-open=FILE
+Open the specified file.
+.SH FILES
+.TP
+.I ~/.config/Papiro/Papiro.conf
+Main configuration file (QSettings).
+.TP
+.I ~/.config/Papiro/cliplib.json
+Clip library data.
+.TP
+.I ~/.config/Papiro/macros/
+Macro files and slot assignments.
+.TP
+.I ~/.config/Papiro/tools.json
+External tools configuration.
+.SH ENVIRONMENT
+.TP
+.I QT_QPA_PLATFORM
+Qt platform plugin (e.g., xcb, wayland, offscreen).
+.TP
+.I LANG
+Interface language (pt, en, es).
+.SH EXAMPLES
+.TP
+Open a file:
+.B papiro main.cpp
+.TP
+Open multiple files:
+.B papiro file1.py file2.py file3.py
+.SH AUTHOR
+Vinicius Werneck <vinicius@example.com>
+.SH SEE ALSO
+.BR qt (7),
+.BR hunspell (1)
+.SH HOMEPAGE
+https://github.com/viniciuswerneck/papiro

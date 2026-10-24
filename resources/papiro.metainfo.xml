@@ -1,18 +1,31 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <component type="desktop-application">
-  <id>com.github.papiro</id>
+  <id>com.github.viniciuswerneck.papiro</id>
   <name>Papiro</name>
   <summary>A focused, cross-platform text editor</summary>
   <description>
-    <p>Papiro is a modern text editor built with Qt 6, featuring syntax highlighting, macros, clip library, spell checking, and more.</p>
+    <p>Papiro is a modern, cross-platform text editor designed for developers and writers who value focus and efficiency.</p>
+    <p>Key features include:</p>
+    <ul>
+      <li>Syntax highlighting for 10+ programming languages</li>
+      <li>Multiple cursors and selections for simultaneous editing</li>
+      <li>Macro recording and playback for automating repetitive tasks</li>
+      <li>Clip library for managing frequently used text snippets</li>
+      <li>Spell checking powered by Hunspell</li>
+      <li>Dark and light themes</li>
+      <li>Translations for Portuguese, English, and Spanish</li>
+    </ul>
+    <p>Built with a focus on performance and a distraction-free interface.</p>
   </description>
-  <project_license>MIT</project_license>
+  <license>MIT</license>
   <url type="homepage">https://github.com/viniciuswerneck/papiro</url>
   <url type="bugtracker">https://github.com/viniciuswerneck/papiro/issues</url>
+  <releases>
+    <release version="0.1.0" date="2026-10-23">
+      <description>Initial public release</description>
+    </release>
+  </releases>
   <provides>
     <binary>papiro</binary>
   </provides>
-  <releases>
-    <release version="0.1.0" date="2026-10-23"/>
-  </releases>
 </component>

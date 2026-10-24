@@ -41,6 +41,13 @@ PreferencesDialog::PreferencesDialog(const Preferences &current, QWidget *parent
     m_lineNumbers = new QCheckBox(tr("Show &line numbers"), this);
     m_lineNumbers->setObjectName(QStringLiteral("PreferencesLineNumbers"));
     m_lineNumbers->setChecked(current.lineNumbers);
+    m_whitespaceVisible = new QCheckBox(tr("Show &whitespace"), this);
+    m_whitespaceVisible->setObjectName(QStringLiteral("PreferencesWhitespaceVisible"));
+    m_whitespaceVisible->setChecked(current.whitespaceVisible);
+    m_cursorFreePositioning = new QCheckBox(tr("Cursor free &positioning (virtual space)"), this);
+    m_cursorFreePositioning->setObjectName(QStringLiteral("PreferencesCursorFreePositioning"));
+    m_cursorFreePositioning->setChecked(current.cursorFreePositioning);
+    m_cursorFreePositioning->setToolTip(tr("Allow cursor to move beyond end of line"));
     m_spellCheck = new QCheckBox(tr("Enable &spell checking"), this);
     m_spellCheck->setObjectName(QStringLiteral("PreferencesSpellCheck"));
     m_spellCheck->setChecked(current.spellCheck);
@@ -49,6 +56,8 @@ PreferencesDialog::PreferencesDialog(const Preferences &current, QWidget *parent
     editorForm->addRow(tr("Editor font:"), fontRow);
     editorForm->addRow(QString(), m_wordWrap);
     editorForm->addRow(QString(), m_lineNumbers);
+    editorForm->addRow(QString(), m_whitespaceVisible);
+    editorForm->addRow(QString(), m_cursorFreePositioning);
     editorForm->addRow(QString(), m_spellCheck);
 
     auto *editorLayout = new QVBoxLayout(editorPage);
@@ -136,6 +145,8 @@ Preferences PreferencesDialog::preferences() const
     result.restoreSession = m_restoreSession->isChecked();
     result.wordWrap = m_wordWrap->isChecked();
     result.lineNumbers = m_lineNumbers->isChecked();
+    result.whitespaceVisible = m_whitespaceVisible->isChecked();
+    result.cursorFreePositioning = m_cursorFreePositioning->isChecked();
     result.spellCheck = m_spellCheck->isChecked();
     result.searchMatchCase = m_matchCase->isChecked();
     result.searchWholeWord = m_wholeWord->isChecked();

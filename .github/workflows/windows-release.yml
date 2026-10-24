@@ -2,57 +2,89 @@ name: Windows Release
 
 on:
   push:
-    tags: ['v*']
+    tags:
+      - 'v*'
   workflow_dispatch:
 
 jobs:
   build:
     runs-on: windows-2022
+    shell: pwsh
+
     steps:
-      - uses: actions/checkout@v4
-      
-      - name: Install Qt 6.8.3 (MSVC)
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Qt 6.8.3 MSVC
         uses: jurplel/install-qt-action@v3
         with:
-          version: '6.8.3'
-          target: 'msvc2022_64'
-          modules: 'qtprintsupport'
+          target: desktop
+          arch: win64_msvc2022_64
           cache: true
-      
-      - name: Install QtIFW
+
+      - name: Install QtIFW 4.6
         run: |
-          $url = "https://download.qt.io/official_releases/qt-installer-framework/4.6.0/qt-installer-framework-windows-x86_4.6.0.exe"
-          Invoke-WebRequest -Uri $url -OutFile qtifw-installer.exe
-          .\qtifw-installer.exe --script .github/scripts/qtifw-install.qs
-          echo "C:\Qt\QtIFW-4.6.0\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-      
-      - name: Configure CMake
+          $qtifwUrl = "https://download.qt.io/official_releases/qt-installer-framework/4.6.0/qt-installer-framework-windows-x86_64-4.6.0.exe"
+          $qtifwInstaller = "qtifw-installer.exe"
+          $qtifwScript = "$(Get-Location)\.github\scripts\qtifw-install.qs"
+          $qtifwDir = "C:\Qt\QtIFW-4.6"
+
+          Invoke-WebRequest -Uri $qtifwUrl -OutFile $qtifwInstaller
+          & $qtifwInstaller --script $qtifwScript --verbose
+          Remove-Item $qtifwInstaller
+
+          $env:PATH += ";$qtifwDir\bin"
+          echo "$qtifwDir\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
+      - name: Configure
         run: |
-          cmake -B build -DCMAKE_BUILD_TYPE=Release -G "Ninja" ^
-            -DCMAKE_PREFIX_PATH="C:/Qt/6.8.3/msvc2022_64"
-      
+          $qt = (Get-ChildItem "C:\Qt\6.8.3\msvc2022_64" -Directory).FullName
+          cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="$qt"
+
       - name: Build
-        run: cmake --build build --config Release -j
-      
-      - name: Run tests
-        run: ctest --test-dir build --output-on-failure
-      
-      - name: Build Installer + Portable
+        run: cmake --build build --config Release
+
+      - name: Test
+        run: cd build; ctest --output-on-failure -C Release
+
+      - name: Deploy Qt dependencies
         run: |
-          .\packaging\windows\build-installer.ps1
-      
+          $qt = (Get-ChildItem "C:\Qt\6.8.3\msvc2022_64" -Directory).FullName
+          $windeployqt = Join-Path $qt "bin\windeployqt.exe"
+          & $windeployqt --release --no-translations --no-openssl --no-angle --no-compiler-runtime "build\Release\Papiro.exe"
+
+      - name: Copy translations, syntax, and icon
+        run: |
+          Copy-Item -Path "resources\translations\*" -Destination "build\Release\translations\" -Force -Recurse -ErrorAction SilentlyContinue
+          Copy-Item -Path "resources\syntax\*" -Destination "build\Release\syntax\" -Force -Recurse -ErrorAction SilentlyContinue
+          Copy-Item -Path "resources\icons\papiro.png" -Destination "build\Release\" -Force -ErrorAction SilentlyContinue
+
+      - name: Build QtIFW installer
+        run: |
+          $qtifwDir = "C:\Qt\QtIFW-4.6"
+          $binarycreator = Join-Path $qtifwDir "bin\binarycreator.exe"
+          $config = "installer\config\config.xml"
+          $packages = "installer\packages"
+          $out = "Papiro-Setup.exe"
+          & $binarycreator --offline-only -c $config -p $packages $out
+
+      - name: Build Portable ZIP
+        run: |
+          Compress-Archive -Path "build\Release\*" -DestinationPath "Papiro-Portable.zip" -Force
+
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: windows-packages
+          name: windows-artifacts
           path: |
-            *.exe
-            dist/Papiro-*-windows/
-      
+            Papiro-Setup.exe
+            Papiro-Portable.zip
+
       - name: Create Release
-        uses: softprops/action-gh-release@v1
-        if: startsWith(github.ref, 'refs/tags/')
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
         with:
           files: |
-            *.exe
-            dist/Papiro-*-windows/
+            Papiro-Setup.exe
+            Papiro-Portable.zip
+          generate_release_notes: true

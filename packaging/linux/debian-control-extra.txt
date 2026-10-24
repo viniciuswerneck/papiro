@@ -1,3 +1,4 @@
+Maintainer: Vinicius Werneck <vinicius@example.com>
 Homepage: https://github.com/viniciuswerneck/papiro
 Vcs-Git: https://github.com/viniciuswerneck/papiro.git
 Vcs-Browser: https://github.com/viniciuswerneck/papiro

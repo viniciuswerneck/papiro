@@ -181,6 +181,22 @@ void Editor::setLineNumbersVisible(bool visible)
     updateLineNumberAreaWidth();
 }
 
+void Editor::setWhitespaceVisible(bool visible)
+{
+    if (m_whitespaceVisible == visible)
+        return;
+    m_whitespaceVisible = visible;
+    viewport()->update();
+}
+
+void Editor::setCursorFreePositioning(bool enabled)
+{
+    if (m_cursorFreePositioning == enabled)
+        return;
+    m_cursorFreePositioning = enabled;
+    setCursorWidth(enabled ? 2 : 1); // Wider cursor for visibility in virtual space
+}
+
 void Editor::setBaseFont(const QFont &font)
 {
     setFont(font);
@@ -247,6 +263,68 @@ void Editor::deleteCurrentLine()
     cursor.endEditBlock();
     setTextCursor(cursor);
     recordMacroCommand("deleteLine");
+}
+
+void Editor::sortLines(int keyCount, bool ascending, Qt::CaseSensitivity caseSensitivity)
+{
+    QTextCursor cursor = textCursor();
+    const bool hasSelection = cursor.hasSelection();
+
+    int startLine, endLine;
+    if (hasSelection) {
+        const int startPos = qMin(cursor.selectionStart(), cursor.selectionEnd());
+        const int endPos = qMax(cursor.selectionStart(), cursor.selectionEnd());
+        const QTextBlock startBlock = document()->findBlock(startPos);
+        const QTextBlock endBlock = document()->findBlock(endPos);
+        startLine = startBlock.blockNumber();
+        endLine = endBlock.blockNumber();
+    } else {
+        startLine = 0;
+        endLine = document()->blockCount() - 1;
+    }
+
+    if (startLine > endLine)
+        return;
+
+    // Extract lines
+    QStringList lines;
+    for (int i = startLine; i <= endLine; ++i) {
+        const QTextBlock block = document()->findBlockByNumber(i);
+        if (block.isValid())
+            lines.append(block.text());
+    }
+
+    if (lines.isEmpty())
+        return;
+
+    // Sort
+    std::sort(lines.begin(), lines.end(), [keyCount, ascending, caseSensitivity](const QString &a, const QString &b) {
+        const QStringList partsA = a.split(QRegularExpression(QStringLiteral("\\s+")), Qt::SkipEmptyParts);
+        const QStringList partsB = b.split(QRegularExpression(QStringLiteral("\\s+")), Qt::SkipEmptyParts);
+
+        for (int k = 0; k < keyCount; ++k) {
+            const QString keyA = k < partsA.size() ? partsA[k] : QString();
+            const QString keyB = k < partsB.size() ? partsB[k] : QString();
+
+            if (keyA == keyB)
+                continue;
+
+            const int cmp = keyA.compare(keyB, caseSensitivity);
+            return ascending ? (cmp < 0) : (cmp > 0);
+        }
+        return false;
+    });
+
+    // Replace lines
+    cursor.beginEditBlock();
+    cursor.setPosition(document()->findBlockByNumber(startLine).position());
+    cursor.setPosition(document()->findBlockByNumber(endLine).position() +
+                       document()->findBlockByNumber(endLine).length(), QTextCursor::KeepAnchor);
+    cursor.removeSelectedText();
+    cursor.insertText(lines.join(QLatin1Char('\n')));
+    cursor.endEditBlock();
+
+    recordMacroCommand("sortLines");
 }
 
 void Editor::refreshFoldCache()
@@ -554,6 +632,12 @@ void Editor::keyPressEvent(QKeyEvent *event)
         }
     }
 
+    // Handle cursor free positioning (virtual space)
+    if (m_cursorFreePositioning && !isReadOnly()) {
+        if (handleVirtualSpaceNavigation(event))
+            return;
+    }
+
     QPlainTextEdit::keyPressEvent(event);
 }
 
@@ -679,6 +763,74 @@ bool Editor::handleAutoClose(QKeyEvent *event)
     setTextCursor(cursor);
     cursor.endEditBlock();
     return true;
+}
+
+bool Editor::handleVirtualSpaceNavigation(QKeyEvent *event)
+{
+    QTextCursor cursor = textCursor();
+    const int currentPos = cursor.position();
+    const QTextBlock currentBlock = cursor.block();
+    const int blockLength = currentBlock.length(); // includes paragraph separator
+    const int posInBlock = cursor.positionInBlock();
+    const bool atEndOfBlock = posInBlock >= blockLength - 1; // -1 for paragraph separator
+
+    switch (event->key()) {
+    case Qt::Key_Right:
+        if (atEndOfBlock && currentBlock.next().isValid()) {
+            // Move to next line, same virtual column
+            cursor.movePosition(QTextCursor::NextBlock);
+            cursor.movePosition(QTextCursor::StartOfBlock);
+            setTextCursor(cursor);
+            return true;
+        }
+        break;
+
+    case Qt::Key_Left:
+        if (posInBlock == 0 && currentBlock.previous().isValid()) {
+            // Move to previous line, end of line
+            cursor.movePosition(QTextCursor::PreviousBlock);
+            cursor.movePosition(QTextCursor::EndOfBlock);
+            setTextCursor(cursor);
+            return true;
+        }
+        break;
+
+    case Qt::Key_Up:
+    case Qt::Key_Down: {
+        const bool up = event->key() == Qt::Key_Up;
+        const QTextBlock targetBlock = up ? currentBlock.previous() : currentBlock.next();
+        if (targetBlock.isValid()) {
+            const int targetBlockLength = targetBlock.length() - 1; // -1 for paragraph separator
+            const int targetPos = qMin(posInBlock, targetBlockLength);
+            cursor.movePosition(up ? QTextCursor::PreviousBlock : QTextCursor::NextBlock);
+            cursor.movePosition(QTextCursor::StartOfBlock);
+            cursor.movePosition(QTextCursor::Right, QTextCursor::MoveAnchor, targetPos);
+            setTextCursor(cursor);
+            return true;
+        }
+        break;
+    }
+
+    case Qt::Key_Home:
+        if (posInBlock > 0) {
+            cursor.movePosition(QTextCursor::StartOfBlock);
+            setTextCursor(cursor);
+            return true;
+        }
+        break;
+
+    case Qt::Key_End:
+        if (!atEndOfBlock) {
+            cursor.movePosition(QTextCursor::EndOfBlock);
+            setTextCursor(cursor);
+            return true;
+        }
+        break;
+
+    default:
+        break;
+    }
+    return false;
 }
 
 int Editor::findMatchingBracket(int position) const
@@ -1202,18 +1354,85 @@ void Editor::leaveEvent(QEvent *event)
     QPlainTextEdit::leaveEvent(event);
 }
 
+void Editor::drawWhitespace(QPainter &painter)
+{
+    const QColor color = Theme::colors().whitespace;
+    if (!color.isValid())
+        return;
+
+    painter.setPen(color);
+    painter.setFont(font());
+
+    const QTextBlock firstBlock = firstVisibleBlock();
+    const QRectF viewportRect = viewport()->rect();
+
+    for (QTextBlock block = firstBlock; block.isValid(); block = block.next()) {
+        const QRectF blockRect = blockBoundingRect(block).translated(contentOffset());
+        if (blockRect.top() > viewportRect.bottom())
+            break;
+        if (blockRect.bottom() < viewportRect.top())
+            continue;
+
+        const QString text = block.text();
+        QTextLayout *layout = block.layout();
+        if (!layout)
+            continue;
+
+        const int lineCount = layout->lineCount();
+        for (int i = 0; i < lineCount; ++i) {
+            const QTextLine line = layout->lineAt(i);
+            const qreal lineY = blockRect.top() + line.y();
+            const qreal lineX = blockRect.left() + line.x();
+
+            // Draw spaces as middle dots
+            for (int pos = line.textStart(); pos < line.textStart() + line.textLength(); ++pos) {
+                if (pos >= text.length())
+                    break;
+                if (text.at(pos) == QLatin1Char(' ')) {
+                    const qreal charX = lineX + line.cursorToX(pos - line.textStart());
+                    painter.drawText(QPointF(charX, lineY + line.ascent()), QStringLiteral("·"));
+                }
+            }
+
+            // Draw tabs as arrows
+            for (int pos = line.textStart(); pos < line.textStart() + line.textLength(); ++pos) {
+                if (pos >= text.length())
+                    break;
+                if (text.at(pos) == QLatin1Char('\t')) {
+                    const qreal charX = lineX + line.cursorToX(pos - line.textStart());
+                    painter.drawText(QPointF(charX, lineY + line.ascent()), QStringLiteral("→"));
+                }
+            }
+        }
+
+        // Draw end-of-line marker (paragraph mark) at end of block (not last block)
+        if (block.next().isValid()) {
+            const qreal eolX = blockRect.left() + layout->lineAt(0).x() + layout->lineAt(0).naturalTextWidth();
+            const qreal eolY = blockRect.top() + layout->lineAt(0).ascent();
+            painter.drawText(QPointF(eolX, eolY), QStringLiteral("¶"));
+        }
+    }
+}
+
 void Editor::paintEvent(QPaintEvent *event)
 {
     QPlainTextEdit::paintEvent(event);
 
-    if (!m_blockSelection)
+    if (!m_blockSelection && !m_whitespaceVisible)
         return;
 
     QPainter painter(viewport());
-    QColor color = palette().color(QPalette::Highlight);
-    color.setAlpha(80);
-    for (const QRect &rectangle : blockSelectionRects())
-        painter.fillRect(rectangle, color);
+
+    if (m_blockSelection) {
+        QColor color = palette().color(QPalette::Highlight);
+        color.setAlpha(80);
+        for (const QRect &rectangle : blockSelectionRects())
+            painter.fillRect(rectangle, color);
+    }
+
+    if (m_whitespaceVisible) {
+        drawWhitespace(painter);
+    }
 }
 
 void Editor::updateLineNumberAreaWidth()
