@@ -5,6 +5,7 @@
 #include "core/Macro.h"
 #include "core/GitRepo.h"
 #include "ui/FindReplaceDialog.h"
+#include "ui/KeyboardShortcutsDialog.h"
 
 #include <QFont>
 #include <QMainWindow>
@@ -126,6 +127,8 @@ private slots:
     void gitDiff();
     void showGitDiff(const QVector<GitDiffFile>& diffs);
     void onGitDiffOpenFile(const QString& filePath, int line);
+    // Keyboard Shortcuts
+    void showKeyboardShortcuts();
 
 private:
     void createActions();
@@ -248,6 +251,7 @@ private:
     QAction *m_gitDiffAction = nullptr;
     QAction *m_gitToggleAction = nullptr;
     QAction *m_toggleGitDiffAction = nullptr;
+    QAction *m_keyboardShortcutsAction = nullptr;
 
     QStringList m_recentFiles;
     QStringList m_recentWorkspaces;

@@ -15,6 +15,7 @@
 #include "ui/MacroManagerDialog.h"
 #include "ui/Theme.h"
 #include "ui/PreferencesDialog.h"
+#include "ui/KeyboardShortcutsDialog.h"
 #include "ui/Theme.h"
 #include "ui/ToolsDialog.h"
 
@@ -214,7 +215,7 @@ void MainWindow::createActions()
     connect(openAction, &QAction::triggered, this, &MainWindow::openFiles);
 
     m_saveAction = makeAction(tr("&Save"), QKeySequence::Save,
-                              style()->standardIcon(QStyle::SP_DialogSaveButton));
+                              style()->standardIcon(QStyle::SP_DriveFDIcon));
     connect(m_saveAction, &QAction::triggered, this, &MainWindow::saveCurrentDocument);
 
     m_saveAsAction = makeAction(tr("Save &As..."), QKeySequence::SaveAs);
@@ -353,6 +354,10 @@ void MainWindow::createActions()
 
     auto *aboutQtAction = makeAction(tr("About &Qt"));
     connect(aboutQtAction, &QAction::triggered, qApp, &QApplication::aboutQt);
+
+    // Keyboard Shortcuts
+    m_keyboardShortcutsAction = makeAction(tr("&Keyboard Shortcuts..."), QKeySequence(Qt::CTRL | Qt::ALT | Qt::Key_K));
+    connect(m_keyboardShortcutsAction, &QAction::triggered, this, &MainWindow::showKeyboardShortcuts);
 
     // Macro actions
     m_recordMacroAction = makeAction(tr("Start &Recording"), QKeySequence(Qt::CTRL | Qt::Key_F9));
@@ -692,6 +697,8 @@ void MainWindow::createActions()
 
     // Help
     auto *helpMenu = menuBar()->addMenu(tr("&Help"));
+    helpMenu->addAction(m_keyboardShortcutsAction);
+    helpMenu->addSeparator();
     helpMenu->addAction(aboutAction);
     helpMenu->addAction(aboutQtAction);
 
@@ -3269,6 +3276,12 @@ void MainWindow::onGitDiffOpenFile(const QString& filePath, int line)
     if (auto *document = currentDocument()) {
         document->editor()->gotoLine(line);
     }
+}
+
+void MainWindow::showKeyboardShortcuts()
+{
+    KeyboardShortcutsDialog dialog(this);
+    dialog.exec();
 }
 
 } // namespace papiro

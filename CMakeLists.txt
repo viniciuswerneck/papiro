@@ -64,6 +64,7 @@ set(PAPIRO_APP_SOURCES
     src/ui/FindReplaceDialog.cpp
     src/ui/GitBlameView.cpp
     src/ui/GitDiffView.cpp
+    src/ui/KeyboardShortcutsDialog.cpp
     src/ui/LSPCompletionWidget.cpp
     src/ui/LSPHoverWidget.cpp
     src/ui/MacroManagerDialog.cpp
