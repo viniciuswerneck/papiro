@@ -72,6 +72,7 @@ set(PAPIRO_APP_SOURCES
     src/ui/LSPPreferencesDialog.cpp
     src/ui/MacroManagerDialog.cpp
     src/ui/PreferencesDialog.cpp
+    src/ui/PrintPreviewDialog.cpp
     src/ui/ToolsDialog.cpp
     src/ui/Theme.cpp
     src/ui/FileExplorerWidget.cpp
