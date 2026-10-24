@@ -19,6 +19,7 @@
 #include <QSettings>
 #include <QTabWidget>
 #include <QTemporaryDir>
+#include <QTextCursor>
 #include <QTimer>
 #include <QTreeWidget>
 #include <QtTest>
@@ -41,6 +42,8 @@ private slots:
     void preferencesDialogRoundTrip();
     void preferencesApplyToWindow();
     void themeActionPersists();
+    void largeFileOpensInReadOnlyPreview();
+    void markCleanClearsModifiedState();
 
 private:
     QTemporaryDir m_settingsDirectory;
@@ -482,6 +485,90 @@ void TestMainWindow::themeActionPersists()
     lightAction->trigger();
     QCOMPARE(Theme::mode(), Theme::Mode::Light);
     QCOMPARE(settings.value(QStringLiteral("ui/theme")).toString(), QStringLiteral("light"));
+}
+
+void TestMainWindow::largeFileOpensInReadOnlyPreview()
+{
+    qputenv("PAPIRO_LARGE_FILE_THRESHOLD_MB", "1");
+    QTemporaryDir directory;
+    QVERIFY(directory.isValid());
+
+    const QString bigPath = directory.filePath(QStringLiteral("grande.txt"));
+    {
+        QFile file(bigPath);
+        QVERIFY(file.open(QIODevice::WriteOnly));
+        const QByteArray chunk(1024 * 1024, 'x');
+        for (int i = 0; i < 9; ++i)
+            QCOMPARE(file.write(chunk), chunk.size());
+    }
+
+    Document document;
+    QString error;
+    QVERIFY2(document.loadFile(bigPath, &error), qPrintable(error));
+    QVERIFY(document.isLargeFile());
+    QVERIFY(document.editor()->isReadOnly());
+    QVERIFY(document.truncatedBytes() > 0);
+    QCOMPARE(document.largeFileSize(), QFileInfo(bigPath).size());
+    QVERIFY(!document.editor()->document()->isEmpty());
+
+    // Saving a truncated preview must not overwrite anything.
+    const QString copyPath = directory.filePath(QStringLiteral("copia.txt"));
+    QVERIFY(!document.saveFile(copyPath, &error));
+    QVERIFY(!error.isEmpty());
+    QVERIFY(!QFileInfo::exists(copyPath));
+
+    // A small file restores the normal editable mode.
+    const QString smallPath = directory.filePath(QStringLiteral("pequeno.txt"));
+    {
+        QFile file(smallPath);
+        QVERIFY(file.open(QIODevice::WriteOnly));
+        file.write("linha 1\nlinha 2\n");
+    }
+    QVERIFY2(document.loadFile(smallPath, &error), qPrintable(error));
+    QVERIFY(!document.isLargeFile());
+    QVERIFY(!document.editor()->isReadOnly());
+    QCOMPARE(document.truncatedBytes(), qint64(0));
+
+    qunsetenv("PAPIRO_LARGE_FILE_THRESHOLD_MB");
+}
+
+void TestMainWindow::markCleanClearsModifiedState()
+{
+    QTemporaryDir directory;
+    QVERIFY(directory.isValid());
+    const QString path = directory.filePath(QStringLiteral("limpo.txt"));
+    {
+        QFile file(path);
+        QVERIFY(file.open(QIODevice::WriteOnly));
+        file.write("conteudo\n");
+    }
+
+    MainWindow window;
+    window.show();
+    window.openFile(path);
+
+    auto *tabs = window.findChild<QTabWidget *>();
+    QVERIFY(tabs);
+    auto *document = qobject_cast<Document *>(tabs->currentWidget());
+    QVERIFY(document);
+
+    document->editor()->moveCursor(QTextCursor::End);
+    document->editor()->insertPlainText("alterado");
+    QVERIFY(document->isModified());
+
+    QAction *markClean = nullptr;
+    for (QAction *action : window.findChildren<QAction *>()) {
+        if (action->text().contains(QStringLiteral("Mark Document"))) {
+            markClean = action;
+            break;
+        }
+    }
+    QVERIFY(markClean);
+    QVERIFY(markClean->isEnabled());
+    markClean->trigger();
+    QVERIFY(!document->isModified());
+
+    QVERIFY(window.close());
 }
 
 QTEST_MAIN(TestMainWindow)

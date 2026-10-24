@@ -5,6 +5,8 @@
 
 #include <QWidget>
 
+class QLabel;
+
 namespace papiro {
 
 class Editor;
@@ -29,6 +31,12 @@ public:
     bool isModified() const;
     void setModified(bool modified);
 
+    /*! True when the file was opened in bounded, read-only preview mode. */
+    bool isLargeFile() const { return m_largeFile; }
+    qint64 largeFileSize() const { return m_largeFileSize; }
+    /*! Bytes not loaded into the editor (0 when the whole file fit). */
+    qint64 truncatedBytes() const { return m_truncatedBytes; }
+
     TextEncoding encoding() const { return m_encoding; }
     void setEncoding(TextEncoding encoding);
 
@@ -45,9 +53,13 @@ signals:
 
 private:
     Editor *m_editor;
+    QLabel *m_largeFileBanner = nullptr;
     QString m_path;
     TextEncoding m_encoding = TextEncoding::Utf8;
     LineEnding m_eol = LineEnding::Lf;
+    bool m_largeFile = false;
+    qint64 m_largeFileSize = 0;
+    qint64 m_truncatedBytes = 0;
 };
 
 } // namespace papiro

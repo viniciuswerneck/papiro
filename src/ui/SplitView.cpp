@@ -4,6 +4,7 @@
 
 #include <QScrollBar>
 #include <QTextCursor>
+#include <QTextDocument>
 
 namespace papiro {
 
@@ -157,16 +158,39 @@ void SplitView::syncScroll(QScrollBar *from, QScrollBar *to)
 
 void SplitView::syncCursor(Editor *from, Editor *to)
 {
-    const QTextCursor cursor = from->textCursor();
+    QTextDocument *document = to->document();
+    if (!document || from->document() != document)
+        return;
+
+    const QTextCursor source = from->textCursor();
+    const int maxPosition = qMax(0, document->characterCount() - 1);
+    const int position = qBound(0, source.position(), maxPosition);
+    const int anchor = qBound(0, source.anchor(), maxPosition);
+
+    QTextCursor cursor(document);
+    cursor.setPosition(anchor);
+    cursor.setPosition(position, QTextCursor::KeepAnchor);
     to->setTextCursor(cursor);
 }
 
 void SplitView::syncSelection(Editor *from, Editor *to)
 {
-    const QTextCursor cursor = from->textCursor();
-    if (cursor.hasSelection()) {
-        to->setTextCursor(cursor);
-    }
+    QTextDocument *document = to->document();
+    if (!document || from->document() != document)
+        return;
+
+    const QTextCursor source = from->textCursor();
+    if (!source.hasSelection())
+        return;
+
+    const int maxPosition = qMax(0, document->characterCount() - 1);
+    const int position = qBound(0, source.position(), maxPosition);
+    const int anchor = qBound(0, source.anchor(), maxPosition);
+
+    QTextCursor cursor(document);
+    cursor.setPosition(anchor);
+    cursor.setPosition(position, QTextCursor::KeepAnchor);
+    to->setTextCursor(cursor);
 }
 
 } // namespace papiro

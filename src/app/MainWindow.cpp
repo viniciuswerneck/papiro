@@ -58,6 +58,7 @@
 #include <QStatusBar>
 #include <QStyle>
 #include <QTabWidget>
+#include <QTabBar>
 #include <QTextBlock>
 #include <QTextBrowser>
 #include <QTextCursor>
@@ -65,6 +66,7 @@
 #include <QToolBar>
 #include <QTreeWidget>
 #include <QUrl>
+#include <QUrlQuery>
 #include <QTimer>
 #include <QSpinBox>
 #include <QFormLayout>
@@ -123,6 +125,8 @@ MainWindow::MainWindow(QWidget *parent)
     m_tabs->setMovable(true);
     m_tabs->setDocumentMode(true);
     setCentralWidget(m_tabs);
+    m_tabs->tabBar()->setAcceptDrops(true);
+    m_tabs->tabBar()->installEventFilter(this);
 
     connect(m_tabs, &QTabWidget::tabCloseRequested, this, &MainWindow::closeTab);
     connect(m_tabs, &QTabWidget::currentChanged, this, [this] {
@@ -254,6 +258,10 @@ void MainWindow::createActions()
 
     m_saveAllAction = makeAction(tr("Save A&ll"));
     connect(m_saveAllAction, &QAction::triggered, this, &MainWindow::saveAllDocuments);
+
+    m_markCleanAction = makeAction(tr("Mark Document &Clean"),
+                                   QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_M));
+    connect(m_markCleanAction, &QAction::triggered, this, &MainWindow::markDocumentClean);
 
     m_closeAction = makeAction(tr("&Close Tab"), QKeySequence::Close);
     connect(m_closeAction, &QAction::triggered, this, &MainWindow::closeCurrentTab);
@@ -570,6 +578,7 @@ void MainWindow::createActions()
     fileMenu->addAction(m_saveAction);
     fileMenu->addAction(m_saveAsAction);
     fileMenu->addAction(m_saveAllAction);
+    fileMenu->addAction(m_markCleanAction);
     fileMenu->addSeparator();
     fileMenu->addAction(m_printAction);
     fileMenu->addAction(m_printPreviewAction);
@@ -893,6 +902,11 @@ void MainWindow::openFile(const QString &path)
     updateRecentFiles(absolute);
     refreshTabTitle(document);
     document->editor()->setFocus();
+    if (document->isLargeFile()) {
+        statusBar()->showMessage(
+            tr("Large file opened in read-only preview mode (%1).")
+                .arg(document->displayName()), 8000);
+    }
     updateWindowTitle();
     updateStatus();
     updateActions();
@@ -989,6 +1003,18 @@ void MainWindow::closeCurrentTab()
     closeTab(m_tabs->currentIndex());
 }
 
+void MainWindow::markDocumentClean()
+{
+    Document *document = currentDocument();
+    if (!document)
+        return;
+
+    QTextDocument *textDocument = document->editor()->document();
+    textDocument->clearUndoRedoStacks();
+    document->setModified(false);
+    statusBar()->showMessage(tr("Document marked as clean."), 3000);
+}
+
 void MainWindow::closeTab(int index)
 {
     auto *document = qobject_cast<Document *>(m_tabs->widget(index));
@@ -1037,6 +1063,42 @@ void MainWindow::dropEvent(QDropEvent *event)
             openFile(url.toLocalFile());
     }
     event->acceptProposedAction();
+}
+
+bool MainWindow::eventFilter(QObject *watched, QEvent *event)
+{
+    if (watched != m_tabs->tabBar())
+        return QMainWindow::eventFilter(watched, event);
+
+    // Dragging a text selection onto a tab moves it into that document.
+    if (event->type() == QEvent::DragEnter || event->type() == QEvent::DragMove) {
+        auto *drop = static_cast<QDropEvent *>(event);
+        if (drop->mimeData()->hasText()) {
+            drop->acceptProposedAction();
+            return true;
+        }
+        return false;
+    }
+
+    if (event->type() == QEvent::Drop) {
+        auto *drop = static_cast<QDropEvent *>(event);
+        if (!drop->mimeData()->hasText())
+            return false;
+
+        const int index = m_tabs->tabBar()->tabAt(drop->position().toPoint());
+        auto *document = (index >= 0)
+            ? qobject_cast<Document *>(m_tabs->widget(index)) : nullptr;
+        if (!document)
+            return false;
+
+        m_tabs->setCurrentIndex(index);
+        document->editor()->insertPlainText(drop->mimeData()->text());
+        document->editor()->setFocus();
+        drop->acceptProposedAction();
+        return true;
+    }
+
+    return QMainWindow::eventFilter(watched, event);
 }
 
 // ---------------------------------------------------------------------------
@@ -1096,6 +1158,7 @@ void MainWindow::updateActions()
     m_saveAction->setEnabled(hasDocument);
     m_saveAsAction->setEnabled(hasDocument);
     m_saveAllAction->setEnabled(hasDocument);
+    m_markCleanAction->setEnabled(hasDocument);
     m_closeAction->setEnabled(hasDocument);
     m_findAction->setEnabled(hasDocument);
     m_findNextAction->setEnabled(hasDocument);
@@ -2638,21 +2701,23 @@ void MainWindow::createDockWidgets()
 
     // Handle anchor clicks (file:line:col links)
     connect(m_outputView, &QTextBrowser::anchorClicked, this, [this](const QUrl &url) {
-        if (url.scheme() == "file") {
-            const QString path = url.path();
-            const QStringList parts = path.split(QLatin1Char(':'));
-            if (parts.size() >= 2) {
-                const QString filePath = parts[0];
-                bool ok = false;
-                const int line = parts[1].toInt(&ok);
-                const int column = (parts.size() >= 3 && ok) ? parts[2].toInt(&ok) : 1;
-                if (ok && QFileInfo(filePath).isFile()) {
-                    openFile(filePath);
-                    if (auto *document = currentDocument()) {
-                        document->editor()->gotoLine(line, column);
-                    }
-                }
-            }
+        if (url.scheme() != QLatin1String("file"))
+            return;
+
+        const QString filePath = url.toLocalFile();
+        if (filePath.isEmpty() || !QFileInfo(filePath).isFile())
+            return;
+
+        const QUrlQuery query(url);
+        bool ok = false;
+        const int line = query.queryItemValue(QStringLiteral("line")).toInt(&ok);
+        const int column = query.queryItemValue(QStringLiteral("column")).toInt();
+
+        openFile(filePath);
+        if (auto *document = currentDocument()) {
+            if (ok && line > 0)
+                document->editor()->gotoLine(line, column > 0 ? column : 1);
+            document->editor()->setFocus();
         }
     });
 
@@ -3041,10 +3106,19 @@ void MainWindow::appendOutputWithErrorParsing(const QString &output,
                 fullPath = QDir(workingDirectory).absoluteFilePath(filePath);
             }
 
-            // Create HTML with anchor link
+            // Create an HTML anchor. The path is encoded as a proper local-file
+            // URL and the position travels in the query string so paths with
+            // spaces, colons or non-ASCII characters survive the round trip.
+            QUrl link = QUrl::fromLocalFile(fullPath);
+            QUrlQuery query;
+            if (!lineStr.isEmpty())
+                query.addQueryItem(QStringLiteral("line"), lineStr);
+            if (!columnStr.isEmpty())
+                query.addQueryItem(QStringLiteral("column"), columnStr);
+            link.setQuery(query);
             QString html = line.toHtmlEscaped();
-            html = QString("<a href=\"file://%1:%2:%3\" style=\"color: #0066cc; text-decoration: underline;\">%4</a>")
-                       .arg(QUrl::toPercentEncoding(fullPath), lineStr, columnStr, html);
+            html = QString("<a href=\"%1\" style=\"color: #0066cc; text-decoration: underline;\">%2</a>")
+                       .arg(link.toString(QUrl::FullyEncoded), html);
             m_outputView->append(html);
         } else {
             m_outputView->append(line);

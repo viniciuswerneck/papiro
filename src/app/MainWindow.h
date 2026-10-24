@@ -50,12 +50,14 @@ protected:
     void closeEvent(QCloseEvent *event) override;
     void dragEnterEvent(QDragEnterEvent *event) override;
     void dropEvent(QDropEvent *event) override;
+    bool eventFilter(QObject *watched, QEvent *event) override;
 
 private slots:
     void openFiles();
     void saveCurrentDocument();
     void saveCurrentDocumentAs();
     void saveAllDocuments();
+    void markDocumentClean();
     void closeCurrentTab();
     void closeTab(int index);
     void updateWindowTitle();
@@ -196,6 +198,7 @@ private:
     QAction *m_saveAction = nullptr;
     QAction *m_saveAsAction = nullptr;
     QAction *m_saveAllAction = nullptr;
+    QAction *m_markCleanAction = nullptr;
     QAction *m_closeAction = nullptr;
     QAction *m_undoAction = nullptr;
     QAction *m_redoAction = nullptr;
