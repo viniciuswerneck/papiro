@@ -11,14 +11,14 @@
 
 > A focused, cross-platform text editor built with **C++17 / Qt 6.8**.
 >
-> **Papiro** é um editor de texto avançado estilo *programmer's editor* (como TextPad, Notepad++, EditPlus), feito para desenvolvedores e usuários avançados que precisam de:
-> - Edição rápida de código e texto com *syntax highlighting* para 9 linguagens
-> - Manipulação de arquivos grandes (GBs) sem travar
-> - Ferramentas integradas: macros, diff, busca em arquivos, ferramentas externas
-> - Interface limpa, leve e personalizável (temas claro/escuro, fonte, layout)
-> - Multiplataforma: Linux, Windows, futuro macOS
+> **Papiro** is an advanced *programmer's editor* (like TextPad, Notepad++, EditPlus), built for developers and power users who need:
+> - Fast code and text editing with syntax highlighting for 9 languages
+> - Large file handling (GBs) without freezing
+> - Integrated tools: macros, diff, file search, external tools
+> - Clean, lightweight, customizable interface (light/dark themes, font, layout)
+> - Cross-platform: Linux, Windows, future macOS
 >
-> Ideal para: programação, scripts, logs, configuração, markdown, CSV, qualquer texto.
+> Ideal for: programming, scripts, logs, configuration, markdown, CSV, any text.
 
 ## 📥 Installation
 

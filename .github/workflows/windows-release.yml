@@ -12,7 +12,9 @@ permissions:
 jobs:
   build:
     runs-on: windows-2022
-    shell: pwsh
+    defaults:
+      run:
+        shell: pwsh
 
     steps:
       - name: Checkout
@@ -34,7 +36,7 @@ jobs:
 
       - name: Install QtIFW 4.6
         run: |
-          $qtifwUrl = "https://download.qt.io/official_releases/qt-installer-framework/4.6.0/qt-installer-framework-windows-x86_64-4.6.0.exe"
+          $qtifwUrl = "https://download.qt.io/official_releases/qt-installer-framework/4.6.1/QtInstallerFramework-windows-x64-4.6.1.exe"
           $qtifwInstaller = "qtifw-installer.exe"
           $qtifwScript = "$(Get-Location)\.github\scripts\qtifw-install.qs"
           $qtifwDir = "C:\Qt\QtIFW-4.6"
