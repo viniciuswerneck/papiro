@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.4.1] - 2026-10-25
+### Added
+- Tab close buttons (X) with custom icon
+- Full keyboard shortcuts dialog translations (PT/ES/EN)
+- App icons installed to hicolor theme (16-256px + SVG)
+
+### Fixed
+- Linux packaging: icon installation to `/usr/share/icons/hicolor/`
+
 ## [0.4.0] - 2026-10-24
 ### Added
 - Fluent Design interface: design tokens (`resources/themes/fluent.json`) plus stylesheet (`fluent.qss`)

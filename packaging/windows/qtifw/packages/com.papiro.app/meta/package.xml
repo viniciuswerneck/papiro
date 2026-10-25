@@ -2,7 +2,7 @@
 <Package>
   <DisplayName>Papiro Text Editor</DisplayName>
   <Description>Core application files</Description>
-  <Version>0.4.0</Version>
+  <Version>0.4.1</Version>
   <ReleaseDate>2026-10-23</ReleaseDate>
   <Default>true</Default>
   <Script>installscript.qs</Script>

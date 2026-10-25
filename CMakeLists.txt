@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.21)
 
 project(Papiro
-    VERSION 0.4.0
+    VERSION 0.4.1
     DESCRIPTION "A focused, cross-platform text editor"
     LANGUAGES CXX
 )
