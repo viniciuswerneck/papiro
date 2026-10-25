@@ -100,9 +100,169 @@
     </message>
 </context>
 <context>
+    <name>papiro::DiffDialog</name>
+    <message>
+        <location filename="../src/ui/DiffDialog.cpp" line="169"/>
+        <source>Diff Viewer</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/DiffDialog.cpp" line="189"/>
+        <location filename="../src/ui/DiffDialog.cpp" line="193"/>
+        <source>Error</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/DiffDialog.cpp" line="189"/>
+        <location filename="../src/ui/DiffDialog.cpp" line="193"/>
+        <source>Cannot open file: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/DiffDialog.cpp" line="234"/>
+        <source>Old file</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/DiffDialog.cpp" line="236"/>
+        <source>Old:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/DiffDialog.cpp" line="240"/>
+        <location filename="../src/ui/DiffDialog.cpp" line="251"/>
+        <source>...</source>
+        <translation type="unfinished">...</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/DiffDialog.cpp" line="241"/>
+        <source>Browse for old file</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/DiffDialog.cpp" line="245"/>
+        <source>New file</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/DiffDialog.cpp" line="247"/>
+        <source>New:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/DiffDialog.cpp" line="252"/>
+        <source>Browse for new file</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/DiffDialog.cpp" line="258"/>
+        <source>Side by Side</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/DiffDialog.cpp" line="259"/>
+        <source>Unified</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/DiffDialog.cpp" line="260"/>
+        <source>Mode:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/DiffDialog.cpp" line="265"/>
+        <source>Swap</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/DiffDialog.cpp" line="266"/>
+        <source>Swap left/right files</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/DiffDialog.cpp" line="270"/>
+        <source>Prev</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/DiffDialog.cpp" line="275"/>
+        <source>Next</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/DiffDialog.cpp" line="383"/>
+        <source>Files are identical</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/DiffDialog.cpp" line="496"/>
+        <source>&amp;Copy</source>
+        <translation type="unfinished">&amp;Copy</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/DiffDialog.cpp" line="500"/>
+        <source>Select &amp;All</source>
+        <translation type="unfinished">Select &amp;All</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/DiffDialog.cpp" line="872"/>
+        <source>Open Old File</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/DiffDialog.cpp" line="873"/>
+        <location filename="../src/ui/DiffDialog.cpp" line="883"/>
+        <source>All Files (*)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/DiffDialog.cpp" line="882"/>
+        <source>Open New File</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>papiro::Document</name>
     <message>
-        <location filename="../src/app/Document.cpp" line="78"/>
+        <location filename="../src/app/Document.cpp" line="118"/>
+        <source>Large file (%1): showing the first %2 in read-only mode. Editing and syntax highlighting are disabled; saving is blocked.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/app/Document.cpp" line="159"/>
+        <location filename="../src/app/Document.cpp" line="225"/>
+        <source>Failed to open file: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/app/Document.cpp" line="166"/>
+        <location filename="../src/app/Document.cpp" line="232"/>
+        <source>Offset beyond end of file</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/app/Document.cpp" line="177"/>
+        <location filename="../src/app/Document.cpp" line="248"/>
+        <source>Failed to map file: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/app/Document.cpp" line="207"/>
+        <source>Large file (%1): showing %2 of %3 in read-only mode. Editing and syntax highlighting are disabled; saving is blocked.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/app/Document.cpp" line="265"/>
+        <source>Large file (%1): showing bytes %2–%3 (%4) in read-only mode. Editing and syntax highlighting are disabled; saving is blocked.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/app/Document.cpp" line="281"/>
+        <source>This is a large file opened in read-only preview mode. Saving it would truncate the file, so the operation was blocked.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/app/Document.cpp" line="313"/>
         <source>Untitled</source>
         <translation>Untitled</translation>
     </message>
@@ -110,107 +270,137 @@
 <context>
     <name>papiro::Editor</name>
     <message>
-        <location filename="../src/editor/Editor.cpp" line="708"/>
+        <location filename="../src/editor/Editor.cpp" line="1180"/>
         <source>Spelling</source>
         <translation>Spelling</translation>
     </message>
     <message>
-        <location filename="../src/editor/Editor.cpp" line="711"/>
+        <location filename="../src/editor/Editor.cpp" line="1183"/>
         <source>(no suggestions)</source>
         <translation>(no suggestions)</translation>
     </message>
     <message>
-        <location filename="../src/editor/Editor.cpp" line="724"/>
+        <location filename="../src/editor/Editor.cpp" line="1196"/>
         <source>Add to dictionary</source>
         <translation>Add to dictionary</translation>
     </message>
     <message>
-        <location filename="../src/editor/Editor.cpp" line="732"/>
+        <location filename="../src/editor/Editor.cpp" line="1204"/>
         <source>&amp;Undo</source>
         <translation>&amp;Undo</translation>
     </message>
     <message>
-        <location filename="../src/editor/Editor.cpp" line="737"/>
+        <location filename="../src/editor/Editor.cpp" line="1209"/>
         <source>&amp;Redo</source>
         <translation>&amp;Redo</translation>
     </message>
     <message>
-        <location filename="../src/editor/Editor.cpp" line="744"/>
+        <location filename="../src/editor/Editor.cpp" line="1216"/>
         <source>Cu&amp;t</source>
         <translation>Cu&amp;t</translation>
     </message>
     <message>
-        <location filename="../src/editor/Editor.cpp" line="749"/>
+        <location filename="../src/editor/Editor.cpp" line="1221"/>
         <source>&amp;Copy</source>
         <translation>&amp;Copy</translation>
     </message>
     <message>
-        <location filename="../src/editor/Editor.cpp" line="754"/>
+        <location filename="../src/editor/Editor.cpp" line="1226"/>
         <source>&amp;Paste</source>
         <translation>&amp;Paste</translation>
     </message>
     <message>
-        <location filename="../src/editor/Editor.cpp" line="759"/>
+        <location filename="../src/editor/Editor.cpp" line="1231"/>
         <source>&amp;Delete</source>
         <translation>&amp;Delete</translation>
     </message>
     <message>
-        <location filename="../src/editor/Editor.cpp" line="774"/>
+        <location filename="../src/editor/Editor.cpp" line="1246"/>
         <source>Select &amp;All</source>
         <translation>Select &amp;All</translation>
     </message>
     <message>
-        <location filename="../src/editor/Editor.cpp" line="780"/>
+        <location filename="../src/editor/Editor.cpp" line="1252"/>
         <source>D&amp;uplicate Line</source>
         <translation>D&amp;uplicate Line</translation>
     </message>
     <message>
-        <location filename="../src/editor/Editor.cpp" line="785"/>
+        <location filename="../src/editor/Editor.cpp" line="1257"/>
         <source>Delete &amp;Line</source>
         <translation>Delete &amp;Line</translation>
     </message>
     <message>
-        <location filename="../src/editor/Editor.cpp" line="790"/>
+        <location filename="../src/editor/Editor.cpp" line="1262"/>
         <source>Toggle &amp;Fold</source>
         <translation>Toggle &amp;Fold</translation>
     </message>
     <message>
-        <location filename="../src/editor/Editor.cpp" line="795"/>
+        <location filename="../src/editor/Editor.cpp" line="1267"/>
         <source>&amp;Column Selection Mode</source>
         <translation>&amp;Column Selection Mode</translation>
     </message>
     <message>
-        <location filename="../src/editor/Editor.cpp" line="800"/>
+        <location filename="../src/editor/Editor.cpp" line="1272"/>
         <source>&amp;Find / Replace...</source>
         <translation>&amp;Find / Replace...</translation>
     </message>
     <message>
-        <location filename="../src/editor/Editor.cpp" line="804"/>
+        <location filename="../src/editor/Editor.cpp" line="1276"/>
         <source>&amp;Go to Line...</source>
         <translation>&amp;Go to Line...</translation>
+    </message>
+    <message>
+        <location filename="../src/editor/Editor.cpp" line="1913"/>
+        <source>Rename Symbol</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/editor/Editor.cpp" line="1914"/>
+        <source>New name:</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
     <name>papiro::FileExplorerWidget</name>
     <message>
-        <location filename="../src/ui/FileExplorerWidget.cpp" line="28"/>
+        <location filename="../src/ui/FileExplorerWidget.cpp" line="232"/>
         <source>Filter files...</source>
         <translation>Filter files...</translation>
     </message>
     <message>
-        <location filename="../src/ui/FileExplorerWidget.cpp" line="101"/>
+        <location filename="../src/ui/FileExplorerWidget.cpp" line="341"/>
         <source>Open</source>
         <translation>Open</translation>
     </message>
     <message>
-        <location filename="../src/ui/FileExplorerWidget.cpp" line="106"/>
+        <location filename="../src/ui/FileExplorerWidget.cpp" line="346"/>
         <source>Copy Path</source>
         <translation>Copy Path</translation>
     </message>
     <message>
-        <location filename="../src/ui/FileExplorerWidget.cpp" line="110"/>
+        <location filename="../src/ui/FileExplorerWidget.cpp" line="350"/>
         <source>Find in &amp;Folder...</source>
         <translation>Find in &amp;Folder...</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/FileExplorerWidget.cpp" line="372"/>
+        <source>Unstage</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/FileExplorerWidget.cpp" line="377"/>
+        <source>Stage</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/FileExplorerWidget.cpp" line="383"/>
+        <source>Stage (Add)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/FileExplorerWidget.cpp" line="389"/>
+        <source>Diff</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -242,109 +432,1252 @@
     </message>
     <message>
         <location filename="../src/ui/FindReplaceDialog.cpp" line="38"/>
+        <source>&amp;Multiline</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/FindReplaceDialog.cpp" line="40"/>
+        <source>Allow ^ and $ to match start/end of each line</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/FindReplaceDialog.cpp" line="41"/>
         <source>&amp;Wrap around</source>
         <translation>&amp;Wrap around</translation>
     </message>
     <message>
-        <location filename="../src/ui/FindReplaceDialog.cpp" line="42"/>
+        <location filename="../src/ui/FindReplaceDialog.cpp" line="45"/>
         <source>...</source>
         <translation>...</translation>
     </message>
     <message>
-        <location filename="../src/ui/FindReplaceDialog.cpp" line="43"/>
+        <location filename="../src/ui/FindReplaceDialog.cpp" line="46"/>
         <source>Choose folder</source>
         <translation>Choose folder</translation>
     </message>
     <message>
-        <location filename="../src/ui/FindReplaceDialog.cpp" line="46"/>
+        <location filename="../src/ui/FindReplaceDialog.cpp" line="49"/>
         <source>&amp;Find:</source>
         <translation>&amp;Find:</translation>
     </message>
     <message>
-        <location filename="../src/ui/FindReplaceDialog.cpp" line="48"/>
+        <location filename="../src/ui/FindReplaceDialog.cpp" line="51"/>
         <source>Re&amp;place:</source>
         <translation>Re&amp;place:</translation>
     </message>
     <message>
-        <location filename="../src/ui/FindReplaceDialog.cpp" line="50"/>
+        <location filename="../src/ui/FindReplaceDialog.cpp" line="53"/>
         <source>&amp;Folder:</source>
         <translation>&amp;Folder:</translation>
     </message>
     <message>
-        <location filename="../src/ui/FindReplaceDialog.cpp" line="54"/>
+        <location filename="../src/ui/FindReplaceDialog.cpp" line="57"/>
         <source>Options</source>
         <translation>Options</translation>
     </message>
     <message>
-        <location filename="../src/ui/FindReplaceDialog.cpp" line="61"/>
+        <location filename="../src/ui/FindReplaceDialog.cpp" line="65"/>
         <source>Find &amp;Next</source>
         <translation>Find &amp;Next</translation>
     </message>
     <message>
-        <location filename="../src/ui/FindReplaceDialog.cpp" line="63"/>
+        <location filename="../src/ui/FindReplaceDialog.cpp" line="67"/>
         <source>Find &amp;Previous</source>
         <translation>Find &amp;Previous</translation>
     </message>
     <message>
-        <location filename="../src/ui/FindReplaceDialog.cpp" line="64"/>
+        <location filename="../src/ui/FindReplaceDialog.cpp" line="68"/>
         <source>Find &amp;All</source>
         <translation>Find &amp;All</translation>
     </message>
     <message>
-        <location filename="../src/ui/FindReplaceDialog.cpp" line="66"/>
+        <location filename="../src/ui/FindReplaceDialog.cpp" line="70"/>
         <source>Find in F&amp;older</source>
         <translation>Find in F&amp;older</translation>
     </message>
     <message>
-        <location filename="../src/ui/FindReplaceDialog.cpp" line="68"/>
+        <location filename="../src/ui/FindReplaceDialog.cpp" line="72"/>
         <source>&amp;Replace</source>
         <translation>&amp;Replace</translation>
     </message>
     <message>
-        <location filename="../src/ui/FindReplaceDialog.cpp" line="69"/>
+        <location filename="../src/ui/FindReplaceDialog.cpp" line="73"/>
         <source>Replace &amp;All</source>
         <translation>Replace &amp;All</translation>
     </message>
     <message>
-        <location filename="../src/ui/FindReplaceDialog.cpp" line="70"/>
+        <location filename="../src/ui/FindReplaceDialog.cpp" line="74"/>
         <source>Close</source>
         <translation>Close</translation>
     </message>
     <message>
-        <location filename="../src/ui/FindReplaceDialog.cpp" line="96"/>
+        <location filename="../src/ui/FindReplaceDialog.cpp" line="100"/>
         <source>Choose Folder</source>
         <translation>Choose Folder</translation>
     </message>
     <message>
-        <location filename="../src/ui/FindReplaceDialog.cpp" line="162"/>
+        <location filename="../src/ui/FindReplaceDialog.cpp" line="168"/>
         <source>Find in Folder</source>
         <translation>Find in Folder</translation>
     </message>
     <message>
-        <location filename="../src/ui/FindReplaceDialog.cpp" line="163"/>
+        <location filename="../src/ui/FindReplaceDialog.cpp" line="169"/>
         <source>Choose a valid folder to search.</source>
         <translation>Choose a valid folder to search.</translation>
     </message>
 </context>
 <context>
+    <name>papiro::FluentTitleBar</name>
+    <message>
+        <location filename="../src/ui/FluentTitleBar.cpp" line="69"/>
+        <source>Minimize</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/FluentTitleBar.cpp" line="79"/>
+        <location filename="../src/ui/FluentTitleBar.cpp" line="187"/>
+        <source>Maximize</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/FluentTitleBar.cpp" line="89"/>
+        <source>Close</source>
+        <translation type="unfinished">Close</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/FluentTitleBar.cpp" line="184"/>
+        <source>Restore</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>papiro::GitBlameView</name>
+    <message>
+        <location filename="../src/ui/GitBlameView.cpp" line="151"/>
+        <source>just now</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/GitBlameView.cpp" line="153"/>
+        <source>%1m ago</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/GitBlameView.cpp" line="155"/>
+        <source>%1h ago</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/GitBlameView.cpp" line="157"/>
+        <source>%1d ago</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/GitBlameView.cpp" line="159"/>
+        <source>%1w ago</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/GitBlameView.cpp" line="161"/>
+        <source>%1mo ago</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/GitBlameView.cpp" line="162"/>
+        <source>%1y ago</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>papiro::GitDiffView</name>
+    <message>
+        <location filename="../src/ui/GitDiffView.cpp" line="65"/>
+        <location filename="../src/ui/GitDiffView.cpp" line="71"/>
+        <location filename="../src/ui/GitDiffView.cpp" line="363"/>
+        <source>Side-by-side</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/GitDiffView.cpp" line="73"/>
+        <location filename="../src/ui/GitDiffView.cpp" line="373"/>
+        <source>Unified</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/GitDiffView.cpp" line="83"/>
+        <source>Previous Change (Shift+F7)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/GitDiffView.cpp" line="89"/>
+        <source>Next Change (F7)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/GitDiffView.cpp" line="322"/>
+        <location filename="../src/ui/GitDiffView.cpp" line="323"/>
+        <location filename="../src/ui/GitDiffView.cpp" line="324"/>
+        <source>No changes to display.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/GitDiffView.cpp" line="418"/>
+        <location filename="../src/ui/GitDiffView.cpp" line="419"/>
+        <location filename="../src/ui/GitDiffView.cpp" line="499"/>
+        <source>Binary file - cannot display diff.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/GitDiffView.cpp" line="939"/>
+        <source>&amp;Copy</source>
+        <translation type="unfinished">&amp;Copy</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/GitDiffView.cpp" line="951"/>
+        <source>Open File at &amp;Line</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>papiro::GitFileSystemModel</name>
+    <message>
+        <location filename="../src/ui/FileExplorerWidget.cpp" line="159"/>
+        <source>Staged: %1
+</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/FileExplorerWidget.cpp" line="162"/>
+        <source>Unstaged: %1
+</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/FileExplorerWidget.cpp" line="165"/>
+        <source>Renamed from: %1
+</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/FileExplorerWidget.cpp" line="170"/>
+        <source>Git Status:
+%1</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>papiro::JavaRunner</name>
+    <message>
+        <location filename="../src/core/JavaRunner.cpp" line="197"/>
+        <source>Java runtime (java) was not found in JAVA_HOME or PATH.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/core/JavaRunner.cpp" line="202"/>
+        <source>Java compiler (javac) was not found. A JDK is required, not just a JRE.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/core/JavaRunner.cpp" line="213"/>
+        <source>Java runtime at %1 could not be started: %2</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/core/JavaRunner.cpp" line="293"/>
+        <source>Source file not found: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/core/JavaRunner.cpp" line="299"/>
+        <source>Could not read source file: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/core/JavaRunner.cpp" line="307"/>
+        <source>Java toolchain unavailable: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/core/JavaRunner.cpp" line="313"/>
+        <source>Could not create a temporary directory for the Java build.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/core/JavaRunner.cpp" line="376"/>
+        <source>Compilation failed (compiler crashed)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/core/JavaRunner.cpp" line="377"/>
+        <source>Compilation failed (exit code %1)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/core/JavaRunner.cpp" line="388"/>
+        <source>Program crashed</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/core/JavaRunner.cpp" line="389"/>
+        <source>Finished with exit code %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/core/JavaRunner.cpp" line="402"/>
+        <source>Failed to start %1: %2</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/core/JavaRunner.cpp" line="423"/>
+        <source>Cancelled</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>papiro::KeyboardShortcutsDialog</name>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="244"/>
+        <source>Keyboard Shortcuts</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="265"/>
+        <source>Search shortcuts... (action name or key combination)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="310"/>
+        <source>&amp;Copy</source>
+        <translation type="unfinished">&amp;Copy</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="312"/>
+        <source>Copy selected shortcut (Ctrl+C)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="318"/>
+        <source>Export &amp;CSV</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="323"/>
+        <source>Export &amp;Markdown</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="330"/>
+        <source>Close</source>
+        <translation type="unfinished">Close</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="461"/>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="462"/>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="463"/>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="464"/>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="465"/>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="466"/>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="467"/>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="468"/>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="469"/>
+        <source>File</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="461"/>
+        <source>New</source>
+        <translation type="unfinished">New</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="461"/>
+        <source>Create a new document</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="462"/>
+        <source>Open...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="462"/>
+        <source>Open an existing file</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="463"/>
+        <source>Save</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="463"/>
+        <source>Save the current document</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="464"/>
+        <source>Save As...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="464"/>
+        <source>Save the current document with a new name</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="465"/>
+        <source>Save All</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="465"/>
+        <source>Save all open documents</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="466"/>
+        <source>Close Tab</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="466"/>
+        <source>Close the current tab</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="467"/>
+        <source>Print...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="467"/>
+        <source>Print the current document</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="468"/>
+        <source>Print Preview...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="468"/>
+        <source>Preview the document before printing</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="469"/>
+        <source>Exit</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="469"/>
+        <source>Quit the application</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="472"/>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="473"/>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="474"/>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="475"/>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="476"/>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="477"/>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="478"/>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="479"/>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="480"/>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="481"/>
+        <source>Edit</source>
+        <translation type="unfinished">Edit</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="472"/>
+        <source>Undo</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="472"/>
+        <source>Undo the last action</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="473"/>
+        <source>Redo</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="473"/>
+        <source>Redo the last undone action</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="474"/>
+        <source>Cut</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="474"/>
+        <source>Cut the selection to clipboard</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="475"/>
+        <source>Copy</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="475"/>
+        <source>Copy the selection to clipboard</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="476"/>
+        <source>Paste</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="476"/>
+        <source>Paste from clipboard</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="477"/>
+        <source>Select All</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="477"/>
+        <source>Select the entire document</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="478"/>
+        <source>Duplicate Line</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="478"/>
+        <source>Duplicate the current line</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="479"/>
+        <source>Delete Line</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="479"/>
+        <source>Delete the current line</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="480"/>
+        <source>Go to Line...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="480"/>
+        <source>Navigate to a specific line number</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="481"/>
+        <source>Preferences...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="481"/>
+        <source>Open preferences dialog</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="484"/>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="485"/>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="486"/>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="487"/>
+        <source>Search</source>
+        <translation type="unfinished">Search</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="484"/>
+        <source>Find / Replace...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="484"/>
+        <source>Open find and replace dialog</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="485"/>
+        <source>Find Next</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="485"/>
+        <source>Find the next occurrence</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="486"/>
+        <source>Find Previous</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="486"/>
+        <source>Find the previous occurrence</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="487"/>
+        <source>Replace...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="487"/>
+        <source>Open replace dialog</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="490"/>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="491"/>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="492"/>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="493"/>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="494"/>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="495"/>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="496"/>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="497"/>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="498"/>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="499"/>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="500"/>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="501"/>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="502"/>
+        <source>View</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="490"/>
+        <source>Word Wrap</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="490"/>
+        <source>Toggle word wrapping</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="491"/>
+        <source>Line Numbers</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="491"/>
+        <source>Toggle line number display</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="492"/>
+        <source>Spell Check</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="492"/>
+        <source>Toggle spell checking</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="493"/>
+        <source>Zoom In</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="493"/>
+        <source>Increase font size</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="494"/>
+        <source>Zoom Out</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="494"/>
+        <source>Decrease font size</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="495"/>
+        <source>Reset Zoom</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="495"/>
+        <source>Reset font size to default</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="496"/>
+        <source>Font...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="496"/>
+        <source>Change editor font</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="497"/>
+        <source>File Explorer</source>
+        <translation type="unfinished">File Explorer</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="497"/>
+        <source>Toggle file explorer panel</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="498"/>
+        <source>Clip Library</source>
+        <translation type="unfinished">Clip Library</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="498"/>
+        <source>Toggle clip library panel</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="499"/>
+        <source>Output</source>
+        <translation type="unfinished">Output</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="499"/>
+        <source>Toggle output panel</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="500"/>
+        <source>Search Results</source>
+        <translation type="unfinished">Search Results</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="500"/>
+        <source>Toggle search results panel</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="501"/>
+        <source>Language</source>
+        <translation type="unfinished">Language</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="501"/>
+        <source>Select document language</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="502"/>
+        <source>Theme</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="502"/>
+        <source>Select application theme</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="505"/>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="506"/>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="507"/>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="508"/>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="509"/>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="510"/>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="511"/>
+        <source>Git</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="505"/>
+        <source>Commit...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="505"/>
+        <source>Commit staged changes</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="506"/>
+        <source>Push</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="506"/>
+        <source>Push commits to remote</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="507"/>
+        <source>Pull</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="507"/>
+        <source>Pull changes from remote</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="508"/>
+        <source>Branch...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="508"/>
+        <source>Create or switch branches</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="509"/>
+        <source>Log...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="509"/>
+        <source>View commit history</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="510"/>
+        <source>Blame</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="510"/>
+        <source>Show git blame annotations</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="511"/>
+        <source>Diff</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="511"/>
+        <source>Show diff view</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="514"/>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="515"/>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="516"/>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="517"/>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="519"/>
+        <source>Macros</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="514"/>
+        <source>Start Recording</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="514"/>
+        <source>Start recording a macro</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="515"/>
+        <source>Stop Recording</source>
+        <translation type="unfinished">Stop Recording</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="515"/>
+        <source>Stop recording a macro</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="516"/>
+        <source>Play Macro</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="516"/>
+        <source>Play the recorded macro</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="517"/>
+        <source>Manage Macros...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="517"/>
+        <source>Open macro manager dialog</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="520"/>
+        <source>Macro Slot %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="522"/>
+        <source>Play macro assigned to slot %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="526"/>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="527"/>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="528"/>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="529"/>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="530"/>
+        <source>LSP</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="526"/>
+        <source>Go to Definition</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="526"/>
+        <source>Go to symbol definition</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="527"/>
+        <source>Find References</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="527"/>
+        <source>Find all references to symbol</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="528"/>
+        <source>Rename Symbol</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="528"/>
+        <source>Rename symbol across project</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="529"/>
+        <source>Trigger Completion</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="529"/>
+        <source>Trigger code completion</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="530"/>
+        <source>Show Hover</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="530"/>
+        <source>Show hover information</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="533"/>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="534"/>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="535"/>
+        <source>Folding</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="533"/>
+        <source>Toggle Fold</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="533"/>
+        <source>Toggle fold at cursor</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="534"/>
+        <source>Fold All</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="534"/>
+        <source>Fold all regions</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="535"/>
+        <source>Unfold All</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="535"/>
+        <source>Unfold all regions</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="567"/>
+        <source>Copied to clipboard</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="571"/>
+        <source>Export Shortcuts to CSV</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="572"/>
+        <source>CSV Files (*.csv);;All Files (*)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="578"/>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="618"/>
+        <source>Export Failed</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="578"/>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="618"/>
+        <source>Could not open file for writing: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="607"/>
+        <source>Exported to CSV: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="611"/>
+        <source>Export Shortcuts to Markdown</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="612"/>
+        <source>Markdown Files (*.md);;All Files (*)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="657"/>
+        <source>Exported to Markdown: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>papiro::LSPPreferencesDialog</name>
+    <message>
+        <location filename="../src/ui/LSPPreferencesDialog.cpp" line="203"/>
+        <source>LSP Servers</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/LSPPreferencesDialog.cpp" line="218"/>
+        <source>&amp;Add...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/LSPPreferencesDialog.cpp" line="219"/>
+        <source>&amp;Edit...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/LSPPreferencesDialog.cpp" line="220"/>
+        <source>&amp;Remove</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/LSPPreferencesDialog.cpp" line="239"/>
+        <source>Language</source>
+        <translation type="unfinished">Language</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/LSPPreferencesDialog.cpp" line="239"/>
+        <source>Name</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/LSPPreferencesDialog.cpp" line="239"/>
+        <source>Command</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/LSPPreferencesDialog.cpp" line="239"/>
+        <source>Enabled</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/LSPPreferencesDialog.cpp" line="239"/>
+        <source>Extensions</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/LSPPreferencesDialog.cpp" line="279"/>
+        <source>Yes</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/LSPPreferencesDialog.cpp" line="279"/>
+        <source>No</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/LSPPreferencesDialog.cpp" line="299"/>
+        <location filename="../src/ui/LSPPreferencesDialog.cpp" line="303"/>
+        <location filename="../src/ui/LSPPreferencesDialog.cpp" line="331"/>
+        <source>Invalid Configuration</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/LSPPreferencesDialog.cpp" line="299"/>
+        <source>Language ID cannot be empty.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/LSPPreferencesDialog.cpp" line="303"/>
+        <source>Command cannot be empty.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/LSPPreferencesDialog.cpp" line="307"/>
+        <source>Duplicate Language ID</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/LSPPreferencesDialog.cpp" line="308"/>
+        <source>A server for language &apos;%1&apos; already exists.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/LSPPreferencesDialog.cpp" line="331"/>
+        <source>Language ID and Command cannot be empty.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/LSPPreferencesDialog.cpp" line="346"/>
+        <source>Remove LSP Server</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/LSPPreferencesDialog.cpp" line="347"/>
+        <source>Remove the LSP server configuration for &apos;%1&apos;?</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>papiro::LSPServerEditDialog</name>
+    <message>
+        <location filename="../src/ui/LSPPreferencesDialog.cpp" line="55"/>
+        <source>Edit LSP Server</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/LSPPreferencesDialog.cpp" line="55"/>
+        <source>Add LSP Server</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/LSPPreferencesDialog.cpp" line="76"/>
+        <source>Display name (e.g., clangd, pyright)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/LSPPreferencesDialog.cpp" line="77"/>
+        <source>&amp;Name:</source>
+        <translation type="unfinished">&amp;Name:</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/LSPPreferencesDialog.cpp" line="80"/>
+        <source>Language ID (e.g., cpp, python, typescript)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/LSPPreferencesDialog.cpp" line="81"/>
+        <source>Language &amp;ID:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/LSPPreferencesDialog.cpp" line="84"/>
+        <source>Executable name or full path</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/LSPPreferencesDialog.cpp" line="85"/>
+        <source>&amp;Command:</source>
+        <translation type="unfinished">&amp;Command:</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/LSPPreferencesDialog.cpp" line="88"/>
+        <source>Arguments separated by spaces (e.g., --background-index --clang-tidy)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/LSPPreferencesDialog.cpp" line="89"/>
+        <source>&amp;Arguments:</source>
+        <translation type="unfinished">&amp;Arguments:</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/LSPPreferencesDialog.cpp" line="92"/>
+        <source>Working directory (empty = project root)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/LSPPreferencesDialog.cpp" line="93"/>
+        <source>Working &amp;Directory:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/LSPPreferencesDialog.cpp" line="96"/>
+        <source>Environment variables as KEY=VALUE pairs separated by semicolons</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/LSPPreferencesDialog.cpp" line="97"/>
+        <source>Environment &amp;Variables:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/LSPPreferencesDialog.cpp" line="99"/>
+        <source>&amp;Enabled</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/LSPPreferencesDialog.cpp" line="104"/>
+        <source>Comma-separated (e.g., .cpp,.h,.hpp)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/LSPPreferencesDialog.cpp" line="105"/>
+        <source>File &amp;Extensions:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/LSPPreferencesDialog.cpp" line="111"/>
+        <source>Language ID must match the LSP specification (e.g., &apos;cpp&apos; for C/C++, &apos;python&apos; for Python, &apos;typescript&apos; for TypeScript). The server executable must be in PATH or provide a full path. Changes take effect for newly opened files.</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>papiro::Macro</name>
     <message>
-        <location filename="../src/core/Macro.cpp" line="119"/>
+        <location filename="../src/core/Macro.cpp" line="128"/>
         <source>Cannot open %1 for writing: %2</source>
         <translation>Cannot open %1 for writing: %2</translation>
     </message>
     <message>
-        <location filename="../src/core/Macro.cpp" line="158"/>
+        <location filename="../src/core/Macro.cpp" line="167"/>
         <source>Cannot open %1 for reading: %2</source>
         <translation>Cannot open %1 for reading: %2</translation>
     </message>
     <message>
-        <location filename="../src/core/Macro.cpp" line="166"/>
+        <location filename="../src/core/Macro.cpp" line="175"/>
         <source>Invalid JSON in %1: %2</source>
         <translation>Invalid JSON in %1: %2</translation>
     </message>
     <message>
-        <location filename="../src/core/Macro.cpp" line="173"/>
+        <location filename="../src/core/Macro.cpp" line="182"/>
         <source>Unsupported macro file version %1 (expected %2)</source>
         <translation>Unsupported macro file version %1 (expected %2)</translation>
     </message>
@@ -352,499 +1685,630 @@
 <context>
     <name>papiro::MacroManager</name>
     <message>
-        <location filename="../src/core/Macro.cpp" line="283"/>
+        <location filename="../src/core/Macro.cpp" line="292"/>
         <source>Macro %1</source>
         <translation>Macro %1</translation>
+    </message>
+    <message>
+        <location filename="../src/core/Macro.cpp" line="644"/>
+        <source>Built-in slot %1 (Macro%2)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/core/Macro.cpp" line="645"/>
+        <source>Built-in slot %1 (Ctrl+Shift+%2)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/core/Macro.cpp" line="652"/>
+        <source>Macro &quot;%1&quot;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/core/Macro.cpp" line="658"/>
+        <source>Reserved editor shortcut</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
     <name>papiro::MacroManagerDialog</name>
     <message>
-        <location filename="../src/ui/MacroManagerDialog.cpp" line="20"/>
-        <location filename="../src/ui/MacroManagerDialog.cpp" line="255"/>
+        <location filename="../src/ui/MacroManagerDialog.cpp" line="21"/>
+        <location filename="../src/ui/MacroManagerDialog.cpp" line="264"/>
         <source>Manage Macros</source>
         <translation>Manage Macros</translation>
     </message>
     <message>
-        <location filename="../src/ui/MacroManagerDialog.cpp" line="28"/>
+        <location filename="../src/ui/MacroManagerDialog.cpp" line="29"/>
         <source>&amp;Rename...</source>
         <translation>&amp;Rename...</translation>
     </message>
     <message>
-        <location filename="../src/ui/MacroManagerDialog.cpp" line="30"/>
+        <location filename="../src/ui/MacroManagerDialog.cpp" line="31"/>
         <source>&amp;Delete</source>
         <translation>&amp;Delete</translation>
     </message>
     <message>
-        <location filename="../src/ui/MacroManagerDialog.cpp" line="32"/>
+        <location filename="../src/ui/MacroManagerDialog.cpp" line="33"/>
         <source>&amp;Play</source>
         <translation>&amp;Play</translation>
     </message>
     <message>
-        <location filename="../src/ui/MacroManagerDialog.cpp" line="45"/>
+        <location filename="../src/ui/MacroManagerDialog.cpp" line="35"/>
+        <source>Edit &amp;Shortcut...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/MacroManagerDialog.cpp" line="49"/>
         <source>User Macros</source>
         <translation>User Macros</translation>
     </message>
     <message>
-        <location filename="../src/ui/MacroManagerDialog.cpp" line="52"/>
+        <location filename="../src/ui/MacroManagerDialog.cpp" line="56"/>
         <source>&amp;Assign to Slot</source>
         <translation>&amp;Assign to Slot</translation>
     </message>
     <message>
-        <location filename="../src/ui/MacroManagerDialog.cpp" line="54"/>
+        <location filename="../src/ui/MacroManagerDialog.cpp" line="58"/>
         <source>&amp;Clear Slot</source>
         <translation>&amp;Clear Slot</translation>
     </message>
     <message>
-        <location filename="../src/ui/MacroManagerDialog.cpp" line="63"/>
+        <location filename="../src/ui/MacroManagerDialog.cpp" line="67"/>
         <source>Shortcut slots: Ctrl+Shift+1 through Ctrl+Shift+9</source>
         <translation>Shortcut slots: Ctrl+Shift+1 through Ctrl+Shift+9</translation>
     </message>
     <message>
-        <location filename="../src/ui/MacroManagerDialog.cpp" line="67"/>
+        <location filename="../src/ui/MacroManagerDialog.cpp" line="71"/>
         <source>Shortcut Slots</source>
         <translation>Shortcut Slots</translation>
     </message>
     <message>
-        <location filename="../src/ui/MacroManagerDialog.cpp" line="115"/>
-        <location filename="../src/ui/MacroManagerDialog.cpp" line="128"/>
-        <location filename="../src/ui/MacroManagerDialog.cpp" line="205"/>
+        <location filename="../src/ui/MacroManagerDialog.cpp" line="120"/>
+        <location filename="../src/ui/MacroManagerDialog.cpp" line="136"/>
+        <location filename="../src/ui/MacroManagerDialog.cpp" line="214"/>
         <source>(unnamed)</source>
         <translation>(unnamed)</translation>
     </message>
     <message>
-        <location filename="../src/ui/MacroManagerDialog.cpp" line="117"/>
+        <location filename="../src/ui/MacroManagerDialog.cpp" line="122"/>
         <source>%1 (%2 actions)</source>
         <translation>%1 (%2 actions)</translation>
     </message>
     <message>
-        <location filename="../src/ui/MacroManagerDialog.cpp" line="129"/>
+        <location filename="../src/ui/MacroManagerDialog.cpp" line="124"/>
+        <source> — %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/MacroManagerDialog.cpp" line="137"/>
         <source>%1. Ctrl+Shift+%2 — %3 (%4 actions)</source>
         <translation>%1. Ctrl+Shift+%2 — %3 (%4 actions)</translation>
     </message>
     <message>
-        <location filename="../src/ui/MacroManagerDialog.cpp" line="135"/>
+        <location filename="../src/ui/MacroManagerDialog.cpp" line="143"/>
         <source>%1. Ctrl+Shift+%2 — (empty)</source>
         <translation>%1. Ctrl+Shift+%2 — (empty)</translation>
     </message>
     <message>
-        <location filename="../src/ui/MacroManagerDialog.cpp" line="179"/>
-        <location filename="../src/ui/MacroManagerDialog.cpp" line="187"/>
+        <location filename="../src/ui/MacroManagerDialog.cpp" line="188"/>
+        <location filename="../src/ui/MacroManagerDialog.cpp" line="196"/>
         <source>Rename Macro</source>
         <translation>Rename Macro</translation>
     </message>
     <message>
-        <location filename="../src/ui/MacroManagerDialog.cpp" line="179"/>
+        <location filename="../src/ui/MacroManagerDialog.cpp" line="188"/>
         <source>Macro name:</source>
         <translation>Macro name:</translation>
     </message>
     <message>
-        <location filename="../src/ui/MacroManagerDialog.cpp" line="188"/>
+        <location filename="../src/ui/MacroManagerDialog.cpp" line="197"/>
         <source>A macro named &quot;%1&quot; already exists.</source>
         <translation>A macro named &quot;%1&quot; already exists.</translation>
     </message>
     <message>
-        <location filename="../src/ui/MacroManagerDialog.cpp" line="207"/>
+        <location filename="../src/ui/MacroManagerDialog.cpp" line="216"/>
         <source>Delete Macro</source>
         <translation>Delete Macro</translation>
     </message>
     <message>
-        <location filename="../src/ui/MacroManagerDialog.cpp" line="208"/>
+        <location filename="../src/ui/MacroManagerDialog.cpp" line="217"/>
         <source>Delete macro &quot;%1&quot;? It will also be removed from its shortcut slots.</source>
         <translation>Delete macro &quot;%1&quot;? It will also be removed from its shortcut slots.</translation>
     </message>
     <message>
-        <location filename="../src/ui/MacroManagerDialog.cpp" line="256"/>
+        <location filename="../src/ui/MacroManagerDialog.cpp" line="265"/>
         <source>The macros could not be saved to disk.</source>
         <translation>The macros could not be saved to disk.</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/MacroManagerDialog.cpp" line="278"/>
+        <source>Edit Shortcut for &quot;%1&quot;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/MacroManagerDialog.cpp" line="281"/>
+        <source>Press the desired key combination:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/MacroManagerDialog.cpp" line="299"/>
+        <source>Shortcut Conflict</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/MacroManagerDialog.cpp" line="300"/>
+        <source>The shortcut &quot;%1&quot; is already used by %2.
+Please choose a different combination.</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
     <name>papiro::MainWindow</name>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="181"/>
+        <location filename="../src/app/MainWindow.cpp" line="250"/>
         <source>&amp;New</source>
         <translation>&amp;New</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="187"/>
+        <location filename="../src/app/MainWindow.cpp" line="256"/>
         <source>&amp;Open...</source>
         <translation>&amp;Open...</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="192"/>
+        <location filename="../src/app/MainWindow.cpp" line="260"/>
         <source>&amp;Save</source>
         <translation>&amp;Save</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="197"/>
+        <location filename="../src/app/MainWindow.cpp" line="264"/>
         <source>Save &amp;As...</source>
         <translation>Save &amp;As...</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="200"/>
+        <location filename="../src/app/MainWindow.cpp" line="267"/>
         <source>Save A&amp;ll</source>
         <translation>Save A&amp;ll</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="203"/>
+        <location filename="../src/app/MainWindow.cpp" line="270"/>
+        <source>Mark Document &amp;Clean</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/app/MainWindow.cpp" line="274"/>
         <source>&amp;Close Tab</source>
         <translation>&amp;Close Tab</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="206"/>
+        <location filename="../src/app/MainWindow.cpp" line="277"/>
         <source>E&amp;xit</source>
         <translation>E&amp;xit</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="209"/>
+        <location filename="../src/app/MainWindow.cpp" line="280"/>
         <source>&amp;Undo</source>
         <translation>&amp;Undo</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="216"/>
+        <location filename="../src/app/MainWindow.cpp" line="287"/>
         <source>&amp;Redo</source>
         <translation>&amp;Redo</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="223"/>
+        <location filename="../src/app/MainWindow.cpp" line="294"/>
         <source>Cu&amp;t</source>
         <translation>Cu&amp;t</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="230"/>
+        <location filename="../src/app/MainWindow.cpp" line="301"/>
         <source>&amp;Copy</source>
         <translation>&amp;Copy</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="237"/>
+        <location filename="../src/app/MainWindow.cpp" line="308"/>
         <source>&amp;Paste</source>
         <translation>&amp;Paste</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="244"/>
+        <location filename="../src/app/MainWindow.cpp" line="315"/>
         <source>Select &amp;All</source>
         <translation>Select &amp;All</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="250"/>
+        <location filename="../src/app/MainWindow.cpp" line="321"/>
         <source>D&amp;uplicate Line</source>
         <translation>D&amp;uplicate Line</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="256"/>
+        <location filename="../src/app/MainWindow.cpp" line="327"/>
         <source>Delete &amp;Line</source>
         <translation>Delete &amp;Line</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="263"/>
+        <location filename="../src/app/MainWindow.cpp" line="334"/>
         <source>&amp;Go to Line...</source>
         <translation>&amp;Go to Line...</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="266"/>
+        <location filename="../src/app/MainWindow.cpp" line="337"/>
         <source>&amp;Find / Replace...</source>
         <translation>&amp;Find / Replace...</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="271"/>
+        <location filename="../src/app/MainWindow.cpp" line="342"/>
         <source>Find &amp;Next</source>
         <translation>Find &amp;Next</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="274"/>
+        <location filename="../src/app/MainWindow.cpp" line="345"/>
         <source>Find &amp;Previous</source>
         <translation>Find &amp;Previous</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="278"/>
+        <location filename="../src/app/MainWindow.cpp" line="349"/>
         <source>&amp;Replace...</source>
         <translation>&amp;Replace...</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="281"/>
+        <location filename="../src/app/MainWindow.cpp" line="352"/>
         <source>&amp;Preferences...</source>
         <translation>&amp;Preferences...</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="284"/>
+        <location filename="../src/app/MainWindow.cpp" line="356"/>
         <source>&amp;Word Wrap</source>
         <translation>&amp;Word Wrap</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="288"/>
+        <location filename="../src/app/MainWindow.cpp" line="360"/>
         <source>&amp;Line Numbers</source>
         <translation>&amp;Line Numbers</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="292"/>
+        <location filename="../src/app/MainWindow.cpp" line="364"/>
         <source>S&amp;pell Check</source>
         <translation>S&amp;pell Check</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="296"/>
+        <location filename="../src/app/MainWindow.cpp" line="368"/>
+        <source>Show &amp;Whitespace</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/app/MainWindow.cpp" line="372"/>
+        <source>Cursor Free &amp;Positioning</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/app/MainWindow.cpp" line="376"/>
         <source>Toggle &amp;Fold</source>
         <translation>Toggle &amp;Fold</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="300"/>
+        <location filename="../src/app/MainWindow.cpp" line="380"/>
         <source>Fold &amp;All</source>
         <translation>Fold &amp;All</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="303"/>
+        <location filename="../src/app/MainWindow.cpp" line="383"/>
         <source>&amp;Unfold All</source>
         <translation>&amp;Unfold All</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="306"/>
+        <location filename="../src/app/MainWindow.cpp" line="386"/>
+        <source>Split &amp;Vertical</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/app/MainWindow.cpp" line="389"/>
+        <source>Split &amp;Horizontal</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/app/MainWindow.cpp" line="392"/>
+        <source>&amp;Unsplit</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/app/MainWindow.cpp" line="395"/>
+        <source>Clone &amp;View</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/app/MainWindow.cpp" line="399"/>
+        <source>Split View</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/app/MainWindow.cpp" line="408"/>
+        <source>Compare &amp;Files...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/app/MainWindow.cpp" line="411"/>
+        <source>Sort &amp;Lines</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/app/MainWindow.cpp" line="414"/>
+        <source>&amp;Join Lines</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/app/MainWindow.cpp" line="420"/>
+        <source>S&amp;plit Lines</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/app/MainWindow.cpp" line="426"/>
+        <source>Compile &amp;&amp; Run &amp;Java</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/app/MainWindow.cpp" line="430"/>
         <source>Zoom &amp;In</source>
         <translation>Zoom &amp;In</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="309"/>
+        <location filename="../src/app/MainWindow.cpp" line="433"/>
         <source>Zoom &amp;Out</source>
         <translation>Zoom &amp;Out</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="312"/>
+        <location filename="../src/app/MainWindow.cpp" line="436"/>
         <source>&amp;Reset Zoom</source>
         <translation>&amp;Reset Zoom</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="315"/>
+        <location filename="../src/app/MainWindow.cpp" line="439"/>
         <source>&amp;Font...</source>
         <translation>&amp;Font...</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="318"/>
+        <location filename="../src/app/MainWindow.cpp" line="442"/>
         <source>&amp;About Papiro</source>
         <translation>&amp;About Papiro</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="321"/>
+        <location filename="../src/app/MainWindow.cpp" line="445"/>
         <source>About Papiro</source>
         <translation>About Papiro</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="322"/>
-        <source>&lt;h3&gt;Papiro %1&lt;/h3&gt;&lt;p&gt;A focused, cross-platform text editor.&lt;/p&gt;&lt;p&gt;Independent implementation written from scratch. Not affiliated with, endorsed by, or containing code or assets from any commercial editor.&lt;/p&gt;&lt;p&gt;Built with Qt %2.&lt;/p&gt;</source>
-        <translation>&lt;h3&gt;Papiro %1&lt;/h3&gt;&lt;p&gt;A focused, cross-platform text editor.&lt;/p&gt;&lt;p&gt;Independent implementation written from scratch. Not affiliated with, endorsed by, or containing code or assets from any commercial editor.&lt;/p&gt;&lt;p&gt;Built with Qt %2.&lt;/p&gt;</translation>
+        <location filename="../src/app/MainWindow.cpp" line="446"/>
+        <source>&lt;h3&gt;Papiro %1&lt;/h3&gt;&lt;p&gt;A focused, cross-platform text editor.&lt;/p&gt;&lt;p&gt;Independent implementation written from scratch. Not affiliated with, endorsed by, or containing code or assets from any commercial editor.&lt;/p&gt;&lt;p&gt;Built with Qt %2.&lt;/p&gt;&lt;p&gt;&lt;a href=&quot;https://lab.werneck.dev.br/&quot;&gt;Desenvolvido por WerneckLab&lt;/a&gt;&lt;/p&gt;</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="330"/>
+        <location filename="../src/app/MainWindow.cpp" line="455"/>
         <source>About &amp;Qt</source>
         <translation>About &amp;Qt</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="334"/>
+        <location filename="../src/app/MainWindow.cpp" line="459"/>
+        <source>&amp;Keyboard Shortcuts...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/app/MainWindow.cpp" line="463"/>
         <source>Start &amp;Recording</source>
         <translation>Start &amp;Recording</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="338"/>
+        <location filename="../src/app/MainWindow.cpp" line="467"/>
         <source>Stop Recording</source>
         <translation>Stop Recording</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="343"/>
+        <location filename="../src/app/MainWindow.cpp" line="472"/>
         <source>&amp;Play Macro</source>
         <translation>&amp;Play Macro</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="347"/>
+        <location filename="../src/app/MainWindow.cpp" line="476"/>
         <source>&amp;Manage Macros...</source>
         <translation>&amp;Manage Macros...</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="353"/>
+        <location filename="../src/app/MainWindow.cpp" line="482"/>
         <source>Macro %1</source>
         <translation>Macro %1</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="362"/>
+        <location filename="../src/app/MainWindow.cpp" line="491"/>
         <source>Open F&amp;older...</source>
         <translation>Open F&amp;older...</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="366"/>
+        <location filename="../src/app/MainWindow.cpp" line="495"/>
         <source>File E&amp;xplorer</source>
         <translation>File E&amp;xplorer</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="373"/>
+        <location filename="../src/app/MainWindow.cpp" line="502"/>
         <source>&amp;Configure Tools...</source>
         <translation>&amp;Configure Tools...</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="376"/>
+        <location filename="../src/app/MainWindow.cpp" line="505"/>
         <source>&amp;Output</source>
         <translation>&amp;Output</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="382"/>
+        <location filename="../src/app/MainWindow.cpp" line="511"/>
         <source>Search &amp;Results</source>
         <translation>Search &amp;Results</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="390"/>
+        <location filename="../src/app/MainWindow.cpp" line="519"/>
         <source>Open &amp;Workspace...</source>
         <translation>Open &amp;Workspace...</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="394"/>
+        <location filename="../src/app/MainWindow.cpp" line="523"/>
         <source>Save Workspace &amp;As...</source>
         <translation>Save Workspace &amp;As...</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="399"/>
+        <location filename="../src/app/MainWindow.cpp" line="528"/>
         <source>Restore Previous Session</source>
         <translation>Restore Previous Session</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="412"/>
+        <location filename="../src/app/MainWindow.cpp" line="541"/>
         <source>&amp;Print...</source>
         <translation>&amp;Print...</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="415"/>
+        <location filename="../src/app/MainWindow.cpp" line="544"/>
         <source>Print Pre&amp;view...</source>
         <translation>Print Pre&amp;view...</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="419"/>
+        <location filename="../src/app/MainWindow.cpp" line="548"/>
         <source>Clip &amp;Library</source>
         <translation>Clip &amp;Library</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="456"/>
+        <location filename="../src/app/MainWindow.cpp" line="586"/>
         <source>&amp;Light</source>
         <translation>&amp;Light</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="457"/>
+        <location filename="../src/app/MainWindow.cpp" line="587"/>
         <source>&amp;Dark</source>
         <translation>&amp;Dark</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="475"/>
+        <location filename="../src/app/MainWindow.cpp" line="605"/>
         <source>&amp;File</source>
         <translation>&amp;File</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="479"/>
+        <location filename="../src/app/MainWindow.cpp" line="609"/>
         <source>Open &amp;Recent</source>
         <translation>Open &amp;Recent</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="480"/>
+        <location filename="../src/app/MainWindow.cpp" line="610"/>
         <source>Recent &amp;Workspaces</source>
         <translation>Recent &amp;Workspaces</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="497"/>
+        <location filename="../src/app/MainWindow.cpp" line="627"/>
         <source>&amp;Edit</source>
         <translation>&amp;Edit</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="514"/>
+        <location filename="../src/app/MainWindow.cpp" line="647"/>
         <source>&amp;Search</source>
         <translation>&amp;Search</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="521"/>
+        <location filename="../src/app/MainWindow.cpp" line="654"/>
         <source>&amp;Document</source>
         <translation>&amp;Document</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="523"/>
+        <location filename="../src/app/MainWindow.cpp" line="656"/>
         <source>&amp;Encoding</source>
         <translation>&amp;Encoding</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="546"/>
+        <location filename="../src/app/MainWindow.cpp" line="679"/>
         <source>Line &amp;Endings</source>
         <translation>Line &amp;Endings</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="570"/>
+        <location filename="../src/app/MainWindow.cpp" line="703"/>
         <source>&amp;Folding</source>
         <translation>&amp;Folding</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="576"/>
+        <location filename="../src/app/MainWindow.cpp" line="712"/>
         <source>&amp;View</source>
         <translation>&amp;View</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="591"/>
+        <location filename="../src/app/MainWindow.cpp" line="731"/>
         <source>&amp;Language</source>
         <translation>&amp;Language</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="593"/>
+        <location filename="../src/app/MainWindow.cpp" line="733"/>
         <source>&amp;Theme</source>
         <translation>&amp;Theme</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="597"/>
+        <location filename="../src/app/MainWindow.cpp" line="737"/>
         <source>&amp;Macros</source>
         <translation>&amp;Macros</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="603"/>
+        <location filename="../src/app/MainWindow.cpp" line="743"/>
         <source>Macro &amp;Slots</source>
         <translation>Macro &amp;Slots</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="610"/>
+        <location filename="../src/app/MainWindow.cpp" line="750"/>
         <source>&amp;Tools</source>
         <translation>&amp;Tools</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="614"/>
+        <location filename="../src/app/MainWindow.cpp" line="756"/>
+        <source>&amp;LSP Servers...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/app/MainWindow.cpp" line="761"/>
         <source>&amp;Help</source>
         <translation>&amp;Help</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="619"/>
+        <location filename="../src/app/MainWindow.cpp" line="768"/>
         <source>Main</source>
         <translation>Main</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="638"/>
+        <location filename="../src/app/MainWindow.cpp" line="787"/>
         <source>Ln 1, Col 1</source>
         <translation>Ln 1, Col 1</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="731"/>
-        <location filename="../src/app/MainWindow.cpp" line="741"/>
-        <location filename="../src/app/MainWindow.cpp" line="764"/>
+        <location filename="../src/app/MainWindow.cpp" line="913"/>
+        <location filename="../src/app/MainWindow.cpp" line="923"/>
+        <location filename="../src/app/MainWindow.cpp" line="946"/>
         <source>Open File</source>
         <translation>Open File</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="732"/>
+        <location filename="../src/app/MainWindow.cpp" line="914"/>
         <source>Text Files (*.txt *.log *.md *.syn *.ini *.json *.xml *.csv);;All Files (*)</source>
         <translation>Text Files (*.txt *.log *.md *.syn *.ini *.json *.xml *.csv);;All Files (*)</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="742"/>
+        <location filename="../src/app/MainWindow.cpp" line="924"/>
         <source>Cannot open &quot;%1&quot;: file does not exist.</source>
         <translation>Cannot open &quot;%1&quot;: file does not exist.</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="795"/>
+        <location filename="../src/app/MainWindow.cpp" line="962"/>
+        <source>Large file opened in read-only preview mode (%1).</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/app/MainWindow.cpp" line="982"/>
         <source>Not saved yet</source>
         <translation>Not saved yet</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="805"/>
+        <location filename="../src/app/MainWindow.cpp" line="992"/>
         <source>Unsaved Changes</source>
         <translation>Unsaved Changes</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="806"/>
+        <location filename="../src/app/MainWindow.cpp" line="993"/>
         <source>&quot;%1&quot; has unsaved changes.
 
 Do you want to save them?</source>
@@ -853,84 +2317,89 @@ Do you want to save them?</source>
 Do you want to save them?</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="827"/>
-        <location filename="../src/app/MainWindow.cpp" line="835"/>
+        <location filename="../src/app/MainWindow.cpp" line="1014"/>
+        <location filename="../src/app/MainWindow.cpp" line="1022"/>
         <source>Save File</source>
         <translation>Save File</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="828"/>
+        <location filename="../src/app/MainWindow.cpp" line="1015"/>
         <source>Text Files (*.txt);;All Files (*)</source>
         <translation>Text Files (*.txt);;All Files (*)</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="932"/>
+        <location filename="../src/app/MainWindow.cpp" line="1070"/>
+        <source>Document marked as clean.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/app/MainWindow.cpp" line="1171"/>
         <source>Papiro</source>
         <translation>Papiro</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="936"/>
+        <location filename="../src/app/MainWindow.cpp" line="1175"/>
         <source>%1[*] - Papiro</source>
         <translation>%1[*] - Papiro</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="956"/>
+        <location filename="../src/app/MainWindow.cpp" line="1195"/>
         <source>Ln %1, Col %2</source>
         <translation>Ln %1, Col %2</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="957"/>
+        <location filename="../src/app/MainWindow.cpp" line="1196"/>
         <source>Sel %1</source>
         <translation>Sel %1</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="965"/>
+        <location filename="../src/app/MainWindow.cpp" line="1204"/>
         <source>Plain Text</source>
         <translation>Plain Text</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="1017"/>
+        <location filename="../src/app/MainWindow.cpp" line="1260"/>
         <source>The search text is empty.</source>
         <translation>The search text is empty.</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="1049"/>
-        <location filename="../src/app/MainWindow.cpp" line="1085"/>
-        <location filename="../src/app/MainWindow.cpp" line="1189"/>
-        <location filename="../src/app/MainWindow.cpp" line="1373"/>
-        <location filename="../src/app/MainWindow.cpp" line="1408"/>
+        <location filename="../src/app/MainWindow.cpp" line="1296"/>
+        <location filename="../src/app/MainWindow.cpp" line="1332"/>
+        <location filename="../src/app/MainWindow.cpp" line="1436"/>
+        <location filename="../src/app/MainWindow.cpp" line="1620"/>
+        <location filename="../src/app/MainWindow.cpp" line="1655"/>
         <source>Invalid regular expression: %1</source>
         <translation>Invalid regular expression: %1</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="1068"/>
+        <location filename="../src/app/MainWindow.cpp" line="1315"/>
         <source>Not found: &quot;%1&quot;</source>
         <translation>Not found: &quot;%1&quot;</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="1074"/>
+        <location filename="../src/app/MainWindow.cpp" line="1321"/>
         <source>Match found</source>
         <translation>Match found</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="1148"/>
-        <location filename="../src/app/MainWindow.cpp" line="1294"/>
+        <location filename="../src/app/MainWindow.cpp" line="1395"/>
+        <location filename="../src/app/MainWindow.cpp" line="1541"/>
         <source>%1 (%2)</source>
         <translation>%1 (%2)</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="1153"/>
+        <location filename="../src/app/MainWindow.cpp" line="1400"/>
         <source>No matches for &quot;%1&quot;</source>
         <translation>No matches for &quot;%1&quot;</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="1155"/>
-        <location filename="../src/app/MainWindow.cpp" line="1304"/>
+        <location filename="../src/app/MainWindow.cpp" line="1402"/>
+        <location filename="../src/app/MainWindow.cpp" line="1551"/>
         <source>No matches for &quot;%1&quot;.</source>
         <translation>No matches for &quot;%1&quot;.</translation>
     </message>
     <message numerus="yes">
-        <location filename="../src/app/MainWindow.cpp" line="1157"/>
+        <location filename="../src/app/MainWindow.cpp" line="1404"/>
         <source>%n match(es) found in %1 document(s).</source>
         <translation>
             <numerusform>%n match found in %1 document.</numerusform>
@@ -938,23 +2407,23 @@ Do you want to save them?</translation>
         </translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="1160"/>
-        <location filename="../src/app/MainWindow.cpp" line="1308"/>
+        <location filename="../src/app/MainWindow.cpp" line="1407"/>
+        <location filename="../src/app/MainWindow.cpp" line="1555"/>
         <source>Showing the first %1.</source>
         <translation>Showing the first %1.</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="1182"/>
+        <location filename="../src/app/MainWindow.cpp" line="1429"/>
         <source>Invalid search folder: %1</source>
         <translation>Invalid search folder: %1</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="1301"/>
+        <location filename="../src/app/MainWindow.cpp" line="1548"/>
         <source>No matches for &quot;%1&quot; in %2</source>
         <translation>No matches for &quot;%1&quot; in %2</translation>
     </message>
     <message numerus="yes">
-        <location filename="../src/app/MainWindow.cpp" line="1306"/>
+        <location filename="../src/app/MainWindow.cpp" line="1553"/>
         <source>%n match(es) found in %1 file(s).</source>
         <translation>
             <numerusform>%n match found in %1 file.</numerusform>
@@ -962,254 +2431,343 @@ Do you want to save them?</translation>
         </translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="1310"/>
+        <location filename="../src/app/MainWindow.cpp" line="1557"/>
         <source>Only the first %1 files were scanned.</source>
         <translation>Only the first %1 files were scanned.</translation>
     </message>
     <message numerus="yes">
-        <location filename="../src/app/MainWindow.cpp" line="1443"/>
+        <location filename="../src/app/MainWindow.cpp" line="1711"/>
         <source>%n replacement(s) made.</source>
         <translation>
             <numerusform>%n replacement made.</numerusform>
             <numerusform>%n replacements made.</numerusform>
         </translation>
     </message>
+    <message numerus="yes">
+        <location filename="../src/app/MainWindow.cpp" line="1754"/>
+        <source>%n replacement(s) made in selection.</source>
+        <translation type="unfinished">
+            <numerusform></numerusform>
+            <numerusform></numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <location filename="../src/app/MainWindow.cpp" line="1836"/>
+        <source>%n replacement(s) made in block selection.</source>
+        <translation type="unfinished">
+            <numerusform></numerusform>
+            <numerusform></numerusform>
+        </translation>
+    </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="1552"/>
+        <location filename="../src/app/MainWindow.cpp" line="1945"/>
         <source>Go to Line</source>
         <translation>Go to Line</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="1552"/>
+        <location filename="../src/app/MainWindow.cpp" line="1945"/>
         <source>Line number:</source>
         <translation>Line number:</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="1562"/>
+        <location filename="../src/app/MainWindow.cpp" line="1961"/>
+        <source>Go to Line and Column</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/app/MainWindow.cpp" line="1978"/>
+        <source>Line:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/app/MainWindow.cpp" line="1979"/>
+        <source>Column:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/app/MainWindow.cpp" line="1996"/>
         <source>Editor Font</source>
         <translation>Editor Font</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="1742"/>
+        <location filename="../src/app/MainWindow.cpp" line="2276"/>
+        <source>Select First File</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/app/MainWindow.cpp" line="2280"/>
+        <source>Select Second File</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/app/MainWindow.cpp" line="2368"/>
         <source>(no recent files)</source>
         <translation>(no recent files)</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="1749"/>
-        <location filename="../src/app/MainWindow.cpp" line="2412"/>
+        <location filename="../src/app/MainWindow.cpp" line="2375"/>
+        <location filename="../src/app/MainWindow.cpp" line="3189"/>
         <source>&amp;%1  %2</source>
         <translation>&amp;%1  %2</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="1756"/>
+        <location filename="../src/app/MainWindow.cpp" line="2382"/>
         <source>Clear Recent Files</source>
         <translation>Clear Recent Files</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="1767"/>
+        <location filename="../src/app/MainWindow.cpp" line="2393"/>
         <source>Open Recent</source>
         <translation>Open Recent</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="1768"/>
+        <location filename="../src/app/MainWindow.cpp" line="2394"/>
         <source>The file &quot;%1&quot; no longer exists.</source>
         <translation>The file &quot;%1&quot; no longer exists.</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="1975"/>
+        <location filename="../src/app/MainWindow.cpp" line="2609"/>
         <source>Macro recording started...</source>
         <translation>Macro recording started...</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="1993"/>
+        <location filename="../src/app/MainWindow.cpp" line="2627"/>
         <source>Macro recorded: %1 actions</source>
         <translation>Macro recorded: %1 actions</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="1996"/>
+        <location filename="../src/app/MainWindow.cpp" line="2630"/>
         <source>Macro recorded, but it could not be saved to disk.</source>
         <translation>Macro recorded, but it could not be saved to disk.</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="1999"/>
+        <location filename="../src/app/MainWindow.cpp" line="2633"/>
         <source>Macro recording cancelled (empty)</source>
         <translation>Macro recording cancelled (empty)</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="2016"/>
+        <location filename="../src/app/MainWindow.cpp" line="2650"/>
         <source>Macro played: %1 actions</source>
         <translation>Macro played: %1 actions</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="2028"/>
+        <location filename="../src/app/MainWindow.cpp" line="2662"/>
         <source>Macro %1 played</source>
         <translation>Macro %1 played</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="2045"/>
+        <location filename="../src/app/MainWindow.cpp" line="2679"/>
         <source>Macro saved to slot %1</source>
         <translation>Macro saved to slot %1</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="2046"/>
+        <location filename="../src/app/MainWindow.cpp" line="2680"/>
         <source>Macro assigned to slot %1, but the assignment could not be saved.</source>
         <translation>Macro assigned to slot %1, but the assignment could not be saved.</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="2078"/>
+        <location filename="../src/app/MainWindow.cpp" line="2712"/>
         <source>Macro %1: %2</source>
         <translation>Macro %1: %2</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="2080"/>
+        <location filename="../src/app/MainWindow.cpp" line="2714"/>
         <source>Play &quot;%1&quot; (Ctrl+Shift+%2)</source>
         <translation>Play &quot;%1&quot; (Ctrl+Shift+%2)</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="2082"/>
+        <location filename="../src/app/MainWindow.cpp" line="2716"/>
         <source>Macro %1 (empty)</source>
         <translation>Macro %1 (empty)</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="2084"/>
+        <location filename="../src/app/MainWindow.cpp" line="2718"/>
         <source>No macro assigned to Ctrl+Shift+%1</source>
         <translation>No macro assigned to Ctrl+Shift+%1</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="2097"/>
+        <location filename="../src/app/MainWindow.cpp" line="2771"/>
         <source>File Explorer</source>
         <translation>File Explorer</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="2129"/>
+        <location filename="../src/app/MainWindow.cpp" line="2836"/>
         <source>Output</source>
         <translation>Output</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="2146"/>
+        <location filename="../src/app/MainWindow.cpp" line="2853"/>
         <source>Line</source>
         <translation>Line</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="2146"/>
+        <location filename="../src/app/MainWindow.cpp" line="2853"/>
         <source>Col</source>
         <translation>Col</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="2146"/>
+        <location filename="../src/app/MainWindow.cpp" line="2853"/>
         <source>Text</source>
         <translation>Text</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="2153"/>
+        <location filename="../src/app/MainWindow.cpp" line="2860"/>
         <source>Search Results</source>
         <translation>Search Results</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="2172"/>
+        <location filename="../src/app/MainWindow.cpp" line="2879"/>
         <source>Clip Library</source>
         <translation>Clip Library</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="2208"/>
+        <location filename="../src/app/MainWindow.cpp" line="2915"/>
         <source>Open Folder</source>
         <translation>Open Folder</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="2243"/>
-        <location filename="../src/app/MainWindow.cpp" line="2253"/>
-        <location filename="../src/app/MainWindow.cpp" line="2430"/>
+        <location filename="../src/app/MainWindow.cpp" line="2950"/>
+        <location filename="../src/app/MainWindow.cpp" line="2960"/>
+        <location filename="../src/app/MainWindow.cpp" line="3207"/>
         <source>Open Workspace</source>
         <translation>Open Workspace</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="2254"/>
+        <location filename="../src/app/MainWindow.cpp" line="2961"/>
         <source>The workspace is empty.</source>
         <translation>The workspace is empty.</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="2295"/>
+        <location filename="../src/app/MainWindow.cpp" line="3002"/>
         <source>Workspace opened: %1</source>
         <translation>Workspace opened: %1</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="2313"/>
-        <location filename="../src/app/MainWindow.cpp" line="2339"/>
+        <location filename="../src/app/MainWindow.cpp" line="3020"/>
+        <location filename="../src/app/MainWindow.cpp" line="3046"/>
         <source>Save Workspace</source>
         <translation>Save Workspace</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="2347"/>
+        <location filename="../src/app/MainWindow.cpp" line="3054"/>
         <source>Workspace saved: %1</source>
         <translation>Workspace saved: %1</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="2349"/>
+        <location filename="../src/app/MainWindow.cpp" line="3056"/>
         <source>(%1 unsaved file(s) skipped)</source>
         <translation>(%1 unsaved file(s) skipped)</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="2362"/>
+        <location filename="../src/app/MainWindow.cpp" line="3069"/>
         <source>Print</source>
         <translation>Print</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="2378"/>
-        <source>Print Preview</source>
-        <translation>Print Preview</translation>
+        <location filename="../src/app/MainWindow.cpp" line="3096"/>
+        <location filename="../src/app/MainWindow.cpp" line="3101"/>
+        <location filename="../src/app/MainWindow.cpp" line="3128"/>
+        <source>Java</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="2404"/>
+        <location filename="../src/app/MainWindow.cpp" line="3097"/>
+        <source>Save the file with a .java extension first.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/app/MainWindow.cpp" line="3102"/>
+        <source>This file is open in read-only large-file mode.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/app/MainWindow.cpp" line="3129"/>
+        <source>No Java JDK found: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/app/MainWindow.cpp" line="3136"/>
+        <source>Compiling %1 with Java %2...
+</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/app/MainWindow.cpp" line="3138"/>
+        <source>(unknown version)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/app/MainWindow.cpp" line="3518"/>
+        <source>LSP: %1 (stopped)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/app/MainWindow.cpp" line="3523"/>
+        <source>LSP: %1 (starting...)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/app/MainWindow.cpp" line="3527"/>
+        <source>LSP: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/app/MainWindow.cpp" line="3531"/>
+        <source>LSP: %1 (error)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/app/MainWindow.cpp" line="3181"/>
         <source>(no recent workspaces)</source>
         <translation>(no recent workspaces)</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="2419"/>
+        <location filename="../src/app/MainWindow.cpp" line="3196"/>
         <source>Clear Recent Workspaces</source>
         <translation>Clear Recent Workspaces</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="2431"/>
+        <location filename="../src/app/MainWindow.cpp" line="3208"/>
         <source>The workspace &quot;%1&quot; no longer exists.</source>
         <translation>The workspace &quot;%1&quot; no longer exists.</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="2456"/>
+        <location filename="../src/app/MainWindow.cpp" line="3233"/>
         <source>(no tools configured)</source>
         <translation>(no tools configured)</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="2480"/>
+        <location filename="../src/app/MainWindow.cpp" line="3321"/>
         <source>External Tools</source>
         <translation>External Tools</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="2481"/>
+        <location filename="../src/app/MainWindow.cpp" line="3322"/>
         <source>This tool is missing a name or a command.</source>
         <translation>This tool is missing a name or a command.</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="2530"/>
+        <location filename="../src/app/MainWindow.cpp" line="3376"/>
         <source>%1 finished with exit code %2.</source>
         <translation>%1 finished with exit code %2.</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="2532"/>
+        <location filename="../src/app/MainWindow.cpp" line="3378"/>
         <source>%1 terminated unexpectedly.</source>
         <translation>%1 terminated unexpectedly.</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="2541"/>
+        <location filename="../src/app/MainWindow.cpp" line="3386"/>
         <source>Failed to run %1: %2</source>
         <translation>Failed to run %1: %2</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="2575"/>
+        <location filename="../src/app/MainWindow.cpp" line="3483"/>
         <source>Language</source>
         <translation>Language</translation>
     </message>
     <message>
-        <location filename="../src/app/MainWindow.cpp" line="2576"/>
+        <location filename="../src/app/MainWindow.cpp" line="3484"/>
         <source>The interface language will change after restarting Papiro.</source>
         <translation>The interface language will change after restarting Papiro.</translation>
     </message>
@@ -1222,112 +2780,142 @@ Do you want to save them?</translation>
 <context>
     <name>papiro::PreferencesDialog</name>
     <message>
-        <location filename="../src/ui/PreferencesDialog.cpp" line="22"/>
+        <location filename="../src/ui/PreferencesDialog.cpp" line="23"/>
         <source>Preferences</source>
         <translation>Preferences</translation>
     </message>
     <message>
-        <location filename="../src/ui/PreferencesDialog.cpp" line="31"/>
+        <location filename="../src/ui/PreferencesDialog.cpp" line="32"/>
         <source>C&amp;hoose...</source>
         <translation>C&amp;hoose...</translation>
     </message>
     <message>
-        <location filename="../src/ui/PreferencesDialog.cpp" line="38"/>
+        <location filename="../src/ui/PreferencesDialog.cpp" line="39"/>
         <source>&amp;Word wrap</source>
         <translation>&amp;Word wrap</translation>
     </message>
     <message>
-        <location filename="../src/ui/PreferencesDialog.cpp" line="41"/>
+        <location filename="../src/ui/PreferencesDialog.cpp" line="42"/>
         <source>Show &amp;line numbers</source>
         <translation>Show &amp;line numbers</translation>
     </message>
     <message>
-        <location filename="../src/ui/PreferencesDialog.cpp" line="44"/>
+        <location filename="../src/ui/PreferencesDialog.cpp" line="45"/>
+        <source>Show &amp;whitespace</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/PreferencesDialog.cpp" line="48"/>
+        <source>Cursor free &amp;positioning (virtual space)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/PreferencesDialog.cpp" line="51"/>
+        <source>Allow cursor to move beyond end of line</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/PreferencesDialog.cpp" line="52"/>
         <source>Enable &amp;spell checking</source>
         <translation>Enable &amp;spell checking</translation>
     </message>
     <message>
-        <location filename="../src/ui/PreferencesDialog.cpp" line="49"/>
+        <location filename="../src/ui/PreferencesDialog.cpp" line="59"/>
+        <source> MB</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/PreferencesDialog.cpp" line="60"/>
+        <source>Files larger than this open in read-only preview mode</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/PreferencesDialog.cpp" line="63"/>
         <source>Editor font:</source>
         <translation>Editor font:</translation>
     </message>
     <message>
-        <location filename="../src/ui/PreferencesDialog.cpp" line="62"/>
+        <location filename="../src/ui/PreferencesDialog.cpp" line="69"/>
+        <source>Large file threshold:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/PreferencesDialog.cpp" line="79"/>
         <source>Light</source>
         <translation>Light</translation>
     </message>
     <message>
-        <location filename="../src/ui/PreferencesDialog.cpp" line="63"/>
+        <location filename="../src/ui/PreferencesDialog.cpp" line="80"/>
         <source>Dark</source>
         <translation>Dark</translation>
     </message>
     <message>
-        <location filename="../src/ui/PreferencesDialog.cpp" line="68"/>
+        <location filename="../src/ui/PreferencesDialog.cpp" line="101"/>
         <source>Theme:</source>
         <translation>Theme:</translation>
     </message>
     <message>
-        <location filename="../src/ui/PreferencesDialog.cpp" line="76"/>
+        <location filename="../src/ui/PreferencesDialog.cpp" line="111"/>
         <source>Restore the previous session on startup</source>
         <translation>Restore the previous session on startup</translation>
     </message>
     <message>
-        <location filename="../src/ui/PreferencesDialog.cpp" line="86"/>
+        <location filename="../src/ui/PreferencesDialog.cpp" line="121"/>
         <source>Match &amp;case</source>
         <translation>Match &amp;case</translation>
     </message>
     <message>
-        <location filename="../src/ui/PreferencesDialog.cpp" line="89"/>
+        <location filename="../src/ui/PreferencesDialog.cpp" line="124"/>
         <source>&amp;Whole word</source>
         <translation>&amp;Whole word</translation>
     </message>
     <message>
-        <location filename="../src/ui/PreferencesDialog.cpp" line="92"/>
+        <location filename="../src/ui/PreferencesDialog.cpp" line="127"/>
         <source>Regular &amp;expression</source>
         <translation>Regular &amp;expression</translation>
     </message>
     <message>
-        <location filename="../src/ui/PreferencesDialog.cpp" line="95"/>
+        <location filename="../src/ui/PreferencesDialog.cpp" line="130"/>
         <source>&amp;Wrap around</source>
         <translation>&amp;Wrap around</translation>
     </message>
     <message>
-        <location filename="../src/ui/PreferencesDialog.cpp" line="99"/>
+        <location filename="../src/ui/PreferencesDialog.cpp" line="134"/>
         <source>Search defaults</source>
         <translation>Search defaults</translation>
     </message>
     <message>
-        <location filename="../src/ui/PreferencesDialog.cpp" line="108"/>
+        <location filename="../src/ui/PreferencesDialog.cpp" line="143"/>
         <source>These options are used when the Find/Replace dialog opens.</source>
         <translation>These options are used when the Find/Replace dialog opens.</translation>
     </message>
     <message>
-        <location filename="../src/ui/PreferencesDialog.cpp" line="114"/>
+        <location filename="../src/ui/PreferencesDialog.cpp" line="149"/>
         <source>Editor</source>
         <translation>Editor</translation>
     </message>
     <message>
-        <location filename="../src/ui/PreferencesDialog.cpp" line="115"/>
+        <location filename="../src/ui/PreferencesDialog.cpp" line="150"/>
         <source>Appearance</source>
         <translation>Appearance</translation>
     </message>
     <message>
-        <location filename="../src/ui/PreferencesDialog.cpp" line="116"/>
+        <location filename="../src/ui/PreferencesDialog.cpp" line="151"/>
         <source>Session</source>
         <translation>Session</translation>
     </message>
     <message>
-        <location filename="../src/ui/PreferencesDialog.cpp" line="117"/>
+        <location filename="../src/ui/PreferencesDialog.cpp" line="152"/>
         <source>Search</source>
         <translation>Search</translation>
     </message>
     <message>
-        <location filename="../src/ui/PreferencesDialog.cpp" line="150"/>
+        <location filename="../src/ui/PreferencesDialog.cpp" line="189"/>
         <source>Editor Font</source>
         <translation>Editor Font</translation>
     </message>
     <message>
-        <location filename="../src/ui/PreferencesDialog.cpp" line="159"/>
+        <location filename="../src/ui/PreferencesDialog.cpp" line="198"/>
         <source>%1, %2 pt</source>
         <translation>%1, %2 pt</translation>
     </message>
@@ -1345,6 +2933,196 @@ Do you want to save them?</translation>
         <location filename="../src/ui/PreferencesDialog.cpp" line="95"/>
         <source>Language changes take effect after restarting Papiro.</source>
         <translation>Language changes take effect after restarting Papiro.</translation>
+    </message>
+</context>
+<context>
+    <name>papiro::PrintPreviewDialog</name>
+    <message>
+        <location filename="../src/ui/PrintPreviewDialog.cpp" line="94"/>
+        <source>Print Preview</source>
+        <translation type="unfinished">Print Preview</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/PrintPreviewDialog.cpp" line="102"/>
+        <source>Papiro Document</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/PrintPreviewDialog.cpp" line="116"/>
+        <location filename="../src/ui/PrintPreviewDialog.cpp" line="245"/>
+        <source>No pages</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/PrintPreviewDialog.cpp" line="118"/>
+        <source>Page %1 of %2</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/PrintPreviewDialog.cpp" line="192"/>
+        <source>Print...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/PrintPreviewDialog.cpp" line="199"/>
+        <source>Close</source>
+        <translation type="unfinished">Close</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/PrintPreviewDialog.cpp" line="208"/>
+        <source>Zoom Out</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/PrintPreviewDialog.cpp" line="217"/>
+        <source>Zoom In</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/PrintPreviewDialog.cpp" line="224"/>
+        <source>Fit Page</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/PrintPreviewDialog.cpp" line="226"/>
+        <source>Fit Width</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/PrintPreviewDialog.cpp" line="251"/>
+        <source>Page Setup</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/PrintPreviewDialog.cpp" line="256"/>
+        <source>Header template, e.g. ${filename}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/PrintPreviewDialog.cpp" line="261"/>
+        <source>Footer template, e.g. ${page} / ${totalPages}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/PrintPreviewDialog.cpp" line="264"/>
+        <source>&amp;Header:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/PrintPreviewDialog.cpp" line="266"/>
+        <source>&amp;Footer:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/PrintPreviewDialog.cpp" line="278"/>
+        <source>&amp;Top:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/PrintPreviewDialog.cpp" line="279"/>
+        <source>&amp;Bottom:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/PrintPreviewDialog.cpp" line="281"/>
+        <source>&amp;Left:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/PrintPreviewDialog.cpp" line="282"/>
+        <source>&amp;Right:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/PrintPreviewDialog.cpp" line="291"/>
+        <source> mm</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/PrintPreviewDialog.cpp" line="311"/>
+        <source> pt</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/PrintPreviewDialog.cpp" line="313"/>
+        <source>Page break on form feed (\f)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/PrintPreviewDialog.cpp" line="319"/>
+        <source>&amp;Font:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/PrintPreviewDialog.cpp" line="567"/>
+        <source>Print</source>
+        <translation type="unfinished">Print</translation>
+    </message>
+</context>
+<context>
+    <name>papiro::ShortcutsTableModel</name>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="84"/>
+        <source>Shortcut: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="104"/>
+        <source>Category</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="105"/>
+        <source>Action</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="106"/>
+        <source>Shortcut</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/KeyboardShortcutsDialog.cpp" line="107"/>
+        <source>Description</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>papiro::SortLinesDialog</name>
+    <message>
+        <location filename="../src/ui/SortLinesDialog.cpp" line="16"/>
+        <source>Sort Lines</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/SortLinesDialog.cpp" line="23"/>
+        <source>Number of sort keys (columns)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/SortLinesDialog.cpp" line="26"/>
+        <source>Ascending (A-Z, 0-9)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/SortLinesDialog.cpp" line="27"/>
+        <source>Descending (Z-A, 9-0)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/SortLinesDialog.cpp" line="30"/>
+        <source>Case sensitive</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/SortLinesDialog.cpp" line="34"/>
+        <source>Sort &amp;keys (columns):</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/SortLinesDialog.cpp" line="35"/>
+        <source>&amp;Order:</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -1391,36 +3169,76 @@ Do you want to save them?</translation>
     </message>
     <message>
         <location filename="../src/ui/ToolsDialog.cpp" line="50"/>
+        <source>Regex pattern, e.g. ([^:]+):(\d+):(\d+)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/ToolsDialog.cpp" line="52"/>
+        <source>File capture group (e.g. 1)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/ToolsDialog.cpp" line="54"/>
+        <source>Line capture group (e.g. 2)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/ToolsDialog.cpp" line="56"/>
+        <source>Column capture group (e.g. 3)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/ToolsDialog.cpp" line="59"/>
         <source>&amp;Name:</source>
         <translation>&amp;Name:</translation>
     </message>
     <message>
-        <location filename="../src/ui/ToolsDialog.cpp" line="51"/>
+        <location filename="../src/ui/ToolsDialog.cpp" line="60"/>
         <source>&amp;Command:</source>
         <translation>&amp;Command:</translation>
     </message>
     <message>
-        <location filename="../src/ui/ToolsDialog.cpp" line="52"/>
+        <location filename="../src/ui/ToolsDialog.cpp" line="61"/>
         <source>&amp;Arguments:</source>
         <translation>&amp;Arguments:</translation>
     </message>
     <message>
-        <location filename="../src/ui/ToolsDialog.cpp" line="53"/>
+        <location filename="../src/ui/ToolsDialog.cpp" line="62"/>
         <source>&amp;Working directory:</source>
         <translation>&amp;Working directory:</translation>
     </message>
     <message>
-        <location filename="../src/ui/ToolsDialog.cpp" line="57"/>
+        <location filename="../src/ui/ToolsDialog.cpp" line="64"/>
+        <source>Error &amp;pattern:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/ToolsDialog.cpp" line="65"/>
+        <source>File &amp;group:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/ToolsDialog.cpp" line="66"/>
+        <source>Line &amp;group:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/ToolsDialog.cpp" line="67"/>
+        <source>Column &amp;group:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/ui/ToolsDialog.cpp" line="70"/>
         <source>Variables: &lt;b&gt;$FILE&lt;/b&gt; full path, &lt;b&gt;$FILEDIR&lt;/b&gt; folder, &lt;b&gt;$FILENAME&lt;/b&gt; name without extension, &lt;b&gt;$FILEEXT&lt;/b&gt; extension.</source>
         <translation>Variables: &lt;b&gt;$FILE&lt;/b&gt; full path, &lt;b&gt;$FILEDIR&lt;/b&gt; folder, &lt;b&gt;$FILENAME&lt;/b&gt; name without extension, &lt;b&gt;$FILEEXT&lt;/b&gt; extension.</translation>
     </message>
     <message>
-        <location filename="../src/ui/ToolsDialog.cpp" line="158"/>
+        <location filename="../src/ui/ToolsDialog.cpp" line="187"/>
         <source>New Tool</source>
         <translation>New Tool</translation>
     </message>
     <message>
-        <location filename="../src/ui/ToolsDialog.cpp" line="189"/>
+        <location filename="../src/ui/ToolsDialog.cpp" line="222"/>
         <source>(unnamed)</source>
         <translation>(unnamed)</translation>
     </message>

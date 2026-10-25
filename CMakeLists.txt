@@ -219,6 +219,16 @@ install(FILES resources/papiro.desktop DESTINATION share/applications)
 # Install AppStream metainfo
 install(FILES resources/papiro.metainfo.xml DESTINATION share/metainfo)
 
+# Install icons (hicolor theme)
+install(FILES resources/icons/papiro.svg DESTINATION share/icons/hicolor/scalable/apps RENAME papiro.svg)
+install(FILES resources/icons/papiro-16.png DESTINATION share/icons/hicolor/16x16/apps RENAME papiro.png)
+install(FILES resources/icons/papiro-24.png DESTINATION share/icons/hicolor/24x24/apps RENAME papiro.png)
+install(FILES resources/icons/papiro-32.png DESTINATION share/icons/hicolor/32x32/apps RENAME papiro.png)
+install(FILES resources/icons/papiro-48.png DESTINATION share/icons/hicolor/48x48/apps RENAME papiro.png)
+install(FILES resources/icons/papiro-64.png DESTINATION share/icons/hicolor/64x64/apps RENAME papiro.png)
+install(FILES resources/icons/papiro-128.png DESTINATION share/icons/hicolor/128x128/apps RENAME papiro.png)
+install(FILES resources/icons/papiro-256.png DESTINATION share/icons/hicolor/256x256/apps RENAME papiro.png)
+
 # Install copyright file (for DEB)
 install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/packaging/linux/copyright
     DESTINATION share/doc/papiro
