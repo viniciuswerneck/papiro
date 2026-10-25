@@ -10,3 +10,6 @@ TextPad.exe
 aqtinstall.log
 .cache/
 *.user
+
+# Website (not committed)
+site/

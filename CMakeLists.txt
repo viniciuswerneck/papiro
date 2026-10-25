@@ -112,6 +112,14 @@ qt_add_resources(Papiro "fluent_theme"
         resources/themes/fluent.qss
 )
 
+# Icon resources
+qt_add_resources(Papiro "icons"
+    PREFIX "/icons"
+    BASE "resources/icons"
+    FILES
+        resources/icons/close.svg
+)
+
 # ---------------------------------------------------------------------------
 # Translations (PT / EN / ES) — .ts updated by lupdate, compiled to .qm
 # and embedded into the Qt resource system under ":/i18n".

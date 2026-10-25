@@ -69,6 +69,7 @@ QTabBar::close-button {
     border-radius: 4px;
     margin: 4px;
     background: transparent;
+    image: url(:/icons/close.svg);
 }
 
 QTabBar::close-button:hover {
