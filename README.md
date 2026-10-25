@@ -10,6 +10,15 @@
 [![GitHub Actions](https://github.com/viniciuswerneck/papiro/actions/workflows/windows-release.yml/badge.svg)](https://github.com/viniciuswerneck/papiro/actions/workflows/windows-release.yml)
 
 > A focused, cross-platform text editor built with **C++17 / Qt 6.8**.
+>
+> **Papiro** é um editor de texto avançado estilo *programmer's editor* (como TextPad, Notepad++, EditPlus), feito para desenvolvedores e usuários avançados que precisam de:
+> - Edição rápida de código e texto com *syntax highlighting* para 9 linguagens
+> - Manipulação de arquivos grandes (GBs) sem travar
+> - Ferramentas integradas: macros, diff, busca em arquivos, ferramentas externas
+> - Interface limpa, leve e personalizável (temas claro/escuro, fonte, layout)
+> - Multiplataforma: Linux, Windows, futuro macOS
+>
+> Ideal para: programação, scripts, logs, configuração, markdown, CSV, qualquer texto.
 
 ## 📥 Installation
 
@@ -17,14 +26,14 @@
 
 #### AppImage (recommended, universal)
 ```bash
-wget https://github.com/viniciuswerneck/papiro/releases/latest/download/Papiro-0.3.0-x86_64.AppImage
+wget https://github.com/viniciuswerneck/papiro/releases/latest/download/Papiro-0.4.0-x86_64.AppImage
 chmod +x Papiro-*.AppImage
 ./Papiro-*.AppImage
 ```
 
 #### Debian/Ubuntu (.deb)
 ```bash
-wget https://github.com/viniciuswerneck/papiro/releases/latest/download/papiro_0.3.0_amd64.deb
+wget https://github.com/viniciuswerneck/papiro/releases/latest/download/papiro_0.4.0_amd64.deb
 sudo apt install ./papiro_*.deb
 ```
 
@@ -39,10 +48,10 @@ yay -S papiro  # or paru -S papiro
 ### Windows
 
 #### Installer (QtIFW)
-Download `Papiro-0.3.0-windows-x64.exe` from [Releases](https://github.com/viniciuswerneck/papiro/releases), run it.
+Download `Papiro-0.4.0-windows-x64.exe` from [Releases](https://github.com/viniciuswerneck/papiro/releases), run it.
 
 #### Portable ZIP
-Download `Papiro-0.3.0-windows-x64-portable.zip`, extract anywhere, run `Papiro.exe`.
+Download `Papiro-0.4.0-windows-x64-portable.zip`, extract anywhere, run `Papiro.exe`.
 
 ### Build from Source
 ```bash
@@ -69,6 +78,10 @@ cmake --build build --config Release -j$(nproc)
 - **Zoom** in/out/reset (Ctrl++ / Ctrl+- / Ctrl+0)
 - **Word wrap** toggle
 - **Configurable font**
+- **Large file support (GBs)** — memory-mapped I/O, chunked loading, virtual scroll with auto-load
+- **Whitespace display** — tabs (→), spaces (·), EOL (¶)
+- **Cursor free positioning** — virtual space beyond line end (View → Cursor Free Positioning)
+- **Join/Split Lines** — Ctrl+J to join, Document → Split Lines to split
 
 ### 📁 File & Project Management
 - **Tabbed interface** with drag-reorder, close buttons
@@ -110,9 +123,10 @@ cmake --build build --config Release -j$(nproc)
 
 ### 🌐 Internationalization
 - **3 languages**: Portuguese (PT), English (EN), Spanish (ES)
-- **266 translated strings** via Qt Linguist (`.ts`/`.qm`)
+- **270 translated strings** via Qt Linguist (`.ts`/`.qm`)
 - **Auto-detect** from system locale (`pt_BR` → `pt`)
-- **Menu**: View → Language
+- **Switcher**: View → Language and Preferences → Appearance → Language
+- **System default** option follows the OS locale
 - **Correct plurals** (numerusform)
 
 ### 📝 Spell Checking (Hunspell)
@@ -122,7 +136,9 @@ cmake --build build --config Release -j$(nproc)
 - **Check Spelling** (F7) toggle in View menu
 
 ### 🎨 Themes
+- **Fluent Design** styling driven by design tokens (`resources/themes/fluent.json`) and a stylesheet (`fluent.qss`)
 - **Light / Dark** themes with instant switching (View → Theme)
+- **Custom Fluent title bar** with Mica on Windows
 - **Syntax colors** adapt per theme (keyword, comment, string, number, etc.)
 - **No flash** — palette applied before window shows
 - **Persisted** in QSettings

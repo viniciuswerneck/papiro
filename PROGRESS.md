@@ -85,8 +85,9 @@
 
 ### Internacionalização (i18n)
 - [x] Infraestrutura `QTranslator` + `.ts`/`.qm` embutidos (`:/i18n`)
-- [x] 266 strings extraídas com `lupdate`, traduzidas para **PT**, **EN** e **ES**
-- [x] Menu **Exibir → Idioma** (English / Português / Español), persistido em QSettings
+- [x] 270 strings extraídas com `lupdate`, traduzidas para **PT**, **EN** e **ES**
+- [x] Menu **Exibir → Idioma** (Padrão do sistema / English / Português / Español), persistido em QSettings
+- [x] Seletor de idioma também em **Preferências → Aparência → Idioma**, sincronizado com o menu
 - [x] Seleção automática pelo locale do sistema (`pt_BR` → `pt`)
 - [x] Plural correto (`numerusform`)
 
@@ -179,6 +180,8 @@
 
 ### Temas claro/escuro
 - [x] `ui/Theme` centraliza paletas e cores de sintaxe
+- [x] Tema **Fluent Design** com design tokens (`fluent.json`) e QSS (`fluent.qss`)
+- [x] Barra de título Fluent com Mica no Windows (`FluentTitleBar`)
 - [x] Menu **View → Theme** com Light/Dark, persistido em `ui/theme`
 - [x] Paleta global aplicada antes da janela abrir (sem “flash” claro)
 - [x] Cores do editor: linha atual, par de colchetes, gutter e sintaxe

@@ -4,6 +4,7 @@
 
 #include <QDialog>
 #include <QFont>
+#include <QString>
 
 class QCheckBox;
 class QComboBox;
@@ -17,6 +18,7 @@ namespace papiro {
 struct Preferences {
     QFont editorFont;
     Theme::Mode theme = Theme::Mode::Light;
+    QString language; // locale name (e.g. "pt"), empty follows the system locale
     bool restoreSession = true;
     bool wordWrap = false;
     bool lineNumbers = true;
@@ -47,6 +49,7 @@ private:
     QLabel *m_fontLabel = nullptr;
     QPushButton *m_fontButton = nullptr;
     QComboBox *m_themeCombo = nullptr;
+    QComboBox *m_languageCombo = nullptr;
     QCheckBox *m_restoreSession = nullptr;
     QCheckBox *m_wordWrap = nullptr;
     QCheckBox *m_lineNumbers = nullptr;

@@ -8,6 +8,7 @@
 #include "ui/FindReplaceDialog.h"
 #include "ui/KeyboardShortcutsDialog.h"
 #include "ui/LSPPreferencesDialog.h"
+#include "ui/FluentTitleBar.h"
 
 #include <QFont>
 #include <QMainWindow>
@@ -148,6 +149,8 @@ private:
     bool saveDocument(Document *document, bool saveAs);
     void refreshTabTitle(Document *document);
     void applySettings();
+    void applyFluentStyle();
+    void setupFluentTitleBar();
     void saveSettings();
     void restoreSession();
     void saveSession();
@@ -298,6 +301,7 @@ private:
     JavaRunner *m_javaRunner = nullptr;
     QString m_javaOutputBuffer;
     QLabel *m_lspStatusLabel = nullptr;
+    FluentTitleBar *m_fluentTitleBar = nullptr;
 
     QMap<Macro *, QShortcut *> m_customShortcuts;
 

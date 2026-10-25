@@ -36,6 +36,10 @@ bool installTranslation(QApplication &app, QTranslator &translator, const QStrin
 
 int main(int argc, char *argv[])
 {
+    // Force Qt to use its own menu bar rendering (not platform native)
+    // This ensures menu bar is always visible on Linux/Wayland
+    QApplication::setAttribute(Qt::AA_DontUseNativeMenuBar, true);
+
     QApplication application(argc, argv);
     QCoreApplication::setOrganizationName(QStringLiteral("Papiro"));
     QCoreApplication::setApplicationName(QStringLiteral("Papiro"));

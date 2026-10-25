@@ -361,17 +361,21 @@ void TestMainWindow::preferencesDialogRoundTrip()
     QVERIFY(fontLabel->text().contains(QStringLiteral("Monospace")));
 
     auto *theme = dialog.findChild<QComboBox *>(QStringLiteral("PreferencesThemeCombo"));
+    auto *language = dialog.findChild<QComboBox *>(QStringLiteral("PreferencesLanguageCombo"));
     auto *restore = dialog.findChild<QCheckBox *>(QStringLiteral("PreferencesRestoreSession"));
     auto *wordWrap = dialog.findChild<QCheckBox *>(QStringLiteral("PreferencesWordWrap"));
     auto *matchCase = dialog.findChild<QCheckBox *>(QStringLiteral("PreferencesMatchCase"));
     auto *wholeWord = dialog.findChild<QCheckBox *>(QStringLiteral("PreferencesWholeWord"));
     QVERIFY(theme);
+    QVERIFY(language);
     QVERIFY(restore);
     QVERIFY(wordWrap);
     QVERIFY(matchCase);
     QVERIFY(wholeWord);
 
+    QCOMPARE(language->currentData().toString(), QString());
     theme->setCurrentIndex(theme->findData(QStringLiteral("dark")));
+    language->setCurrentIndex(language->findData(QStringLiteral("es")));
     restore->setChecked(false);
     wordWrap->setChecked(true);
     matchCase->setChecked(true);
@@ -379,6 +383,7 @@ void TestMainWindow::preferencesDialogRoundTrip()
 
     const Preferences result = dialog.preferences();
     QCOMPARE(result.theme, Theme::Mode::Dark);
+    QCOMPARE(result.language, QStringLiteral("es"));
     QVERIFY(!result.restoreSession);
     QVERIFY(result.wordWrap);
     QVERIFY(result.searchMatchCase);

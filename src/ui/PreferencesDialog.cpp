@@ -81,11 +81,29 @@ PreferencesDialog::PreferencesDialog(const Preferences &current, QWidget *parent
     const int themeIndex = m_themeCombo->findData(Theme::key(current.theme));
     m_themeCombo->setCurrentIndex(themeIndex >= 0 ? themeIndex : 0);
 
+    m_languageCombo = new QComboBox(this);
+    m_languageCombo->setObjectName(QStringLiteral("PreferencesLanguageCombo"));
+    // Language names are shown in their own language so they stay recognizable
+    // no matter which translation is active.
+    m_languageCombo->addItem(tr("System default"), QString());
+    m_languageCombo->addItem(QStringLiteral("English"), QStringLiteral("en"));
+    m_languageCombo->addItem(QStringLiteral("Português"), QStringLiteral("pt"));
+    m_languageCombo->addItem(QStringLiteral("Español"), QStringLiteral("es"));
+    const int languageIndex = m_languageCombo->findData(current.language);
+    m_languageCombo->setCurrentIndex(languageIndex >= 0 ? languageIndex : 0);
+
+    auto *languageHint = new QLabel(tr("Language changes take effect after restarting Papiro."), this);
+    languageHint->setObjectName(QStringLiteral("PreferencesLanguageHint"));
+    languageHint->setWordWrap(true);
+    languageHint->setEnabled(false);
+
     auto *appearanceForm = new QFormLayout;
     appearanceForm->addRow(tr("Theme:"), m_themeCombo);
+    appearanceForm->addRow(tr("Language:"), m_languageCombo);
 
     auto *appearanceLayout = new QVBoxLayout(appearancePage);
     appearanceLayout->addLayout(appearanceForm);
+    appearanceLayout->addWidget(languageHint);
     appearanceLayout->addStretch();
 
     // --- Session ----------------------------------------------------------
@@ -150,6 +168,7 @@ Preferences PreferencesDialog::preferences() const
     Preferences result;
     result.editorFont = m_font;
     result.theme = Theme::fromKey(m_themeCombo->currentData().toString());
+    result.language = m_languageCombo->currentData().toString();
     result.restoreSession = m_restoreSession->isChecked();
     result.wordWrap = m_wordWrap->isChecked();
     result.lineNumbers = m_lineNumbers->isChecked();

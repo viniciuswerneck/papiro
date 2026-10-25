@@ -24,6 +24,7 @@
 #include "ui/ToolsDialog.h"
 #include "ui/Theme.h"
 #include "ui/SortLinesDialog.h"
+#include "ui/FluentTitleBar.h"
 
 #include <QAction>
 #include <QActionGroup>
@@ -141,9 +142,13 @@ MainWindow::MainWindow(QWidget *parent)
     });
 
     applySettings();
+    applyFluentStyle();
     createActions();
     createStatusBar();
     createDockWidgets();
+
+    // Setup Fluent title bar AFTER menus are created
+    setupFluentTitleBar();
 
     // LSP: connect signals
     connect(m_lspManager, &LSPManager::clientStarted, this, &MainWindow::updateLSPStatus);
@@ -552,6 +557,7 @@ void MainWindow::createActions()
         const char *label;
         const char *locale;
     } languages[] = {
+        {QT_TRANSLATE_NOOP("papiro::MainWindow", "System default"), ""},
         {"English", "en"},
         {"Português", "pt"},
         {"Español", "es"},
@@ -559,7 +565,7 @@ void MainWindow::createActions()
     QSettings langSettings;
     const QString currentLang = langSettings.value(QStringLiteral("ui/language")).toString();
     for (const auto &entry : languages) {
-        auto *action = new QAction(QString::fromUtf8(entry.label), this);
+        auto *action = new QAction(tr(entry.label), this);
         action->setCheckable(true);
         action->setData(QString::fromLatin1(entry.locale));
         if (currentLang == QLatin1String(entry.locale))
@@ -1999,6 +2005,7 @@ void MainWindow::openPreferences()
     Preferences current;
     current.editorFont = m_editorFont;
     current.theme = Theme::mode();
+    current.language = QSettings().value(QStringLiteral("ui/language")).toString();
     current.restoreSession = m_restoreSessionAction->isChecked();
     current.wordWrap = m_wordWrap;
     current.lineNumbers = m_lineNumbers;
@@ -2046,6 +2053,12 @@ void MainWindow::applyPreferences(const Preferences &preferences)
                 action->setChecked(true);
         }
     }
+
+    // Language is installed by main() before the window is built, so a change
+    // can only take effect on the next start. setLanguage() persists it and
+    // warns the user (it is also used by View > Language).
+    if (preferences.language != QSettings().value(QStringLiteral("ui/language")).toString())
+        setLanguage(preferences.language);
 
     m_searchMatchCase = preferences.searchMatchCase;
     m_searchWholeWord = preferences.searchWholeWord;
@@ -3396,8 +3409,71 @@ void MainWindow::setTheme(const QString &key)
     updateStatus();
 }
 
+void MainWindow::applyFluentStyle()
+{
+    // Apply Fluent QSS based on current theme
+    Theme::apply(Theme::mode());
+
+    // Configure tab widget for Fluent style
+    m_tabs->setDocumentMode(false);
+    m_tabs->setTabPosition(QTabWidget::North);
+    m_tabs->setElideMode(Qt::ElideRight);
+    m_tabs->setUsesScrollButtons(true);
+    m_tabs->setIconSize(QSize(16, 16));
+
+    // Configure main toolbar
+    auto *mainToolbar = findChild<QToolBar *>(QStringLiteral("MainToolbar"));
+    if (mainToolbar) {
+        mainToolbar->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+        mainToolbar->setIconSize(QSize(18, 18));
+        mainToolbar->setMovable(false);
+    }
+
+    // Status bar - remove size grip
+    statusBar()->setSizeGripEnabled(false);
+
+    // Ensure all widgets update their style
+    for (QWidget *widget : QApplication::allWidgets()) {
+        widget->style()->unpolish(widget);
+        widget->style()->polish(widget);
+    }
+}
+
+void MainWindow::setupFluentTitleBar()
+{
+    m_fluentTitleBar = new FluentTitleBar(this);
+    m_fluentTitleBar->setWindowTitle(windowTitle());
+    m_fluentTitleBar->setWindowIcon(windowIcon());
+
+    connect(m_fluentTitleBar, &FluentTitleBar::minimizeRequested, this, &QWidget::showMinimized);
+    connect(m_fluentTitleBar, &FluentTitleBar::maximizeRequested, this, [this] {
+        if (isMaximized()) showNormal(); else showMaximized();
+        m_fluentTitleBar->updateMaximizeButton();
+    });
+    connect(m_fluentTitleBar, &FluentTitleBar::closeRequested, this, &QWidget::close);
+
+#ifdef Q_OS_WIN
+    // On Windows with Mica, integrate menu bar into custom titlebar
+    m_fluentTitleBar->setMenuBar(menuBar());
+    setMenuWidget(m_fluentTitleBar);
+#else
+    // On Linux/macOS: use native window frame and menu bar
+    // FluentTitleBar is only needed for Windows Mica integration
+    m_fluentTitleBar->hide();
+    m_fluentTitleBar->deleteLater();
+    m_fluentTitleBar = nullptr;
+#endif
+}
+
 void MainWindow::setLanguage(const QString &locale)
 {
+    if (m_languageGroup) {
+        for (QAction *action : m_languageGroup->actions()) {
+            if (action->data().toString() == locale)
+                action->setChecked(true);
+        }
+    }
+
     QSettings settings;
     if (settings.value(QStringLiteral("ui/language")).toString() == locale)
         return;

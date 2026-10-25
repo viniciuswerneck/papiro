@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.21)
 
 project(Papiro
-    VERSION 0.3.0
+    VERSION 0.4.0
     DESCRIPTION "A focused, cross-platform text editor"
     LANGUAGES CXX
 )
@@ -78,6 +78,7 @@ set(PAPIRO_APP_SOURCES
     src/ui/ToolsDialog.cpp
     src/ui/Theme.cpp
     src/ui/FileExplorerWidget.cpp
+    src/ui/FluentTitleBar.cpp
 )
 
 qt_add_executable(Papiro WIN32 MACOSX_BUNDLE
@@ -100,6 +101,15 @@ qt_add_resources(Papiro "syntax_definitions"
         resources/syntax/markdown.syn
         resources/syntax/python.syn
         resources/syntax/text.syn
+)
+
+# Fluent theme resources
+qt_add_resources(Papiro "fluent_theme"
+    PREFIX "/themes"
+    BASE "resources/themes"
+    FILES
+        resources/themes/fluent.json
+        resources/themes/fluent.qss
 )
 
 # ---------------------------------------------------------------------------

@@ -10,6 +10,15 @@
 [![GitHub Actions](https://github.com/viniciuswerneck/papiro/actions/workflows/windows-release.yml/badge.svg)](https://github.com/viniciuswerneck/papiro/actions/workflows/windows-release.yml)
 
 > Un editor de texto enfocado, multiplataforma, construido con **C++17 / Qt 6.8**.
+>
+> **Papiro** es un editor de texto avanzado estilo *programmer's editor* (como TextPad, Notepad++, EditPlus), hecho para desarrolladores y usuarios avanzados que necesitan:
+> - Edición rápida de código y texto con *syntax highlighting* para 9 lenguajes
+> - Manipulación de archivos grandes (GBs) sin trabar
+> - Herramientas integradas: macros, diff, búsqueda en archivos, herramientas externas
+> - Interfaz limpia, ligera y personalizable (temas claro/oscuro, fuente, layout)
+> - Multiplataforma: Linux, Windows, futuro macOS
+>
+> Ideal para: programación, scripts, logs, configuración, markdown, CSV, cualquier texto.
 
 ## 📥 Instalación
 
@@ -17,14 +26,14 @@
 
 #### AppImage (recomendado, universal)
 ```bash
-wget https://github.com/viniciuswerneck/papiro/releases/latest/download/Papiro-0.3.0-x86_64.AppImage
+wget https://github.com/viniciuswerneck/papiro/releases/latest/download/Papiro-0.4.0-x86_64.AppImage
 chmod +x Papiro-*.AppImage
 ./Papiro-*.AppImage
 ```
 
 #### Debian/Ubuntu (.deb)
 ```bash
-wget https://github.com/viniciuswerneck/papiro/releases/latest/download/papiro_0.3.0_amd64.deb
+wget https://github.com/viniciuswerneck/papiro/releases/latest/download/papiro_0.4.0_amd64.deb
 sudo apt install ./papiro_*.deb
 ```
 
@@ -39,10 +48,10 @@ yay -S papiro  # o paru -S papiro
 ### Windows
 
 #### Instalador (QtIFW)
-Descargue `Papiro-0.3.0-windows-x64.exe` de [Releases](https://github.com/viniciuswerneck/papiro/releases) y ejecútelo.
+Descargue `Papiro-0.4.0-windows-x64.exe` de [Releases](https://github.com/viniciuswerneck/papiro/releases) y ejecútelo.
 
 #### ZIP Portable
-Descargue `Papiro-0.3.0-windows-x64-portable.zip`, extraiga en cualquier lugar, ejecute `Papiro.exe`.
+Descargue `Papiro-0.4.0-windows-x64-portable.zip`, extraiga en cualquier lugar, ejecute `Papiro.exe`.
 
 ### Compilar desde Código Fuente
 ```bash
@@ -110,9 +119,10 @@ cmake --build build --config Release -j$(nproc)
 
 ### 🌐 Internacionalización
 - **3 idiomas**: Portugués (PT), Inglés (EN), Español (ES)
-- **266 strings traducidas** via Qt Linguist (`.ts`/`.qm`)
+- **270 strings traducidas** via Qt Linguist (`.ts`/`.qm`)
 - **Detección automática** por locale del sistema (`es_ES` → `es`)
-- **Menú**: Ver → Idioma
+- **Selector**: Ver → Idioma y Preferencias → Apariencia → Idioma
+- **Predeterminado del sistema** sigue el locale del SO
 - **Plurales correctos** (numerusform)
 
 ### 📝 Corrector Ortográfico (Hunspell)
@@ -122,7 +132,9 @@ cmake --build build --config Release -j$(nproc)
 - **Verificar Ortografía** (F7) alternable en menú Ver
 
 ### 🎨 Temas
+- **Fluent Design** con design tokens (`resources/themes/fluent.json`) y hoja de estilo (`fluent.qss`)
 - **Claro / Oscuro** con cambio instantáneo (Ver → Tema)
+- **Barra de título Fluent** con Mica en Windows
 - **Colores de sintaxis** se adaptan por tema (keyword, comment, string, number, etc.)
 - **Sin "flash"** — paleta aplicada antes de mostrar la ventana
 - **Persistido** en QSettings

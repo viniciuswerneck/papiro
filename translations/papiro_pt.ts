@@ -1213,6 +1213,11 @@ Deseja salvá-las?</translation>
         <source>The interface language will change after restarting Papiro.</source>
         <translation>O idioma da interface mudará após reiniciar o Papiro.</translation>
     </message>
+    <message>
+        <location filename="../src/app/MainWindow.cpp" line="560"/>
+        <source>System default</source>
+        <translation>Padrão do sistema</translation>
+    </message>
 </context>
 <context>
     <name>papiro::PreferencesDialog</name>
@@ -1325,6 +1330,21 @@ Deseja salvá-las?</translation>
         <location filename="../src/ui/PreferencesDialog.cpp" line="159"/>
         <source>%1, %2 pt</source>
         <translation>%1, %2 pt</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/PreferencesDialog.cpp" line="102"/>
+        <source>Language:</source>
+        <translation>Idioma:</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/PreferencesDialog.cpp" line="88"/>
+        <source>System default</source>
+        <translation>Padrão do sistema</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/PreferencesDialog.cpp" line="95"/>
+        <source>Language changes take effect after restarting Papiro.</source>
+        <translation>A mudança de idioma terá efeito após reiniciar o Papiro.</translation>
     </message>
 </context>
 <context>

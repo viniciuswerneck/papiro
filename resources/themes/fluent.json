@@ -1,0 +1,218 @@
+{
+  "light": {
+    "color": {
+      "background": "#FFFFFF",
+      "surface": "#F3F3F3",
+      "surfaceHover": "#E8E8E8",
+      "surfacePressed": "#DCDCDC",
+      "border": "#D1D1D1",
+      "borderFocus": "#0078D4",
+      "textPrimary": "#1B1B1B",
+      "textSecondary": "#616161",
+      "textDisabled": "#9D9D9D",
+      "textOnAccent": "#FFFFFF",
+      "accent": "#0078D4",
+      "accentHover": "#106EBE",
+      "accentPressed": "#005A9E",
+      "accentLight": "#DEECF9",
+      "accentLighter": "#EFF6FC",
+      "success": "#107C10",
+      "successLight": "#DFF6DD",
+      "warning": "#FF8C00",
+      "warningLight": "#FFF4E6",
+      "error": "#D13438",
+      "errorLight": "#FDE7E9",
+      "focusBorder": "#0078D4",
+      "divider": "#E1E1E1"
+    },
+    "cornerRadius": {
+      "small": 4,
+      "medium": 8,
+      "large": 12,
+      "xlarge": 16
+    },
+    "spacing": {
+      "xs": 4,
+      "s": 8,
+      "m": 12,
+      "l": 16,
+      "xl": 24,
+      "xxl": 32
+    },
+    "typography": {
+      "fontFamily": "Segoe UI Variable, Segoe UI, system-ui, -apple-system, BlinkMacSystemFont, sans-serif",
+      "fontFamilyMonospace": "'JetBrains Mono', 'Fira Code', 'Consolas', 'Monospace'",
+      "baseSize": 14,
+      "caption": 12,
+      "body": 14,
+      "bodyStrong": 14,
+      "subtitle": 16,
+      "title": 20,
+      "large": 28,
+      "xlarge": 36,
+      "fontWeightNormal": 400,
+      "fontWeightMedium": 500,
+      "fontWeightSemibold": 600,
+      "fontWeightBold": 700,
+      "lineHeight": 1.43
+    },
+    "elevation": {
+      "level0": "none",
+      "level1": "0 1px 2px rgba(0,0,0,0.05), 0 1px 1px rgba(0,0,0,0.03)",
+      "level2": "0 2px 6px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.05)",
+      "level3": "0 8px 16px rgba(0,0,0,0.12), 0 4px 8px rgba(0,0,0,0.08)",
+      "level4": "0 16px 32px rgba(0,0,0,0.15), 0 8px 16px rgba(0,0,0,0.1)"
+    },
+    "scrollbar": {
+      "width": 8,
+      "track": "transparent",
+      "thumb": "#C8C8C8",
+      "thumbHover": "#A0A0A0",
+      "thumbPressed": "#8C8C8C",
+      "radius": 4,
+      "margin": 2
+    },
+    "animation": {
+      "durationFast": 100,
+      "durationNormal": 150,
+      "durationSlow": 200,
+      "easingStandard": "cubic-bezier(0.4, 0.0, 0.2, 1)",
+      "easingDecelerate": "cubic-bezier(0.0, 0.0, 0.2, 1)",
+      "easingAccelerate": "cubic-bezier(0.4, 0.0, 1, 1)"
+    },
+    "iconSizes": {
+      "small": 16,
+      "medium": 18,
+      "large": 20,
+      "xlarge": 24
+    },
+    "component": {
+      "tabHeight": 36,
+      "tabMinWidth": 120,
+      "tabPaddingHorizontal": 16,
+      "menuBarHeight": 32,
+      "menuItemPaddingVertical": 8,
+      "menuItemPaddingHorizontal": 16,
+      "menuMinWidth": 200,
+      "toolBarHeight": 40,
+      "toolButtonPadding": 6,
+      "statusBarHeight": 28,
+      "dockTitleHeight": 32,
+      "buttonHeight": 36,
+      "buttonPaddingHorizontal": 16,
+      "inputHeight": 36,
+      "inputPaddingHorizontal": 12,
+      "comboBoxPaddingRight": 32,
+      "dialogPadding": 24,
+      "dialogButtonPaddingHorizontal": 16
+    }
+  },
+  "dark": {
+    "color": {
+      "background": "#1B1B1B",
+      "surface": "#252526",
+      "surfaceHover": "#2D2D2D",
+      "surfacePressed": "#383838",
+      "border": "#3F3F46",
+      "borderFocus": "#0078D4",
+      "textPrimary": "#FFFFFF",
+      "textSecondary": "#CCCCCC",
+      "textDisabled": "#808080",
+      "textOnAccent": "#FFFFFF",
+      "accent": "#0078D4",
+      "accentHover": "#3A96DD",
+      "accentPressed": "#005A9E",
+      "accentLight": "#004578",
+      "accentLighter": "#0E2D45",
+      "success": "#4EC921",
+      "successLight": "#1A3D1A",
+      "warning": "#FFB900",
+      "warningLight": "#3D2F00",
+      "error": "#F14C4C",
+      "errorLight": "#3D1A1A",
+      "focusBorder": "#0078D4",
+      "divider": "#3F3F46"
+    },
+    "cornerRadius": {
+      "small": 4,
+      "medium": 8,
+      "large": 12,
+      "xlarge": 16
+    },
+    "spacing": {
+      "xs": 4,
+      "s": 8,
+      "m": 12,
+      "l": 16,
+      "xl": 24,
+      "xxl": 32
+    },
+    "typography": {
+      "fontFamily": "Segoe UI Variable, Segoe UI, system-ui, -apple-system, BlinkMacSystemFont, sans-serif",
+      "fontFamilyMonospace": "'JetBrains Mono', 'Fira Code', 'Consolas', 'Monospace'",
+      "baseSize": 14,
+      "caption": 12,
+      "body": 14,
+      "bodyStrong": 14,
+      "subtitle": 16,
+      "title": 20,
+      "large": 28,
+      "xlarge": 36,
+      "fontWeightNormal": 400,
+      "fontWeightMedium": 500,
+      "fontWeightSemibold": 600,
+      "fontWeightBold": 700,
+      "lineHeight": 1.43
+    },
+    "elevation": {
+      "level0": "none",
+      "level1": "0 1px 2px rgba(0,0,0,0.2), 0 1px 1px rgba(0,0,0,0.15)",
+      "level2": "0 2px 6px rgba(0,0,0,0.25), 0 1px 3px rgba(0,0,0,0.15)",
+      "level3": "0 8px 16px rgba(0,0,0,0.3), 0 4px 8px rgba(0,0,0,0.2)",
+      "level4": "0 16px 32px rgba(0,0,0,0.35), 0 8px 16px rgba(0,0,0,0.25)"
+    },
+    "scrollbar": {
+      "width": 8,
+      "track": "transparent",
+      "thumb": "#4E4E4E",
+      "thumbHover": "#6E6E6E",
+      "thumbPressed": "#808080",
+      "radius": 4,
+      "margin": 2
+    },
+    "animation": {
+      "durationFast": 100,
+      "durationNormal": 150,
+      "durationSlow": 200,
+      "easingStandard": "cubic-bezier(0.4, 0.0, 0.2, 1)",
+      "easingDecelerate": "cubic-bezier(0.0, 0.0, 0.2, 1)",
+      "easingAccelerate": "cubic-bezier(0.4, 0.0, 1, 1)"
+    },
+    "iconSizes": {
+      "small": 16,
+      "medium": 18,
+      "large": 20,
+      "xlarge": 24
+    },
+    "component": {
+      "tabHeight": 36,
+      "tabMinWidth": 120,
+      "tabPaddingHorizontal": 16,
+      "menuBarHeight": 32,
+      "menuItemPaddingVertical": 8,
+      "menuItemPaddingHorizontal": 16,
+      "menuMinWidth": 200,
+      "toolBarHeight": 40,
+      "toolButtonPadding": 6,
+      "statusBarHeight": 28,
+      "dockTitleHeight": 32,
+      "buttonHeight": 36,
+      "buttonPaddingHorizontal": 16,
+      "inputHeight": 36,
+      "inputPaddingHorizontal": 12,
+      "comboBoxPaddingRight": 32,
+      "dialogPadding": 24,
+      "dialogButtonPaddingHorizontal": 16
+    }
+  }
+}

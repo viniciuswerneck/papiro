@@ -3,6 +3,7 @@
 #include <QColor>
 #include <QPalette>
 #include <QString>
+#include <QJsonObject>
 
 namespace papiro {
 namespace Theme {
@@ -53,6 +54,12 @@ QPalette palette(Mode mode);
 
 /*! Applies the palette to the running QApplication and stores the mode. */
 void apply(Mode mode);
+
+/*! Returns the Fluent QSS stylesheet for the given mode. */
+QString fluentQSS(Mode mode);
+
+/*! Loads fluent tokens from JSON resource. */
+bool loadFluentTokens();
 
 QString key(Mode mode);
 Mode fromKey(const QString &key, Mode fallback = Mode::Light);

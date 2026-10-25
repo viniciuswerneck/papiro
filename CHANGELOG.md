@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.4.0] - 2026-10-24
+### Added
+- Fluent Design interface: design tokens (`resources/themes/fluent.json`) plus stylesheet (`fluent.qss`)
+- Custom Fluent title bar with Mica integration on Windows
+- Language selector in Preferences → Appearance (System default / English / Português / Español)
+- "System default" entry in View → Language so the app can follow the OS locale again
+
+### Fixed
+- Menu bar items were clipped on Linux when the stylesheet forced a fixed menu bar height
+- Dark theme overrides never applied (the `theme` property was set on QApplication, not on a widget)
+- Combo box popups opened showing a single item plus scroll arrows
+- Low-contrast selected item text in dark theme combo popups
+
 ## [0.3.0] - 2026-10-24
 ### Added
 - Advanced print preview with configurable headers/footers

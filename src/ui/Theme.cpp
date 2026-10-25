@@ -1,12 +1,18 @@
 #include "ui/Theme.h"
 
 #include <QApplication>
+#include <QFile>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QDir>
 
 namespace papiro {
 namespace Theme {
 namespace {
 
 Mode g_mode = Mode::Light;
+QJsonObject g_fluentTokens;
+bool g_tokensLoaded = false;
 
 } // namespace
 
@@ -124,8 +130,74 @@ QPalette palette(Mode mode)
 void apply(Mode mode)
 {
     setMode(mode);
-    if (auto *application = qobject_cast<QApplication *>(QCoreApplication::instance()))
+    if (auto *application = qobject_cast<QApplication *>(QCoreApplication::instance())) {
         application->setPalette(palette(mode));
+
+        // Also apply Fluent QSS
+        QString qss = fluentQSS(mode);
+        if (!qss.isEmpty()) {
+            application->setStyleSheet(qss);
+        }
+    }
+}
+
+QString fluentQSS(Mode mode)
+{
+    if (!g_tokensLoaded) {
+        loadFluentTokens();
+    }
+
+    QFile file(":/themes/fluent.qss");
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        return QString();
+    }
+
+    QString qss = file.readAll();
+    file.close();
+
+    // The QSS file ships the light theme as base rules and the dark theme as
+    // `[theme="dark"] ...` overrides. Property selectors only match a widget or
+    // one of its widget ancestors, and QApplication is a QObject (not a
+    // QWidget), so those rules would never match. Resolve them here instead:
+    // drop the prefix and let the dark overrides follow the base rules, where
+    // they win by order (same specificity).
+    if (mode == Mode::Dark) {
+        static const QString darkPrefix = QStringLiteral("[theme=\"dark\"] ");
+        qss.replace(darkPrefix, QString());
+    }
+
+    qApp->setProperty("theme", key(mode));
+
+    return qss;
+}
+
+bool loadFluentTokens()
+{
+    if (g_tokensLoaded) {
+        return true;
+    }
+
+    QFile file(":/themes/fluent.json");
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        return false;
+    }
+
+    QByteArray data = file.readAll();
+    file.close();
+
+    QJsonParseError error;
+    QJsonDocument doc = QJsonDocument::fromJson(data, &error);
+    if (error.error != QJsonParseError::NoError) {
+        return false;
+    }
+
+    if (doc.isObject()) {
+        g_fluentTokens = doc.object();
+        g_tokensLoaded = true;
+        return true;
+    }
+
+    return false;
 }
 
 QString key(Mode mode)

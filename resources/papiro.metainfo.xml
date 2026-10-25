@@ -21,6 +21,9 @@
   <url type="homepage">https://github.com/viniciuswerneck/papiro</url>
   <url type="bugtracker">https://github.com/viniciuswerneck/papiro/issues</url>
   <releases>
+    <release version="0.4.0" date="2026-10-24">
+      <description>Fluent Design interface, custom Windows title bar, and a language selector in Preferences.</description>
+    </release>
     <release version="0.3.0" date="2026-10-24">
       <description>Print preview, Java/JDK integration, real diff hunks, virtual-space cursor and TextPad feature parity.</description>
     </release>
