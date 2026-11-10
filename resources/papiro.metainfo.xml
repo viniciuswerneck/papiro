@@ -21,6 +21,9 @@
   <url type="homepage">https://github.com/viniciuswerneck/papiro</url>
   <url type="bugtracker">https://github.com/viniciuswerneck/papiro/issues</url>
   <releases>
+    <release version="0.4.2" date="2026-11-09">
+      <description>Fixed the invisible dark-theme tab close button and unified the launcher, dock and window icons.</description>
+    </release>
     <release version="0.4.1" date="2026-10-25">
       <description>Tab close buttons, keyboard shortcuts translations, fixed icon installation.</description>
     </release>

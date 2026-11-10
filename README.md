@@ -26,14 +26,14 @@
 
 #### AppImage (recommended, universal)
 ```bash
-wget https://github.com/viniciuswerneck/papiro/releases/latest/download/Papiro-0.4.1-x86_64.AppImage
+wget https://github.com/viniciuswerneck/papiro/releases/latest/download/Papiro-0.4.2-x86_64.AppImage
 chmod +x Papiro-*.AppImage
 ./Papiro-*.AppImage
 ```
 
 #### Debian/Ubuntu (.deb)
 ```bash
-wget https://github.com/viniciuswerneck/papiro/releases/latest/download/papiro_0.4.1_amd64.deb
+wget https://github.com/viniciuswerneck/papiro/releases/latest/download/papiro_0.4.2_amd64.deb
 sudo apt install ./papiro_*.deb
 ```
 
@@ -48,10 +48,10 @@ yay -S papiro  # or paru -S papiro
 ### Windows
 
 #### Installer (QtIFW)
-Download `Papiro-0.4.1-windows-x64.exe` from [Releases](https://github.com/viniciuswerneck/papiro/releases), run it.
+Download `Papiro-0.4.2-windows-x64.exe` from [Releases](https://github.com/viniciuswerneck/papiro/releases), run it.
 
 #### Portable ZIP
-Download `Papiro-0.4.1-windows-x64-portable.zip`, extract anywhere, run `Papiro.exe`.
+Download `Papiro-0.4.2-windows-x64-portable.zip`, extract anywhere, run `Papiro.exe`.
 
 ### Build from Source
 ```bash

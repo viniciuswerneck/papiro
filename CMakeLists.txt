@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.21)
 
 project(Papiro
-    VERSION 0.4.1
+    VERSION 0.4.2
     DESCRIPTION "A focused, cross-platform text editor"
     LANGUAGES CXX
 )
@@ -118,6 +118,8 @@ qt_add_resources(Papiro "icons"
     BASE "resources/icons"
     FILES
         resources/icons/close.svg
+        resources/icons/close-dark.svg
+        resources/icons/papiro.png
 )
 
 # ---------------------------------------------------------------------------

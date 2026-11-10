@@ -999,8 +999,18 @@ QTableView:focus {
     background-color: #2D2D2D;
 }
 
+[theme="dark"] QTabBar::close-button {
+    /* QSS `color` does not affect SVG `currentColor`, so use a white icon
+       variant explicitly; otherwise the dark cross is invisible on the tab. */
+    image: url(:/icons/close-dark.svg);
+}
+
 [theme="dark"] QTabBar::close-button:hover {
     background-color: #383838;
+}
+
+[theme="dark"] QTabBar::close-button:pressed {
+    background-color: #2A2A2A;
 }
 
 [theme="dark"] QMenuBar::item:selected {

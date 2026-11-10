@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.4.2] - 2026-11-09
+### Fixed
+- Dark theme: the tab close button (X) was invisible because the SVG `currentColor` rendered as black; the dark theme now uses a white icon variant
+- App icon mismatch between the Ubuntu app grid and the dock/taskbar: all PNG sizes and the Windows `.ico` were regenerated from the current SVG
+- The window/dock now uses the same embedded icon artwork as the launcher entry
+
 ## [0.4.1] - 2026-10-25
 ### Added
 - Tab close buttons (X) with custom icon

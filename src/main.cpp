@@ -3,6 +3,7 @@
 
 #include <QApplication>
 #include <QCoreApplication>
+#include <QIcon>
 #include <QLocale>
 #include <QSettings>
 #include <QTranslator>
@@ -44,6 +45,10 @@ int main(int argc, char *argv[])
     QCoreApplication::setOrganizationName(QStringLiteral("Papiro"));
     QCoreApplication::setApplicationName(QStringLiteral("Papiro"));
     QCoreApplication::setApplicationVersion(QStringLiteral(PAPIRO_VERSION));
+
+    // Use the same artwork as the launcher entry (installed from the same SVG)
+    // for the window/dock icon.
+    QApplication::setWindowIcon(QIcon(QStringLiteral(":/icons/papiro.png")));
 
     // Language selection: explicit setting wins, otherwise follow the system.
     QSettings settings;
